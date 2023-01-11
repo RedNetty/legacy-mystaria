@@ -1,0 +1,128 @@
+name: PracticeServer
+main: me.retrorealms.practiceserver.PracticeServer
+version: 1.1.0
+authors: [Red, Red29, xTuti, Giovanni, bpweber]
+loadbefore:
+  [Essentials, BungeeTabListPlus]
+softdepend: ['BungeeTabListPlus']
+commands:
+  food:
+  pet:
+  psmute:
+  psunmute:
+  givemask:
+  givecandy:
+  givehallowcrate:
+  checkgems:
+  givelegendaryorb:
+  shard:
+  togglepvp:
+  toggledebug:
+  togglechaos:
+  toggleff:
+  discord:
+  playerclone:
+  givetokens:
+  awardtokens:
+  toggleGems:
+  setAlignment:
+  createBankNote:
+  market:
+  testcommand:
+  Invsee:
+  sc:
+  givePouch:
+  giveCrate:
+  giveGodPick:
+  drheal:
+  giveInsanePick:
+  giveMagnetPick:
+  giveWepTrak:
+  givePickTrak:
+  lootbuff:
+    aliases: [lb]
+  giveAll:
+  duel:
+  daccept:
+  pdaccept:
+  pduel:
+  dquit:
+  orbs:
+  giveOrb:
+  guildwipeall:
+  giveNameTag:
+  giveScroll:
+  guildshow:
+    aliases: [ginfo, gwho, guildwho, guildinfo, gshow]
+  leaderboard:
+  guildquit:
+    aliases: [gquit, gleave]
+  guildpromote:
+    aliases: [gpromote]
+  guilddemote:
+    aliases: [gdemote]
+  guildcreate:
+    aliases: [gcreate]
+  guildinvite:
+    aliases: [ginvite]
+  guildaccept:
+    aliases: [gaccept]
+  guilddecline:
+    aliases: [gdecline]
+  guild:
+    aliases: [g]
+  guildkick:
+    aliases: [gkick]
+  giveBuff:
+  deadman:
+  createdrop:
+  listparties:
+  maxpartysize:
+  togglemobs:
+  tellall:
+  roll:
+  fakeroll:
+  setrank:
+  spawn:
+  patch:
+  gl:
+  giveEnchant:
+  tags:
+  mount:
+  toggle:
+    aliases: [toggles]
+  dungeonstart:
+  add:
+  del:
+  delete:
+  broadcasttopplayers:
+  message:
+    aliases: [msg, m, whisper, w, tell, t]
+  reply:
+    aliases: [r]
+  banksee:
+  logout:
+  showms:
+  hidems:
+  monspawn:
+  killall:
+  showloot:
+  hideloot:
+  psvanish:
+  pinvite:
+  paccept:
+  pquit:
+  pkick:
+  pdecline:
+  armorsee:
+  p:
+  toggleenergy:
+  deploy:
+  rrversion:
+  togglegm:
+  togglealignmentglow:
+  elytra:
+  scrap:
+  combust:
+  dpsdummy:
+    aliases: [dpstest, dummy, testdummy]

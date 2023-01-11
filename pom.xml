@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!--<parent>-->
+        <!--<artifactId>ps</artifactId>-->
+    <!--</parent>-->
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>RetroServer</artifactId>
+    <groupId>me.Red</groupId>
+    <version>1.1</version>
+
+    <build>
+        <defaultGoal>clean install</defaultGoal>
+        <finalName>RetroServer</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                </configuration>
+
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>RHazDev</id>
+            <url>https://raw.github.com/RHazDev/RHaz-Maven/</url>
+        </repository>
+
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>http://repo.dmulloy2.net/content/groups/public/</url>
+        </repository>
+
+        <repository>
+            <id>codecrafter47-repo</id>
+            <url>http://nexus.codecrafter47.de/content/repositories/public/</url>
+        </repository>
+
+        <repository>
+            <id>inventive-repo</id>
+            <url>https://repo.inventivetalent.org/content/groups/public/</url>
+        </repository>
+
+    </repositories>
+
+    <dependencies>
+        <dependency>
+        <groupId>fr.rhaz.sockets</groupId>
+        <artifactId>socket4mc</artifactId>
+        <version>3.2.8</version>
+        <scope>system</scope>
+        <systemPath>${basedir}/lib/socket4mc-3.2.8.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.46</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>2.4.7</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.inventivetalent</groupId>
+            <artifactId>glowapi</artifactId>
+            <version>1.4.4</version>
+            <systemPath>${project.basedir}/lib/GlowAPI_v1.4.4.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vexsoftware</groupId>
+            <artifactId>votifier</artifactId>
+            <version>1.9</version>
+            <systemPath>${project.basedir}/lib/votifier-1.9.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.gmail.filoghost</groupId>
+            <artifactId>holographicdisplays.api</artifactId>
+            <version>2.1.3</version>
+            <systemPath>${project.basedir}/lib/HolographicDisplays.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.saintx</groupId>
+            <artifactId>holograms</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/Holograms-2.4.0-SNAPSHOT.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.bukkit</groupId>
+            <artifactId>craftbukkit</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/craftbukkit-1.9.4-R0.1-SNAPSHOT.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.earth2me.essentials</groupId>
+            <artifactId>EssentialsX</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/EssentialsX-2.0.1.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.kitteh.vanish</groupId>
+            <artifactId>VanishPlugin</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/VanishNoPacket.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.inventivetalent</groupId>
+            <artifactId>BossBarAPI</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/BossBarAPI_v2.4.1.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.comphenix</groupId>
+            <artifactId>ProtocolLib</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/ProtocolLib.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>SpigotMC</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/Spigot.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mcsg.double0negative.tabapi</groupId>
+            <artifactId>BossBarAPI</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/TabAPI.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.milkbowl.vault</groupId>
+            <artifactId>Vault</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/Vault.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mewin.WGRegionEvents</groupId>
+            <artifactId>WGRegionEvents</artifactId>
+            <version>1.0</version>
+            <systemPath>${project.basedir}/lib/WGRegionEvents.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>worldedit</artifactId>
+            <version>6.1.5</version>
+            <systemPath>${project.basedir}/lib/worldedit-bukkit-6.1.5.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>worldguard</artifactId>
+            <version>6.1</version>
+            <systemPath>${project.basedir}/lib/worldguard-6.2.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
