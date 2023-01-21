@@ -73,6 +73,7 @@ public class DropPriority implements Listener {
                 droppedTime.put(i, rankTime((Player) killer));
             }
         }
+
         if(killer instanceof Player && is.getType() != Material.EMERALD)
         Mobdrops.dropShowString((Player) killer, is, mob);
         return i;
@@ -123,7 +124,7 @@ public class DropPriority implements Listener {
         RankEnum rank = ModerationMechanics.getRank(p);
         switch(rank){
             case DEFAULT:
-                return 0;
+                return 2;
             case SUB:
                 return 5;
             case SUB1:

@@ -9,6 +9,7 @@ import me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager;
 import me.retrorealms.practiceserver.mechanics.guilds.guild.Role;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
+import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Banks;
 import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
@@ -210,13 +211,19 @@ public class SQLMain implements Listener {
                     buddies += ",";
                 }
             }
+            String rank = RankEnum.DEFAULT.toString();
+            try{
+                rank = RankEnum.enumToString(ModerationMechanics.getRank(p));
+            }catch (NoClassDefFoundError e) {
+
+            }
 
             String stats = "REPLACE INTO PersistentData (UUID, Username, Rank, Buddies, PVPToggle, ChaoToggle, FFToggle, DebugToggle, HologramToggle, " +
                     "LVLHPToggle, GlowToggle, PMToggle, TradingToggle, GemsToggle, TrailToggle, DropToggle, KitToggle, " +
                     "Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, OrbRolls, Luck, Reaper, KitWeapon, KitHelm, KitChest, KitLegs, KitBoots)" +
                     "VALUES ('" + uuid.toString() + "'," +
                     " '" + p.getName() + "'," +
-                    " '" + RankEnum.enumToString(ModerationMechanics.getRank(p)) + "'," +
+                    " '" + rank + "'," +
                     " '" + buddies + "'," +
                     Toggles.getToggleStatus(p, "Anti PVP") + "," +
                     Toggles.getToggleStatus(p, "Chaotic") + "," +
@@ -294,9 +301,6 @@ public class SQLMain implements Listener {
                     ModerationMechanics.rankHashMap.put(p.getUniqueId(), RankEnum.fromString(rs.getString("Rank")));
                     int mount = rs.getInt("Mount") + 1;
                     Horses.horseTier.put(p, mount);
-                    if(ModerationMechanics.rankHashMap.get(p.getUniqueId()) == RankEnum.SUPPORTER) {
-                        donor = true;
-                    }
                 } else {
                     ModerationMechanics.rankHashMap.put(p.getUniqueId(), RankEnum.DEFAULT);
                     Horses.horseTier.put(p, 0);
@@ -336,7 +340,15 @@ public class SQLMain implements Listener {
                     GuildPlayers.add(new GuildPlayer(p.getUniqueId(), p.getName(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
                     p.getInventory().clear();
                     Listeners.Kit(p);
-                    if(donor) p.getInventory().addItem(Listeners.donorPick());
+                    new BukkitRunnable() {
+                        public void run() {
+                            if(ModerationMechanics.isDonator(p)) {
+                                Items.giveDonorItems(p);
+                            }
+                            this.cancel();
+
+                        }
+                    }.runTaskLater(PracticeServer.getInstance(), 80L);
                     p.teleport(TeleportBooks.DeadPeaks);
                 }
             } catch (Exception ex) {

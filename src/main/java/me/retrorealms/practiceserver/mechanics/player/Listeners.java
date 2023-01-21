@@ -3,6 +3,7 @@ package me.retrorealms.practiceserver.mechanics.player;
 import lombok.Getter;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.API;
+import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
 import me.retrorealms.practiceserver.apis.itemapi.NBTAccessor;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.commands.moderation.ToggleGMCommand;
@@ -335,12 +336,15 @@ public class Listeners implements Listener {
 							 * setting HP.
 							 */
 		if (player.isOp()) {
+			if(!ToggleGMCommand.togglegm.contains(player.getName())) ActionBar.sendActionBar(player, "&bYou are in GM Mode", 5);
 			player.sendMessage(ChatColor.BLUE + "You are currently not vanished! Please use /psvanish to vanish.");
 			player.setMaxHealth(10000);
 			player.setHealth(10000);
 		}
 		Toggles.enablePM(
 				player); /* Enables the players PM toggle for some reason */
+		Toggles.toggles.get(player.getUniqueId()).add("Debug");
+		Toggles.toggles.get(player.getUniqueId()).add("Glow Drops");
 	}
 
 	@EventHandler
@@ -454,9 +458,6 @@ public class Listeners implements Listener {
 						}
 					}
 				}.runTaskLater(PracticeServer.plugin, 10);
-				// new AsyncTask(() -> {
-				//
-				// }).setDelay(1).scheduleDelayedTask();
 			}
 		}
 	}

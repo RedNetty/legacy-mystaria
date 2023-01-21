@@ -15,12 +15,12 @@ public class PartyDuelAcceptCommand implements CommandExecutor {
             final Player p = (Player) sender;
             if (Duels.hasRequest.containsKey(p)) {
                 int maxPlayers = 1;
-                for(Player team1 : Parties.parties.get(Duels.hasRequest.get(p))){
+                for(Player team1 : Parties.getParties().get(Duels.hasRequest.get(p))){
                     maxPlayers = Math.max(maxPlayers, Duels.rankPlayers(team1));
-                }for(Player team2 : Parties.parties.get(p)){
+                }for(Player team2 : Parties.getParties().get(p)){
                     maxPlayers = Math.max(maxPlayers, Duels.rankPlayers(team2));
                 }
-                if(Parties.parties.get(p).size() > maxPlayers || Parties.parties.get(Duels.hasRequest.get(p)).size() > maxPlayers){
+                if(Parties.getParties().get(p).size() > maxPlayers || Parties.getParties().get(Duels.hasRequest.get(p)).size() > maxPlayers){
                     for(Player member : Parties.getEntirePartyOf(p)){
                         member.sendMessage(ChatColor.RED + "Duel Cancelled: One member in either party must be higher rank to support this many players.");
                     }for(Player member : Parties.getEntirePartyOf(Duels.hasRequest.get(p))){

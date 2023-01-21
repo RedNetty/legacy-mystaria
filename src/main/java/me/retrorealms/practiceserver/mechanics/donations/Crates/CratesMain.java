@@ -194,6 +194,7 @@ public class CratesMain implements Listener {
                     public void run() {
                         entity.remove();
                         Particles.EXPLOSION_NORMAL.display(0.2F, 0.3F, 0.2F, 0, 3, entity.getLocation(), 30);
+                        this.cancel();
                     }
                 }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 40L);
             });

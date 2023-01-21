@@ -260,7 +260,7 @@ public class Mobs implements Listener {
                                 crit.put(l, 0);
                                 p.damage(l.getLastDamage(), l);
                                 crit.remove(l);
-                                Vector v = p.getLocation().toVector().subtract(l.getLocation().toVector());
+                                Vector v = p.getLocation().clone().toVector().subtract(l.getLocation().toVector());
                                 if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
                                     v.normalize();
                                 }
@@ -273,7 +273,7 @@ public class Mobs implements Listener {
 
                             l.getWorld().playSound(l.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.5f);
                             Particles.EXPLOSION_HUGE.display(0.0f, 0.0f, 0.0f, 1.0f, 40,
-                                    l.getLocation().add(0.0, 1.0, 0.0), 20.0);
+                                    l.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
 
                             l.setCustomName(Mobs.generateOverheadBar(l, l.getHealth(), l.getMaxHealth(),
                                     Mobs.getMobTier(l), true));
@@ -358,7 +358,7 @@ public class Mobs implements Listener {
                 Bukkit.getOnlinePlayers().forEach(player -> {
                     Location loc = player.getLocation();
                     Bukkit.getWorld("jew").getNearbyEntities(loc, 10, 10, 10).forEach(entity -> {
-                        entity.remove();
+                        if(!MobHandler.isWorldBoss(entity)) entity.remove();
                     });
 
                 });
@@ -572,7 +572,7 @@ public class Mobs implements Listener {
 			}
 			LivingEntity s = (LivingEntity) e.getEntity();
 			Random random = new Random();
-			int rcrt = random.nextInt(100) + 1;
+			int rcrt = random.nextInt(150) + 1;
 			if (!crit.containsKey(s) && (Mobs.getMobTier(s) == 1 && rcrt <= 5 || Mobs.getMobTier(s) == 2 && rcrt <= 7
 					|| Mobs.getMobTier(s) == 3 && rcrt <= 10 || Mobs.getMobTier(s) == 4 && rcrt <= 13
 					|| Mobs.getMobTier(s) >= 5 && rcrt <= 20)) {

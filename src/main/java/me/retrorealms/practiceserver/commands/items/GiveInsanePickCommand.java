@@ -1,5 +1,6 @@
 package me.retrorealms.practiceserver.commands.items;
 
+import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -22,24 +23,7 @@ public class GiveInsanePickCommand implements CommandExecutor {
         if(!sender.isOp()) return false;
         Player p = Bukkit.getPlayer(args[0]);
         if(p != null && p.isOnline()){
-            ItemStack P = new ItemStack(Material.DIAMOND_PICKAXE);
-            ItemMeta pickmeta = P.getItemMeta();
-            pickmeta.setDisplayName(ChatColor.BLUE + "Donator++ Pickaxe");
-            ArrayList<String> lore = new ArrayList<String>();
-            lore.add(ChatColor.GRAY + "Level: " + ChatColor.BLUE + "120");
-            lore.add(ChatColor.GRAY + "0 / 0");
-            lore.add(ChatColor.GRAY + "EXP: " + ChatColor.BLUE + "||||||||||||||||||||||||||||||||||||||||||||||||||");
-            lore.add(ChatColor.RED + "DOUBLE ORE: 25%");
-            lore.add(ChatColor.RED + "GEM FIND: 15%");
-            lore.add(ChatColor.RED + "TRIPLE ORE: 10%");
-            lore.add(ChatColor.RED + "TREASURE FIND: 5%");
-            lore.add(ChatColor.RED + "MINING SUCCESS: 20%");
-            lore.add(ChatColor.RED + "DURABILITY: 15%");
-            lore.add(ChatColor.RED + "MAGNETISM");
-            lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of ice.");
-            pickmeta.setLore(lore);
-            P.setItemMeta(pickmeta);
-            p.getInventory().addItem(P);
+            ProfessionMechanics.getDonorPicked(p);
         }
         return false;
     }

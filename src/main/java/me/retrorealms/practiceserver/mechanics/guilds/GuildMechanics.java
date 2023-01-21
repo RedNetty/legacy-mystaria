@@ -91,7 +91,7 @@ public final class GuildMechanics {
     public boolean isInSameGuild(Player shooter, Player entity) {
         GuildPlayer guildPlayer = GuildPlayers.getInstance().get(shooter.getUniqueId());
         GuildPlayer guildPlayer1 = GuildPlayers.getInstance().get(entity.getUniqueId());
-        return ((guildPlayer.getGuildName() != null) && (guildPlayer1.getGuildName() != null) && (guildPlayer.getGuildName().equals(guildPlayer1.getGuildName())));
+        return ((guildPlayer.getGuildName() != null) && (guildPlayer1.getGuildName() != null)) && ((guildPlayer.getGuildName() != "") && (guildPlayer1.getGuildName() != "")) && (guildPlayer.getGuildName().equals(guildPlayer1.getGuildName()));
     }
 
     public void wipe() {

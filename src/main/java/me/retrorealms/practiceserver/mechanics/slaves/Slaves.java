@@ -100,11 +100,9 @@ public class Slaves implements Listener {
     }
 
     public void onEnable(){
-        System.out.println("[Slaves] Are white");
     }
 
     public void onDisable(){
-        System.out.println("[Slaves] Are black");
     }
 
 }

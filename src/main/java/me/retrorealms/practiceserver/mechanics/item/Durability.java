@@ -153,6 +153,7 @@ public class Durability implements Listener {
 
     @EventHandler
     public void onDamage(final EntityDamageByEntityEvent e) {
+
         if (e.getDamage() <= 0.0) {
             return;
         }
@@ -166,12 +167,12 @@ public class Durability implements Listener {
             final Player p = (Player) e.getEntity();
             final Random r = new Random();
             final int dodura = r.nextInt(1500);
-            if(Listeners.isWeapon(p.getInventory().getItemInMainHand())) {
+            if (Listeners.isWeapon(p.getInventory().getItemInMainHand())) {
                 p.getInventory().getItemInMainHand().setDurability((short) 0);
             }
             if (p.getInventory().getHelmet() != null && p.getInventory().getHelmet().getType() != Material.AIR) {
                 final ItemStack is = p.getInventory().getHelmet();
-                if(p.getInventory().getHelmet().getType() != Material.JACK_O_LANTERN) {
+                if (p.getInventory().getHelmet().getType() != Material.JACK_O_LANTERN) {
                     if (dodura <= is.getType().getMaxDurability()) {
                         if (is.getDurability() >= is.getType().getMaxDurability()) {
                             p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);

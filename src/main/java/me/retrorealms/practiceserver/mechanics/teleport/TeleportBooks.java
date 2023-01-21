@@ -81,11 +81,18 @@ public class TeleportBooks implements Listener {
         casting_time = new HashMap<String, Integer>();
     }
 
+
+    AvalonPortal avalonPortal;
     public void onEnable() {
+        avalonPortal = new AvalonPortal();
+        Bukkit.getServer().getPluginManager().registerEvents(avalonPortal, PracticeServer.getInstance());
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         Tripoli = new Location(Bukkit.getWorlds().get(0), 817.0, 9.0, -80.0, 1.0f, 1.0f);
         DeadPeaks = new Location(Bukkit.getWorlds().get(0), 603.0, 35.0, -281.0, 1.0f, 1.0f);
         Avalon = new Location(Bukkit.getWorlds().get(0), 636.0, 97.0, 243.0, 1.0f, 1.0f);
+
+        avalonPortal.onLoad();
+
         new BukkitRunnable() {
 
             public void run() {
@@ -286,13 +293,13 @@ public class TeleportBooks implements Listener {
     }
 
     String getTeleportMessage(String s) {
-        if (s.contains("avalon")) {
+        if (s.toLowerCase().contains("avalon")) {
             return "Teleport Scroll: Avalon";
         }
-        if (s.contains("deadpeaks mountain camp")) {
+        if (s.toLowerCase().contains("deadpeaks mountain camp")) {
             return "Teleport Scroll: Deadpeaks Mountain Camp";
         }
-        if (s.contains("tripoli")) {
+        if (s.toLowerCase().contains("tripoli")) {
             return "Teleport Scroll: Tripoli";
         }
         return "Teleport Scroll: Deadpeaks Mountain Camp";

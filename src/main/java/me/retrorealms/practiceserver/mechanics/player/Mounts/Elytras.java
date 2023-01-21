@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.player.Listeners;
+import me.retrorealms.practiceserver.mechanics.teleport.AvalonPortal;
 import me.retrorealms.practiceserver.utils.ArmorEquipEvent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -48,7 +49,7 @@ public class Elytras implements Listener {
 
 	public Elytras(PracticeServer plugin) {
 		this.plugin = plugin;
-		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+		//plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
 	@EventHandler
@@ -70,7 +71,7 @@ public class Elytras implements Listener {
 
 	@EventHandler
 	public void onDamageAll(EntityDamageEvent event) {
-		if (!(event.getEntity() instanceof Player))
+	/*	if (!(event.getEntity() instanceof Player))
 			return;
 		Player player = (Player) event.getEntity();
 
@@ -89,6 +90,7 @@ public class Elytras implements Listener {
 		if (gliding.contains(player)) {
 			stopGliding(player);
 		}
+	}*/
 	}
 
 	@EventHandler
@@ -377,9 +379,6 @@ public class Elytras implements Listener {
 			if (gliding.contains(player)) {
 				gliding.remove(player);
 
-				ItemStack[] armorcontents = player.getInventory().getArmorContents();
-				armorcontents[2] = queuechestplate.get(player.getName());
-				player.getInventory().setArmorContents(armorcontents);
 				Listeners.hpCheck(player);
 				queuechestplate.remove(player.getName());
 				try {
@@ -401,16 +400,17 @@ public class Elytras implements Listener {
 	}
 
 	private void stopGliding(Player player, boolean blister) {
-		player.setGliding(false);
+/*		player.setGliding(false);
 		player.setVelocity(new Vector(0, -5, 0));
 		player.setFallDistance(0); // For some reason this doesn't work for DR
+		AvalonPortal.glidingPlayers.remove(player);
 		if (!blister) {
 			player.sendMessage(ChatColor.RED + "Your elytra wings have blistered and are unable to fly anymore.");
 		} else {
 			player.sendMessage(
 					ChatColor.RED + "You have flown too high and your elytra wings have blistered. Please fly lower.");
 		}
-		queueheal.add(player);
+		queueheal.add(player);*/
 	}
 
 	private boolean isDeadpeaks(Player player) {

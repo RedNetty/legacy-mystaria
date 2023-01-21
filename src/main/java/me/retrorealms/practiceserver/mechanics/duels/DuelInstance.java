@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Author: Red
@@ -18,8 +19,8 @@ import java.util.Collection;
 public class DuelInstance {
 
 
-    public ArrayList<Player> team1;
-    public ArrayList<Player> team2;
+    public List<Player> team1;
+    public List<Player> team2;
     private ArrayList<Player> team1Remaining;
     private ArrayList<Player> team2Remaining;
     private Integer arena;
@@ -27,7 +28,7 @@ public class DuelInstance {
     private Player team2Leader;
     private boolean party;
 
-    public DuelInstance(Integer arena, ArrayList<Player> team1, ArrayList<Player> team2, Player team1Leader, Player team2Leader, boolean party){
+    public DuelInstance(Integer arena, List<Player> team1, List<Player> team2, Player team1Leader, Player team2Leader, boolean party){
         this.arena = arena;
         this.team1 = team1;
         this.team1Remaining = new ArrayList();
@@ -80,8 +81,8 @@ public class DuelInstance {
     }
 
     public void end() {
-        ArrayList<Player> winningTeam;
-        ArrayList<Player> losingTeam;
+        List<Player> winningTeam;
+        List<Player> losingTeam;
         Player winningLeader;
         Player losingLeader;
         if (team1Remaining.isEmpty()) {

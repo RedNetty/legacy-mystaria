@@ -53,7 +53,7 @@ public class ChatTagGUI extends Menu {
                             "&7Price: &a&l$1.99",
                             "&eSUB &7or higher gets instant access to all chat-tags!",
                             "",
-                            "&dstore.autismrealms.club");
+                            "&dMessage Red for Info");
 
                     itemMeta.setLore(lore.stream().map(string -> ChatColor.translateAlternateColorCodes('&', string)).collect(Collectors.toList()));
                 }
@@ -80,7 +80,7 @@ public class ChatTagGUI extends Menu {
                             "&7Price: &a&l15000G",
                             "&eSUB &7or higher gets instant access to all chat-tags!",
                             "",
-                            "&dstore.autismrealms.club");
+                            "&dMessage Red for Info");
 
                     itemMeta.setLore(lore.stream().map(string -> ChatColor.translateAlternateColorCodes('&', string)).collect(Collectors.toList()));
                 }

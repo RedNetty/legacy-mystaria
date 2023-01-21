@@ -250,7 +250,7 @@ public class Toggles implements Listener {
         inv.addItem(Toggles.getToggleButton("Player Messages", getToggleStatus(p, "Player Messages")));
         inv.addItem(Toggles.getToggleButton("Trading", getToggleStatus(p, "Trading")));
         inv.addItem(Toggles.getToggleButton("Disable Kit", getToggleStatus(p, "Disable Kit")));
-        if (ModerationMechanics.getRank(p) == RankEnum.SUPPORTER || ModerationMechanics.getRank(p) == RankEnum.YOUTUBER || ModerationMechanics.getRank(p) == RankEnum.SUB3 || ModerationMechanics.isStaff(p)) {
+        if (ModerationMechanics.getRank(p) == RankEnum.SUB2 || ModerationMechanics.getRank(p) == RankEnum.SUB3 || ModerationMechanics.getRank(p) == RankEnum.SUPPORTER || ModerationMechanics.getRank(p) == RankEnum.YOUTUBER || ModerationMechanics.getRank(p) == RankEnum.SUB3 || ModerationMechanics.isStaff(p)) {
             inv.addItem(Toggles.getToggleButton("Gems", getToggleStatus(p, "Gems")));
         }
         if(ModerationMechanics.isDonator(p)) {

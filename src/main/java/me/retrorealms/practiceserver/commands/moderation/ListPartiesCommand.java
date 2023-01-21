@@ -19,7 +19,7 @@ public class ListPartiesCommand implements CommandExecutor {
         for(Player p : Bukkit.getServer().getOnlinePlayers()){
             if(Parties.isInParty(p) && Parties.isPartyLeader(p)){
                 String message = ChatColor.YELLOW + p.getName() + ": " + ChatColor.GRAY;
-                for(Player member: Parties.parties.get(p)){
+                for(Player member: Parties.getParties().get(p)){
                     if(member != p) message += member.getName() + " ";
                 }
                 sender.sendMessage(message);

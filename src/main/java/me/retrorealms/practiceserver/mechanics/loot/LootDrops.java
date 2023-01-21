@@ -1,6 +1,11 @@
 package me.retrorealms.practiceserver.mechanics.loot;
 
+import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
+import me.retrorealms.practiceserver.mechanics.donations.Nametags.Nametag;
+import me.retrorealms.practiceserver.mechanics.donations.StatTrak.WepTrak;
 import me.retrorealms.practiceserver.mechanics.item.Items;
+import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGUI;
+import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGenerator;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import org.bukkit.ChatColor;
@@ -13,11 +18,12 @@ import org.bukkit.potion.PotionType;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class LootDrops {
     public static ItemStack createLootDrop(int tier) {
         Random random = new Random();
-        int dodrop = random.nextInt(150);
+        int dodrop = random.nextInt(301);
 
         if (dodrop < 50) {
             int whatenchant = random.nextInt(2);
@@ -26,7 +32,7 @@ public class LootDrops {
             }
             return Items.orb(false);
         }
-        if (dodrop < 80) {
+        if (dodrop <= 100) {
             int gemamt = 0;
             if (tier == 1) {
                 gemamt = random.nextInt(9) + 8;
@@ -51,10 +57,10 @@ public class LootDrops {
             }
             return Money.makeGems(gemamt);
         }
-        if (dodrop < 130) {
+        if (dodrop <= 160) {
             return potion(tier);
         }
-        if (dodrop < 150) {
+        if (dodrop <= 230) {
             int scrolltype;
             if (tier == 1) {
                 scrolltype = random.nextInt(1);
@@ -112,22 +118,21 @@ public class LootDrops {
             }
         }
         if (dodrop < 250) {
-            int whatfoodtodrop = random.nextInt(5);
-            if (whatfoodtodrop == 0) {
-                return new ItemStack(Material.COOKED_BEEF);
+            boolean whatDrop = ThreadLocalRandom.current().nextBoolean();
+            if(whatDrop) {
+                return Nametag.item_ownership_tag.clone();
+            }else{
+                return WepTrak.weapon_tracker_item.clone();
             }
-            if (whatfoodtodrop == 1) {
-                return new ItemStack(Material.BREAD);
-            }
-            if (whatfoodtodrop == 2) {
-                return new ItemStack(Material.PUMPKIN_PIE);
-            }
-            if (whatfoodtodrop == 3) {
-                return new ItemStack(Material.APPLE);
-            }
-            if (whatfoodtodrop == 4) {
-                return new ItemStack(Material.MELON);
-            }
+        }
+        if(dodrop <= 260) {
+            return new ItemStack(new ScrollGenerator().next(tier - 1));
+        }
+        if(tier == 5 && dodrop <= 270) {
+            return new ItemStack(Items.legendaryOrb(false));
+        }
+        if(dodrop <= 300) {
+            return new ItemStack(CratesMain.createCrate(tier, false));
         }
         return new ItemStack(Material.AIR);
     }

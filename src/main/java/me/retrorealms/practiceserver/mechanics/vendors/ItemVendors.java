@@ -354,7 +354,7 @@ public class ItemVendors
                 inv.addItem(new ItemStack[]{this.food(4)});
                 e.getPlayer().openInventory(inv);
                 e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            } else if (p.getName().equals("Inn Keeper")) {
+            } else if (p.getName().equals("Book Vendor")) {
                 Inventory inv = Bukkit.getServer().createInventory(null, 18, "Book Vendor");
                 inv.addItem(new ItemStack[]{TeleportBooks.deadpeaks_book(true)});
                 inv.addItem(new ItemStack[]{TeleportBooks.tripoli_book(true)});
@@ -430,9 +430,9 @@ public class ItemVendors
                     p.closeInventory();
                 }
             }
-        } else if (e.getCurrentItem() != null && e.getInventory().getTitle().equals("Food Vendor")) {
+        } else if (e.getCurrentItem() != null && (e.getInventory().getTitle().equals("Food Vendor") || e.getInventory().getTitle().equals("Book Vendor"))) {
             e.setCancelled(true);
-            if (e.getCurrentItem() != null && (e.getCurrentItem().getType() == Material.MELON || e.getCurrentItem().getType() == Material.APPLE || e.getCurrentItem().getType() == Material.BREAD || e.getCurrentItem().getType() == Material.PUMPKIN_PIE || e.getCurrentItem().getType() == Material.COOKED_BEEF) && e.getCurrentItem().getItemMeta().hasLore() && ((String) (e.getCurrentItem().getItemMeta().getLore()).get(0)).contains("Price:")) {
+            if (e.getCurrentItem() != null && (e.getCurrentItem().getType() == Material.BOOK || e.getCurrentItem().getType() == Material.MELON || e.getCurrentItem().getType() == Material.APPLE || e.getCurrentItem().getType() == Material.BREAD || e.getCurrentItem().getType() == Material.PUMPKIN_PIE || e.getCurrentItem().getType() == Material.COOKED_BEEF) && e.getCurrentItem().getItemMeta().hasLore() && ((String) (e.getCurrentItem().getItemMeta().getLore()).get(0)).contains("Price:")) {
                 int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
                 if (Money.hasEnoughGems(p, price)) {
                     ItemStack is = new ItemStack(e.getCurrentItem().getType());

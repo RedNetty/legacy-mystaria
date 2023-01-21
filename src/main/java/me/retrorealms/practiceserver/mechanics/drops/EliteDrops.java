@@ -593,9 +593,11 @@ public class EliteDrops {
 
         NBTAccessor nbtAccessor = new NBTAccessor(is).check();
         nbtAccessor.setString("rarityType", color.name());
+        nbtAccessor.setDouble("namedElite", 1D);
 
         return nbtAccessor.update();
     }
+
 
     public static ItemStack createCustomEliteDrop(String mobname) {
         String name = "";
@@ -2048,6 +2050,7 @@ public class EliteDrops {
                 nbtAccessor.setInt("fixedgear", 1);
             }
             nbtAccessor.setString("rarityType", color.name());
+            nbtAccessor.setDouble("namedElite", 1D);
             ItemStack update = nbtAccessor.update();
             if (PracticeServer.GLOWING_NAMED_ELITE_DROP) {
                 update.addUnsafeEnchantment(Enchants.glow, 1);

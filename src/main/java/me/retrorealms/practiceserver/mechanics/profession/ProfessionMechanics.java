@@ -52,6 +52,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.StringJoiner;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -451,6 +452,54 @@ public class  ProfessionMechanics implements Listener {
             xp = 100;
         }
         return xp;
+    }
+
+    public static void getDonorPicked(Player p) {
+        int dblAmt = 15, gemAmt = 10, trplAmt = 10, succAmt = 20, tresAmt = 5, duraAmt = 15;
+        boolean mag = false;
+        RankEnum rank = ModerationMechanics.getRank(p);
+        ItemStack P = new ItemStack(Material.DIAMOND_PICKAXE);
+        ItemMeta pickmeta = P.getItemMeta();
+        pickmeta.setDisplayName(ChatColor.BLUE + "Donator Pickaxe");
+        ArrayList<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.GRAY + "Level: " + ChatColor.BLUE + "120");
+        lore.add(ChatColor.GRAY + "0 / 0");
+        lore.add(ChatColor.GRAY + "EXP: " + ChatColor.BLUE + "||||||||||||||||||||||||||||||||||||||||||||||||||");
+
+        switch (rank) {
+            case SUB1:
+                dblAmt = 20;
+                gemAmt = 15;
+                trplAmt = 15;
+                succAmt = 25;
+                tresAmt = 8;
+                duraAmt = 20;
+                break;
+            case SUB2:
+            case SUPPORTER:
+                dblAmt = 25;
+                gemAmt = 24;
+                trplAmt = 20;
+                succAmt = 30;
+                tresAmt = 10;
+                duraAmt = 30;
+                mag = true;
+                break;
+
+        }
+        lore.add(ChatColor.RED + "DOUBLE ORE: " + dblAmt + "%");
+        lore.add(ChatColor.RED + "GEM FIND: " + gemAmt + "%");
+        lore.add(ChatColor.RED + "TRIPLE ORE: " + trplAmt + "%");
+        lore.add(ChatColor.RED + "TREASURE FIND: " + tresAmt + "%");
+        lore.add(ChatColor.RED + "MINING SUCCESS: " + succAmt + "%");
+        lore.add(ChatColor.RED + "DURABILITY: " + duraAmt + "%");
+
+        if(mag)  lore.add(ChatColor.RED + "MAGNETISM");
+        lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of ice.");
+        pickmeta.setLore(lore);
+        P.setItemMeta(pickmeta);
+        p.getInventory().addItem(P);
+
     }
 
     public static ItemStack addExp(Player p, ItemStack is, int xp, boolean alerts) {

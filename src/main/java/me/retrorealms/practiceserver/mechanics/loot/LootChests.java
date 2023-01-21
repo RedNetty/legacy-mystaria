@@ -40,7 +40,7 @@ public class LootChests implements Listener {
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
-                for(Location location : loot.keySet()) {
+                for (Location location : loot.keySet()) {
                     Location cloneLocation = location.clone().add(0.5, 1.5, 0.5);
                     cloneLocation.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, cloneLocation, 1, .1, .1, .1, -0.0005);
                 }
@@ -98,7 +98,7 @@ public class LootChests implements Listener {
             file.delete();
         }
         YamlConfiguration config = new YamlConfiguration();
-        if(!loot.isEmpty()) {
+        if (!loot.isEmpty()) {
             for (Location loc1 : loot.keySet()) {
                 String s = String.valueOf(loc1.getWorld().getName()) + "," + (int) loc1.getX() + "," + (int) loc1.getY() + "," + (int) loc1.getZ();
                 config.set(s, loot.get(loc1));
@@ -114,7 +114,8 @@ public class LootChests implements Listener {
 
     public boolean isMobNear(Location location) {
         for (Entity ent : location.getWorld().getNearbyEntities(location, 6.0, 6.0, 6.0)) {
-            if (!(ent instanceof LivingEntity) || ent instanceof Player || ent instanceof Horse || ent.hasMetadata("pet")) continue;
+            if (!(ent instanceof LivingEntity) || ent instanceof Player || ent instanceof Horse || ent.hasMetadata("pet"))
+                continue;
             return true;
         }
         return false;

@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class PAcceptCommand implements CommandExecutor {
     public boolean onCommand(final CommandSender sender, final Command cmd, final String label, final String[] args) {
@@ -22,16 +23,16 @@ public class PAcceptCommand implements CommandExecutor {
                     if (Parties.invite.get(p) == null || leader == null) {
                         p.sendMessage(ChatColor.RED + "This party invite is no longer available.");
                         Parties.invite.remove(p);
-                        Parties.invitetime.remove(p);
+                        Parties.invite.remove(p);
                         return true;
                     }
-                    if (Parties.parties.get(leader).size() == Parties.maxSize) {
+                    if (Parties.getParties().get(leader).size() == Parties.maxSize) {
                         p.sendMessage(ChatColor.RED + "This party is currently full.");
                         Parties.invite.remove(p);
-                        Parties.invitetime.remove(p);
+                        Parties.invite.remove(p);
                         return true;
                     }
-                    final ArrayList<Player> mem = Parties.parties.get(leader);
+                    final List<Player> mem = Parties.getParties().get(leader);
                     for (final Player pl : mem) {
                         pl.sendMessage(String.valueOf(ChatColor.LIGHT_PURPLE.toString()) + "<" + ChatColor.BOLD + "P" + ChatColor.LIGHT_PURPLE + ">" + ChatColor.GRAY + " " + p.getName() + ChatColor.GRAY.toString() + " has " + ChatColor.LIGHT_PURPLE + ChatColor.UNDERLINE + "joined" + ChatColor.GRAY + " your party.");
                     }

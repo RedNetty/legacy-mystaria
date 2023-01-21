@@ -193,6 +193,9 @@ public class Enchants implements Listener {
                 final int newhp = (int) (beforehp + added);
                 final ItemStack is = e.getCurrentItem();
                 final ItemMeta im = is.getItemMeta();
+                if (ChatColor.stripColor(name).contains("[+")) {
+                    name = name.replace("[+" + (plus) + "] ", "");
+                }
                 im.setDisplayName(ChatColor.RED + "[+" + (plus + 1) + "] " + name);
                 final List<String> lore = im.getLore();
                 lore.set(1, ChatColor.RED + "HP: +" + newhp);
@@ -255,6 +258,9 @@ public class Enchants implements Listener {
                     final int newhp2 = (int) (beforehp + added2);
                     final ItemStack is2 = e.getCurrentItem();
                     final ItemMeta im2 = is2.getItemMeta();
+                    if (ChatColor.stripColor(name).contains("[+")) {
+                        name = name.replace("[+" + (plus) + "] ", "");
+                    }
                     im2.setDisplayName(ChatColor.RED + "[+" + (plus + 1) + "] " + name);
                     final List<String> lore2 = im2.getLore();
                     lore2.set(1, ChatColor.RED + "HP: +" + newhp2);
@@ -328,6 +334,9 @@ public class Enchants implements Listener {
                 final int max = (int) (beforemax + addedmax);
                 final ItemStack is3 = e.getCurrentItem();
                 final ItemMeta im3 = is3.getItemMeta();
+                if (ChatColor.stripColor(name2).contains("[+")) {
+                    name2 = name2.replace("[+" + (plus2) + "] ", "");
+                }
                 im3.setDisplayName(ChatColor.RED + "[+" + (plus2 + 1) + "] " + name2);
                 final List<String> lore3 = im3.getLore();
                 lore3.set(0, ChatColor.RED + "DMG: " + min + " - " + max);
@@ -367,7 +376,6 @@ public class Enchants implements Listener {
 
                     e.setCurrentItem(null);
                 } else {
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1.0f, 1.25f);
                     final Firework fw4 = (Firework) p.getWorld().spawnEntity(p.getLocation(), EntityType.FIREWORK);
                     final FireworkMeta fwm4 = fw4.getFireworkMeta();
                     final FireworkEffect effect4 = FireworkEffect.builder().flicker(false).withColor(Color.YELLOW).withFade(Color.YELLOW).with(FireworkEffect.Type.BURST).trail(true).build();
@@ -387,6 +395,9 @@ public class Enchants implements Listener {
                     final int max2 = (int) (beforemax + addedmax2);
                     final ItemStack is4 = e.getCurrentItem();
                     final ItemMeta im4 = is4.getItemMeta();
+                    if (ChatColor.stripColor(name2).contains("[+")) {
+                        name2 = name2.replace("[+" + (plus2) + "] ", "");;
+                    }
                     im4.setDisplayName(ChatColor.RED + "[+" + (plus2 + 1) + "] " + name2);
                     final List<String> lore4 = im4.getLore();
                     lore4.set(0, ChatColor.RED + "DMG: " + min2 + " - " + max2);

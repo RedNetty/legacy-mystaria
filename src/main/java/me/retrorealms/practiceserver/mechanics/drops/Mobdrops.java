@@ -6,17 +6,13 @@ import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
 import me.retrorealms.practiceserver.mechanics.drops.buff.BuffHandler;
-import me.retrorealms.practiceserver.mechanics.drops.buff.LootBuff;
-import me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager;
-import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
-import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
 import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
 import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
-import me.retrorealms.practiceserver.mechanics.mobs.elite.SkeletonElite;
-import me.retrorealms.practiceserver.mechanics.money.GemPouches;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.utils.JSONMessage;
+import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -27,14 +23,12 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.inventivetalent.glow.GlowAPI;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Stream;
 
 public class Mobdrops implements Listener {
 
@@ -58,7 +52,7 @@ public class Mobdrops implements Listener {
         }
         if(PracticeServer.buffHandler().isActive()) {
             int buffAmount = PracticeServer.buffHandler().getActiveBuff().getUpdate();
-            if((targetDropRate * buffAmount / 100) + targetDropRate > dropRate) {
+            if((dropRate - (dropRate * buffAmount) / 100) < targetDropRate) {
                 BuffHandler lootBuff = PracticeServer.buffHandler();
                 if(lootBuff.isActive()) lootBuff.updateImprovedDrops();
                 return true;
@@ -97,10 +91,13 @@ public class Mobdrops implements Listener {
     }
     public static void dropShowString(Player killer, ItemStack is, LivingEntity livingEntity) {
         String name = "";
-        if (livingEntity.hasMetadata("name")) {
+        if (livingEntity != null && livingEntity.hasMetadata("name")) {
             name = livingEntity.getMetadata("name").get(0).asString();
         }
         String message = ChatColor.RED + name +  ChatColor.YELLOW + " has dropped " + "@i@";
+        if(livingEntity == null) {
+            message = StringUtil.getCenteredMessage(ChatColor.RED + "                      ➤" + ChatColor.YELLOW + " You have received " + "@i@" + ChatColor.YELLOW + " from the World-Boss");
+        }
             String[] split = message.split("@i@");
             String after = "";
             String before = "";
@@ -141,32 +138,35 @@ public class Mobdrops implements Listener {
                 boolean dodrop = false;
                 boolean elite = false;
                 int randomEliteDrop = ThreadLocalRandom.current().nextInt(80);
-                int dropRate = random.nextInt(250);
+                int dropRate = ThreadLocalRandom.current().nextInt(100);
                 final int cratedrop = random.nextInt(50);
                 if (s.getEquipment().getItemInMainHand().getItemMeta().hasEnchants()) {
                     elite = true;
                 }
                 //TODO Loot Buff improvement
+                if(MobHandler.getTier(s) == 5) {
+                    WorldBossHandler.addKill();
+                }
                 switch (MobHandler.getTier(s)){
                     case 1:
                         dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                200, 10, 150, 150 );
+                                75, 10, 100, 150 );
                         break;
                     case 2:
                         dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                200, 7, 75, 100 );
+                                60, 7, 75, 100 );
                         break;
                     case 3:
                         dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                150, 7, 70, 75 );
+                                40, 7, 50, 75 );
                         break;
                     case 4:
                         dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                100, 3, 40, 50 );
+                                22, 3, 35, 50 );
                         break;
                     case 5:
                         dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                90, 1, 40, 30 );
+                                14, 1, 20, 30 );
                         if (Mobs.isGolemBoss(s) && dropRate < 50) {
                             dodrop = true;
                         }
@@ -193,20 +193,27 @@ public class Mobdrops implements Listener {
                 }
 
                 //Elite Random Drops
-                if(elite) {
-                    if(randomEliteDrop >= 10) {
+                if(elite && MobHandler.isCustomNamedElite(s)) {
+                    if(randomEliteDrop <= 20) {
                         ItemStack protScroll = ItemAPI.getScrollGenerator().next(MobHandler.getTier(s) - 1).clone();
                         DropPriority.DropItem(player, s, s.getLocation().add(0, 1, 0), protScroll);
-                    }else if(randomEliteDrop <= 70) {
-                        ItemStack gemPouch = GemPouches.gemPouch(MobHandler.getTier(s)).clone();
-                        DropPriority.DropItem(player, s, s.getLocation().add(0, 1, 0), gemPouch);
                     }
                 }
 
+                if(MobHandler.isWorldBoss(s)) {
+                    dodrop = true;
+                }
                 //Normal Mob Drops
                 if (dodrop) {
+                    if(MobHandler.isWorldBoss(s)) {
+                        WorldBossHandler.getActiveBoss().explodeDrops(s);
+                        return;
+                    }
                     if (!MobHandler.isCustomNamedElite(s) && elite) {
                         final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+                        if(s instanceof Skeleton) {
+                            if(s.hasMetadata("type") && s.getMetadata("type").get(0).asString().equals("witherskeleton")) drops.add(Drops.createDrop(Mobs.getMobTier(s), 5));
+                        }
                         ItemStack[] armorContents;
                         for (int length = (armorContents = s.getEquipment()
                                 .getArmorContents()).length, i = 0; i < length; ++i) {
@@ -240,6 +247,9 @@ public class Mobdrops implements Listener {
                     }else if (!MobHandler.isCustomNamedElite(s) && !elite) {
                             final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
                             ItemStack[] armorContents;
+                        if(s instanceof Skeleton) {
+                            if(s.hasMetadata("type") && s.getMetadata("type").get(0).asString().equals("witherskeleton")) drops.add(Drops.createDrop(Mobs.getMobTier(s), 5));
+                        }
                             for (int length = (armorContents = s.getEquipment()
                                     .getArmorContents()).length, i = 0; i < length; ++i) {
                                 final ItemStack is = armorContents[i];
@@ -291,7 +301,7 @@ public class Mobdrops implements Listener {
     private ItemStack getBookDrop(int tier) {
         int scrolltype;
         if (tier == 1) {
-            scrolltype = ThreadLocalRandom.current().nextInt(1);
+            scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
                 return TeleportBooks.deadpeaks_book(false);
             }
@@ -300,7 +310,7 @@ public class Mobdrops implements Listener {
             }
         }
         if (tier == 2) {
-            scrolltype = ThreadLocalRandom.current().nextInt(1);
+            scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
                 return TeleportBooks.deadpeaks_book(false);
             }
@@ -309,7 +319,7 @@ public class Mobdrops implements Listener {
             }
         }
         if (tier == 3) {
-            scrolltype = ThreadLocalRandom.current().nextInt(1);
+            scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
                 return TeleportBooks.deadpeaks_book(false);
             }
@@ -318,7 +328,7 @@ public class Mobdrops implements Listener {
             }
         }
         if (tier == 4) {
-            scrolltype = ThreadLocalRandom.current().nextInt(1);
+            scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
                 return TeleportBooks.deadpeaks_book(false);
             }
@@ -327,7 +337,7 @@ public class Mobdrops implements Listener {
             }
         }
         if (tier == 5) {
-            scrolltype = ThreadLocalRandom.current().nextInt(1);
+            scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
                 return TeleportBooks.avalonBook(false);
             }
@@ -337,8 +347,8 @@ public class Mobdrops implements Listener {
         }
         return TeleportBooks.deadpeaks_book(false);
     }
-    private GlowAPI.Color groupOf(ItemStack itemStack) {
-
+    public static GlowAPI.Color groupOf(ItemStack itemStack) {
+        if(itemStack.hasItemMeta() && itemStack.getItemMeta().getDisplayName().contains("Loot Crate")) return GlowAPI.Color.RED;
         for (String string : itemStack.getItemMeta().getLore()) {
             if (string.contains("Common")) {
                 return GlowAPI.Color.WHITE;

@@ -55,20 +55,16 @@ public class ModerationMechanics implements Listener {
         RankEnum rankEnum = getRank(player);
         switch (rankEnum) {
             case SUB:
-                return true;
             case SUB1:
-                return true;
             case SUB2:
-                return true;
             case SUB3:
-                return true;
             case SUPPORTER:
-                return true;
             case YOUTUBER:
-                return true;
             case QUALITY:
-                return true;
             case PMOD:
+            case GM:
+            case DEV:
+            case MANAGER:
                 return true;
             default:
                 return false;
@@ -95,7 +91,7 @@ public class ModerationMechanics implements Listener {
             permList.add("ultracosmetics.mounts.hypecart");
 
         }
-        if (rankEnum == RankEnum.SUB1 || rankEnum == RankEnum.SUB2 || rankEnum == RankEnum.BUILDER || rankEnum == RankEnum.PMOD){
+        if (rankEnum == RankEnum.SUB1 || rankEnum == RankEnum.SUB2 || rankEnum == RankEnum.BUILDER || rankEnum == RankEnum.PMOD) {
             permList.add("ultracosmetics.particleeffects.raincloud");
             permList.add("ultracosmetics.particleeffects.snowcloud");
             permList.add("ultracosmetics.particleeffects.frostlord");
@@ -106,7 +102,7 @@ public class ModerationMechanics implements Listener {
             permList.add("ultracosmetics.mounts.rudolph");
 
         }
-        if (rankEnum == RankEnum.SUB2 || rankEnum == RankEnum.BUILDER || rankEnum == RankEnum.PMOD){
+        if (rankEnum == RankEnum.SUB2 || rankEnum == RankEnum.BUILDER || rankEnum == RankEnum.PMOD) {
             permList.add("ultracosmetics.particleeffects.music");
             permList.add("ultracosmetics.particleeffects.enchanted");
             permList.add("ultracosmetics.particleeffects.crushedcandycane");
@@ -115,7 +111,7 @@ public class ModerationMechanics implements Listener {
             permList.add("ultracosmetics.mounts.slime");
 
         }
-        if(rankEnum == RankEnum.SUPPORTER){
+        if (rankEnum == RankEnum.SUPPORTER) {
             permList.add("ultracosmetics.mounts.*");
             permList.add("ultracosmetics.particleeffects.*");
         }
@@ -147,7 +143,7 @@ public class ModerationMechanics implements Listener {
     }
 
     private void loadModeration() {
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         for (String UUIDString : StaticConfig.get().getKeys(false)) {
             UUID playerUUID = UUID.fromString(UUIDString);
             /*RANKS*/
@@ -195,7 +191,7 @@ public class ModerationMechanics implements Listener {
     }
 
     private void saveModeration() {
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         for (UUID playerUUID : rankHashMap.keySet()) {
             String UUIDString = playerUUID.toString();
             /*Rank*/

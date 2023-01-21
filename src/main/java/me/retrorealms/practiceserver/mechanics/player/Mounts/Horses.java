@@ -1,6 +1,7 @@
 package me.retrorealms.practiceserver.mechanics.player.Mounts;
 
 import me.retrorealms.practiceserver.PracticeServer;
+import me.retrorealms.practiceserver.apis.tab.TabMenu;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
@@ -36,6 +37,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.mcsg.double0negative.tabapi.TabAPI;
 
 import java.sql.ResultSet;
 import java.util.*;
@@ -426,15 +428,17 @@ public class Horses
     public void onMountSummon(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         if (!(e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK || p.getInventory().getItemInMainHand() == null || Horses.getMountTier(p.getInventory().getItemInMainHand()) <= 0 || p.getVehicle() != null || mounting.containsKey(p.getName()) || Duels.duelers.containsKey(p))) {
-            int mountTime;
+            int mountTime = 6;
+            if(TabMenu.getAlignment(p).toLowerCase().contains("chaotic")) mountTime = 8;
             if (Alignments.isSafeZone(p.getLocation())) {
-                mountTime = 1;
+                mountingloc.put(p.getName(), p.getLocation());
+                horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
+                Horses.horse(p, Horses.getMountTier(p.getInventory().getItemInMainHand()));
             } else {
-                mountTime = 6;
+                mounting.put(p.getName(), mountTime);
+                mountingloc.put(p.getName(), p.getLocation());
+                horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
             }
-            mounting.put(p.getName(), mountTime);
-            mountingloc.put(p.getName(), p.getLocation());
-            horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
         }
     }
 

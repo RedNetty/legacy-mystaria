@@ -46,6 +46,7 @@ import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.guilds.GuildMechanics;
 import me.retrorealms.practiceserver.mechanics.party.Parties;
 import me.retrorealms.practiceserver.mechanics.player.Energy;
+import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.player.Toggles;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.utils.BoundingBox;
@@ -177,8 +178,13 @@ public class Staffs implements Listener {
                                 continue;
                             }
                         }
+                        if(le instanceof Horse && le.getPassenger() != null) {
+                            le.damage(1);
+                            le.remove();
+                        }
+                        if(!shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) continue;
 
-                        if (shooter instanceof Player) {
+                        if (shooter instanceof Player && shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) {
                             staff.put((Player) shooter, ((Player) shooter).getInventory().getItemInMainHand());
                             le.damage(1, shooter);
                             staff.remove((Player) shooter);
@@ -194,7 +200,7 @@ public class Staffs implements Listener {
                 Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
                 Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
             }
-        }.runTaskTimer(PracticeServer.plugin, 0L, 0L);
+        }.runTaskTimer(PracticeServer.plugin, 0L, 1L);
     }
 
     public enum StaffType {

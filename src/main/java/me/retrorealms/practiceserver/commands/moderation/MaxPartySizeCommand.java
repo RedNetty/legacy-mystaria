@@ -15,7 +15,7 @@ public class MaxPartySizeCommand implements CommandExecutor {
             return false;
         }
         try {
-            Parties.maxSize = Integer.parseInt(args[0]);
+            Parties.maxSize = (Integer.parseInt(args[0]));
             sender.sendMessage(ChatColor.GREEN + "Max party size has been set to " + args[0]);
         } catch (NumberFormatException e) {
             sender.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "Usage: /maxpartysize <number>");

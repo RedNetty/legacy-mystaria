@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class PartyCommand implements CommandExecutor {
 
@@ -27,7 +28,7 @@ public class PartyCommand implements CommandExecutor {
                 for (final String s : args) {
                     msg = String.valueOf(msg) + s + " ";
                 }
-                final ArrayList<Player> mem = Parties.parties.get(Parties.getParty(p));
+                final List<Player> mem = Parties.getEntirePartyOf(p);
                 for (final Player pl : mem) {
                     pl.sendMessage(String.valueOf(ChatColor.LIGHT_PURPLE.toString()) + "<" + ChatColor.BOLD + "P" + ChatColor.LIGHT_PURPLE + ">" + " " + p.getDisplayName() + ": " + ChatColor.GRAY + msg);
                 }

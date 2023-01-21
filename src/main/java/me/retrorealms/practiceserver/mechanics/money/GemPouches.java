@@ -1,6 +1,6 @@
 /*
  * Decompiled with CFR 0_118.
- * 
+ *
  * Could not load the following classes:
  *  org.bukkit.Bukkit
  *  org.bukkit.ChatColor
@@ -39,6 +39,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -61,28 +62,23 @@ public class GemPouches
         String name = "";
         String lore = "";
         if (tier == 1) {
-            name =  ChatColor.WHITE + "Small Gem Pouch" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A small linen pouch that holds " +  ChatColor.BOLD + "100g";
-        }
-        else if (tier == 2) {
-            name =  ChatColor.GREEN + "Medium Gem Sack" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A medium wool sack that holds " +  ChatColor.BOLD + "150g";
-        }
-        else if (tier == 3) {
-            name =  ChatColor.AQUA + "Large Gem Satchel" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A large leather satchel that holds " +  ChatColor.BOLD + "200g";
-        }
-        else if (tier == 4) {
-            name =  ChatColor.LIGHT_PURPLE + "Gigantic Gem Container" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A giant container that holds " +  ChatColor.BOLD + "300g";
-        }
-        else if (tier == 5) {
-            name =  ChatColor.YELLOW + "Legendary Gem Container" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A giant container that holds " +  ChatColor.BOLD + "500g";
-        }
-        else if (tier == 6) {
-            name =  ChatColor.RED + "Insane Gem Container" +  ChatColor.GREEN +  ChatColor.BOLD + " 0g";
-            lore =  ChatColor.GRAY + "A giant container that holds " +  ChatColor.BOLD + "100000g";
+            name = ChatColor.WHITE + "Small Gem Pouch" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A small linen pouch that holds " + ChatColor.BOLD + "100g";
+        } else if (tier == 2) {
+            name = ChatColor.GREEN + "Medium Gem Sack" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A medium wool sack that holds " + ChatColor.BOLD + "150g";
+        } else if (tier == 3) {
+            name = ChatColor.AQUA + "Large Gem Satchel" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A large leather satchel that holds " + ChatColor.BOLD + "200g";
+        } else if (tier == 4) {
+            name = ChatColor.LIGHT_PURPLE + "Gigantic Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "300g";
+        } else if (tier == 5) {
+            name = ChatColor.YELLOW + "Legendary Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "500g";
+        } else if (tier == 6) {
+            name = ChatColor.RED + "Insane Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
+            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "100000g";
         }
         ItemStack is = new ItemStack(Material.INK_SACK);
         ItemMeta im = is.getItemMeta();
@@ -177,6 +173,13 @@ public class GemPouches
         if (e.isCancelled()) {
             return;
         }
+        if(e.getItem().getItemStack().hasItemMeta()) {
+            ItemMeta meta = e.getItem().getItemStack().getItemMeta();
+            for (ItemFlag itemFlag : ItemFlag.values()) {
+                meta.addItemFlags(itemFlag);
+                e.getItem().getItemStack().setItemMeta(meta);
+            }
+        }
         if (e.getItem().getItemStack().getType() != Material.EMERALD) {
             return;
         }
@@ -226,6 +229,7 @@ public class GemPouches
             ++n2;
         }
     }
+
     //yeah this is absolute garbage but w/e it works
     public static void onItemPickup(Player p, ItemStack itemStack) {
         int add = itemStack.getAmount();
@@ -264,23 +268,23 @@ public class GemPouches
             }
             ++n2;
         }
-        if(add > 0){
+        if (add > 0) {
             itemStack.setAmount(add);
             Mining.addToInv(p, itemStack);
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
             p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD.toString() + "                    +" + ChatColor.GREEN.toString() + add + ChatColor.GREEN + ChatColor.BOLD + "G");
         }
         /**
- if(amount != 0){
-        ItemMeta gm = gem.getItemMeta();
-                gm.setDisplayName(ChatColor.WHITE + "Gem");
-                gm.setLore(Arrays.asList(ChatColor.GRAY + "The currency of Andalucia"));
-                gem.setItemMeta(gm);
-                p.getInventory().addItem(gem);
-                amount -= gemAmount;
-            }
+         if(amount != 0){
+         ItemMeta gm = gem.getItemMeta();
+         gm.setDisplayName(ChatColor.WHITE + "Gem");
+         gm.setLore(Arrays.asList(ChatColor.GRAY + "The currency of Andalucia"));
+         gem.setItemMeta(gm);
+         p.getInventory().addItem(gem);
+         amount -= gemAmount;
+         }
 
-        }*/
+         }*/
     }
 //    ItemStack itemStack = e.getItem().getItemStack();
 //        if (itemStack.getType() == Material.EMERALD) {

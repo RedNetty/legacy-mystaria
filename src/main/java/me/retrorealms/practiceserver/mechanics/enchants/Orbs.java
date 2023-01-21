@@ -2,14 +2,14 @@ package me.retrorealms.practiceserver.mechanics.enchants;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
+import me.retrorealms.practiceserver.apis.itemapi.NBTAccessor;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
+import me.retrorealms.practiceserver.mechanics.donations.StatTrak.WepTrak;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.item.Items;
-import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import me.retrorealms.practiceserver.utils.Particles;
-import me.retrorealms.practiceserver.mechanics.donations.StatTrak.WepTrak;
 import org.bukkit.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
@@ -44,7 +44,7 @@ public class Orbs implements Listener {
         if (is.getType().name().contains("GOLD_")) {
             return 5;
         }
-        if (is.getType().name().contains("DIAMOND_") || is.getType().name().contains("LEATHER_")){
+        if (is.getType().name().contains("DIAMOND_") || is.getType().name().contains("LEATHER_")) {
             return 6;
         }
         return 0;
@@ -80,6 +80,7 @@ public class Orbs implements Listener {
 
     public static ItemStack randomizeStats(final ItemStack is) {
         String name = "";
+        String oldName = is.getItemMeta().getDisplayName();
         ArrayList<String> rare = new ArrayList<>();
         int tier = getItemTier(is);
         final int item = getItemType(is);
@@ -101,27 +102,26 @@ public class Orbs implements Listener {
         final int dex = random.nextInt(3) + 1;
         final int thorns = random.nextInt(3) + 1;
 
-        int dodgeamt = 0, blockamt = 0, vitamt = 0, 
-                vsMonstersAmt = 0, vsPlayersAmt = 0, stramt = 0, intamt = 0, dexamt = 0, 
-                elemamt = 0, pureamt = 0, lifeamt = 0, critamt = 0, thornsamt = 0, accamt = 0;
-        
-        
+        int dodgeamt = 0, blockamt = 0, vitamt = 0, vsMonstersAmt = 0, vsPlayersAmt = 0, stramt = 0, intamt = 0, dexamt = 0, elemamt = 0, pureamt = 0, lifeamt = 0, critamt = 0, thornsamt = 0, accamt = 0;
+
+
         int extra = ItemAPI.isProtected(is) ? 2 : 0;
 
-        if(WepTrak.isStatTrak(is)){
-            for(int i = oldlore.size() - 7 - extra; i < oldlore.size(); i++){
+
+        if (WepTrak.isStatTrak(is)) {
+            for (int i = oldlore.size() - 7 - extra; i < oldlore.size(); i++) {
                 String line = oldlore.get(i);
                 if (line.contains("Normal Orbs Used: ")) {
                     int current = Integer.parseInt(line.split(": " + ChatColor.AQUA)[1]);
-                    rare.add(ChatColor.GOLD + "Normal Orbs Used: " + ChatColor.AQUA + Integer.toString(current+1));
+                    rare.add(ChatColor.GOLD + "Normal Orbs Used: " + ChatColor.AQUA + (current + 1));
                 } else {
                     rare.add(oldlore.get(i));
                 }
 
             }
-        }else{
-            for(int i = oldlore.size() - 1 - extra; i < oldlore.size(); i++) {
-                if(oldlore.get(i).contains(ChatColor.GRAY.toString()) && !oldlore.get(i).toLowerCase().contains("common") && !oldlore.get(i).toLowerCase().contains("untradeable")){
+        } else {
+            for (int i = oldlore.size() - 1 - extra; i < oldlore.size(); i++) {
+                if (oldlore.get(i).contains(ChatColor.GRAY.toString()) && !oldlore.get(i).toLowerCase().contains("common") && !oldlore.get(i).toLowerCase().contains("untradeable")) {
                     i--;
                 }
                 rare.add(oldlore.get(i));
@@ -420,7 +420,7 @@ public class Orbs implements Listener {
                 name = "Frozen Platemail Boots";
                 is.setType(Material.LEATHER_BOOTS);
             }
-            if(item > 3) Items.setItemBlueLeather(is);
+            if (item > 3) Items.setItemBlueLeather(is);
         }
         if (item == 0 || item == 1 || item == 2 || item == 3) {
             lore.add(oldlore.get(0));
@@ -432,10 +432,10 @@ public class Orbs implements Listener {
                 lore.add(ChatColor.RED + "ACCURACY: " + accamt + "%");
                 name = "Accurate " + name;
             }
-            if(vsMonsters == 1) {
+            if (vsMonsters == 1) {
                 lore.add(ChatColor.RED + "VS MONSTERS: " + vsMonstersAmt + "%");
             }
-            if(vsPlayers == 1) {
+            if (vsPlayers == 1) {
                 lore.add(ChatColor.RED + "VS PLAYERS: " + vsPlayersAmt + "%");
             }
             if (life == 1) {
@@ -448,15 +448,15 @@ public class Orbs implements Listener {
             }
             if (elem == 3) {
                 lore.add(ChatColor.RED + "ICE DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Ice";
+                name = name + " of Ice";
             }
             if (elem == 2) {
                 lore.add(ChatColor.RED + "POISON DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Poison";
+                name = name + " of Poison";
             }
             if (elem == 1) {
                 lore.add(ChatColor.RED + "FIRE DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Fire";
+                name = name + " of Fire";
             }
         }
         if (item == 4 || item == 5 || item == 6 || item == 7) {
@@ -488,9 +488,21 @@ public class Orbs implements Listener {
                 lore.add(ChatColor.RED + "BLOCK: " + blockamt + "%");
             }
             if (oldlore.get(2).contains("ENERGY REGEN:")) {
-                name = String.valueOf(name) + " of Fortitude";
+                name = name + " of Fortitude";
             }
         }
+        int plus = Enchants.getPlus(is);
+        NBTAccessor nbt = new NBTAccessor(is).check();
+        if (oldName != null && nbt.getInteger("namedElite") == 1) {
+            name = oldName;
+            for (String line : oldlore) {
+                if (line.startsWith(ChatColor.GRAY.toString())) {
+                    lore.add(line);
+                }
+            }
+        }
+
+
         lore.addAll(rare);
         if (tier == 1) {
             name = ChatColor.WHITE + name;
@@ -510,17 +522,33 @@ public class Orbs implements Listener {
         if (tier == 6) {
             name = ChatColor.BLUE + name;
         }
-        if (Enchants.getPlus(is) > 0) {
+
+        if (ChatColor.stripColor(name).contains("[+")) {
+            name = name.replace("[+" + plus + "]", "[+" + plus + "]");
+        } else if (!ChatColor.stripColor(name).contains("[+") && plus >= 1) {
             name = ChatColor.RED + "[+" + Enchants.getPlus(is) + "] " + name;
         }
         final ItemMeta im = is.getItemMeta();
+        im.setDisplayName(name);
         im.setLore(lore);
         is.setItemMeta(im);
         return is;
     }
+
+    public static boolean hasLoreLine(ItemStack stack) {
+        final List<String> oldlore = stack.getItemMeta().getLore();
+        for (String line : oldlore) {
+            if (line.contains(ChatColor.GRAY.toString()) && line.contains(ChatColor.ITALIC.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static ItemStack randomizeLegendaryStats(final ItemStack is, Player p) {
         String name = "";
-        ArrayList<String> rare = new ArrayList<>();
+        String oldName = is.getItemMeta().getDisplayName();
+        List<String> rare = new ArrayList<>();
         int tier = getItemTier(is);
         final int item = getItemType(is);
         final List<String> oldlore = is.getItemMeta().getLore();
@@ -569,30 +597,36 @@ public class Orbs implements Listener {
         int thornsamt2 = 0;
         int accamt2 = 0;
         int extra = 0;
-        if(ItemAPI.isProtected(is)){
+        if (ItemAPI.isProtected(is)) {
             extra = 2;
         }
-        if(WepTrak.isStatTrak(is)){
-            for(int i = oldlore.size()-7-extra; i < oldlore.size(); i++){
+        if (hasLoreLine(is)) {
+            extra = 1;
+        }
+
+        if (WepTrak.isStatTrak(is)) {
+            for (int i = oldlore.size() - 7 - extra; i < oldlore.size(); i++) {
                 String line = oldlore.get(i);
-                if (line.contains("Legendary Orbs Used: ")) {
+                if (line.contains("Normal Orbs Used: ")) {
                     int current = Integer.parseInt(line.split(": " + ChatColor.AQUA)[1]);
-                    rare.add(ChatColor.GOLD + "Legendary Orbs Used: " + ChatColor.AQUA + Integer.toString(current+1));
+                    rare.add(ChatColor.GOLD + "Normal Orbs Used: " + ChatColor.AQUA + (current + 1));
                 } else {
                     rare.add(oldlore.get(i));
                 }
 
             }
-        }else{
-            for(int i = oldlore.size() - 1 - extra; i < oldlore.size(); i++) {
-                if(oldlore.get(i).contains(ChatColor.GRAY.toString()) && !oldlore.get(i).toLowerCase().contains("common") && !oldlore.get(i).toLowerCase().contains("untradeable")){
-                    i--;
+        } else {
+            for (int i = oldlore.size() - 1 - extra; i < oldlore.size(); i++) {
+                try {
+                    if (oldlore.get(i).contains(ChatColor.GRAY.toString()) && !oldlore.get(i).toLowerCase().contains("common") && !oldlore.get(i).toLowerCase().contains("untradeable")) {
+                        i--;
+                    }
+                } catch (Exception e) {
                 }
                 rare.add(oldlore.get(i));
             }
         }
         if (tier == 1) {
-            tier = 1;
             dodgeamt = random.nextInt(5) + 1;
             blockamt = random.nextInt(5) + 1;
             vsMonstersAmt = random.nextInt(4) + 1;
@@ -657,7 +691,7 @@ public class Orbs implements Listener {
             accamt = random.nextInt(12) + 1;
             thornsamt = random.nextInt(3) + 1;
             PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-            for(int i = 0; i< pp.orbrolls; i++){
+            for (int i = 0; i < pp.orbrolls; i++) {
                 dodgeamt2 = random.nextInt(8) + 1;
                 blockamt2 = random.nextInt(8) + 1;
                 vitamt2 = random.nextInt(35) + 1;
@@ -672,20 +706,20 @@ public class Orbs implements Listener {
                 critamt2 = random.nextInt(6) + 1;
                 accamt2 = random.nextInt(12) + 1;
                 thornsamt2 = random.nextInt(3) + 1;
-                if(dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
-                if(blockamt2 > blockamt) blockamt = blockamt2;
-                if(vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
-                if(vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
-                if(vitamt2 > vitamt) vitamt = vitamt2;
-                if(dexamt2 > dexamt) dexamt = dexamt2;
-                if(stramt2 > stramt) stramt = stramt2;
-                if(intamt2 > intamt) intamt = intamt2;
-                if(elemamt2 > elemamt) elemamt = elemamt2;
-                if(pureamt2 > pureamt) pureamt = pureamt2;
-                if(lifeamt2 > lifeamt) lifeamt = lifeamt2;
-                if(critamt2 > critamt) critamt = critamt2;
-                if(accamt2 > accamt) accamt = accamt2;
-                if(thornsamt2 > thornsamt) thornsamt = thornsamt2;
+                if (dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
+                if (blockamt2 > blockamt) blockamt = blockamt2;
+                if (vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
+                if (vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
+                if (vitamt2 > vitamt) vitamt = vitamt2;
+                if (dexamt2 > dexamt) dexamt = dexamt2;
+                if (stramt2 > stramt) stramt = stramt2;
+                if (intamt2 > intamt) intamt = intamt2;
+                if (elemamt2 > elemamt) elemamt = elemamt2;
+                if (pureamt2 > pureamt) pureamt = pureamt2;
+                if (lifeamt2 > lifeamt) lifeamt = lifeamt2;
+                if (critamt2 > critamt) critamt = critamt2;
+                if (accamt2 > accamt) accamt = accamt2;
+                if (thornsamt2 > thornsamt) thornsamt = thornsamt2;
             }
             if (item == 0) {
                 name = "Battletaff";
@@ -737,7 +771,7 @@ public class Orbs implements Listener {
             accamt = random.nextInt(25) + 1;
             thornsamt = random.nextInt(4) + 1;
             PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-            for(int i = 0; i< pp.orbrolls; i++){
+            for (int i = 0; i < pp.orbrolls; i++) {
                 dodgeamt2 = random.nextInt(10) + 1;
                 blockamt2 = random.nextInt(10) + 1;
                 vitamt2 = random.nextInt(75) + 1;
@@ -752,20 +786,20 @@ public class Orbs implements Listener {
                 critamt2 = random.nextInt(8) + 1;
                 accamt2 = random.nextInt(25) + 1;
                 thornsamt2 = random.nextInt(4) + 1;
-                if(dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
-                if(blockamt2 > blockamt) blockamt = blockamt2;
-                if(vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
-                if(vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
-                if(vitamt2 > vitamt) vitamt = vitamt2;
-                if(dexamt2 > dexamt) dexamt = dexamt2;
-                if(stramt2 > stramt) stramt = stramt2;
-                if(intamt2 > intamt) intamt = intamt2;
-                if(elemamt2 > elemamt) elemamt = elemamt2;
-                if(pureamt2 > pureamt) pureamt = pureamt2;
-                if(lifeamt2 > lifeamt) lifeamt = lifeamt2;
-                if(critamt2 > critamt) critamt = critamt2;
-                if(accamt2 > accamt) accamt = accamt2;
-                if(thornsamt2 > thornsamt) thornsamt = thornsamt2;
+                if (dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
+                if (blockamt2 > blockamt) blockamt = blockamt2;
+                if (vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
+                if (vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
+                if (vitamt2 > vitamt) vitamt = vitamt2;
+                if (dexamt2 > dexamt) dexamt = dexamt2;
+                if (stramt2 > stramt) stramt = stramt2;
+                if (intamt2 > intamt) intamt = intamt2;
+                if (elemamt2 > elemamt) elemamt = elemamt2;
+                if (pureamt2 > pureamt) pureamt = pureamt2;
+                if (lifeamt2 > lifeamt) lifeamt = lifeamt2;
+                if (critamt2 > critamt) critamt = critamt2;
+                if (accamt2 > accamt) accamt = accamt2;
+                if (thornsamt2 > thornsamt) thornsamt = thornsamt2;
             }
             if (item == 0) {
                 name = "Wizard Staff";
@@ -817,7 +851,7 @@ public class Orbs implements Listener {
             accamt = random.nextInt(28) + 1;
             thornsamt = random.nextInt(5) + 1;
             PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-            for(int i = 0; i< pp.orbrolls; i++){
+            for (int i = 0; i < pp.orbrolls; i++) {
                 dodgeamt2 = random.nextInt(12) + 1;
                 blockamt2 = random.nextInt(12) + 1;
                 vsMonstersAmt2 = random.nextInt(10) + 1;
@@ -832,20 +866,20 @@ public class Orbs implements Listener {
                 critamt2 = random.nextInt(10) + 1;
                 accamt2 = random.nextInt(28) + 1;
                 thornsamt2 = random.nextInt(5) + 1;
-                if(dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
-                if(blockamt2 > blockamt) blockamt = blockamt2;
-                if(vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
-                if(vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
-                if(vitamt2 > vitamt) vitamt = vitamt2;
-                if(dexamt2 > dexamt) dexamt = dexamt2;
-                if(stramt2 > stramt) stramt = stramt2;
-                if(intamt2 > intamt) intamt = intamt2;
-                if(elemamt2 > elemamt) elemamt = elemamt2;
-                if(pureamt2 > pureamt) pureamt = pureamt2;
-                if(lifeamt2 > lifeamt) lifeamt = lifeamt2;
-                if(critamt2 > critamt) critamt = critamt2;
-                if(accamt2 > accamt) accamt = accamt2;
-                if(thornsamt2 > thornsamt) thornsamt = thornsamt2;
+                if (dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
+                if (blockamt2 > blockamt) blockamt = blockamt2;
+                if (vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
+                if (vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
+                if (vitamt2 > vitamt) vitamt = vitamt2;
+                if (dexamt2 > dexamt) dexamt = dexamt2;
+                if (stramt2 > stramt) stramt = stramt2;
+                if (intamt2 > intamt) intamt = intamt2;
+                if (elemamt2 > elemamt) elemamt = elemamt2;
+                if (pureamt2 > pureamt) pureamt = pureamt2;
+                if (lifeamt2 > lifeamt) lifeamt = lifeamt2;
+                if (critamt2 > critamt) critamt = critamt2;
+                if (accamt2 > accamt) accamt = accamt2;
+                if (thornsamt2 > thornsamt) thornsamt = thornsamt2;
             }
             if (item == 0) {
                 name = "Ancient Staff";
@@ -897,7 +931,7 @@ public class Orbs implements Listener {
             accamt = random.nextInt(20) + 15;
             thornsamt = random.nextInt(5) + 1;
             PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-            for(int i = 0; i< pp.orbrolls; i++){
+            for (int i = 0; i < pp.orbrolls; i++) {
                 dodgeamt2 = random.nextInt(12) + 1;
                 blockamt2 = random.nextInt(12) + 1;
                 vitamt2 = random.nextInt(250) + 1;
@@ -912,20 +946,20 @@ public class Orbs implements Listener {
                 critamt2 = random.nextInt(11) + 1;
                 accamt2 = random.nextInt(35) + 1;
                 thornsamt2 = random.nextInt(5) + 1;
-                if(dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
-                if(blockamt2 > blockamt) blockamt = blockamt2;
-                if(vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
-                if(vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
-                if(vitamt2 > vitamt) vitamt = vitamt2;
-                if(dexamt2 > dexamt) dexamt = dexamt2;
-                if(stramt2 > stramt) stramt = stramt2;
-                if(intamt2 > intamt) intamt = intamt2;
-                if(elemamt2 > elemamt) elemamt = elemamt2;
-                if(pureamt2 > pureamt) pureamt = pureamt2;
-                if(lifeamt2 > lifeamt) lifeamt = lifeamt2;
-                if(critamt2 > critamt) critamt = critamt2;
-                if(accamt2 > accamt) accamt = accamt2;
-                if(thornsamt2 > thornsamt) thornsamt = thornsamt2;
+                if (dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
+                if (blockamt2 > blockamt) blockamt = blockamt2;
+                if (vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
+                if (vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
+                if (vitamt2 > vitamt) vitamt = vitamt2;
+                if (dexamt2 > dexamt) dexamt = dexamt2;
+                if (stramt2 > stramt) stramt = stramt2;
+                if (intamt2 > intamt) intamt = intamt2;
+                if (elemamt2 > elemamt) elemamt = elemamt2;
+                if (pureamt2 > pureamt) pureamt = pureamt2;
+                if (lifeamt2 > lifeamt) lifeamt = lifeamt2;
+                if (critamt2 > critamt) critamt = critamt2;
+                if (accamt2 > accamt) accamt = accamt2;
+                if (thornsamt2 > thornsamt) thornsamt = thornsamt2;
             }
             if (item == 0) {
                 name = "Legendary Staff";
@@ -977,7 +1011,7 @@ public class Orbs implements Listener {
             accamt = random.nextInt(20) + 20;
             thornsamt = random.nextInt(5) + 1;
             PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-            for(int i = 0; i< pp.orbrolls; i++){
+            for (int i = 0; i < pp.orbrolls; i++) {
                 dodgeamt2 = random.nextInt(13) + 1;
                 blockamt2 = random.nextInt(13) + 1;
                 vitamt2 = random.nextInt(150) + 200;
@@ -992,20 +1026,20 @@ public class Orbs implements Listener {
                 critamt2 = random.nextInt(11) + 1;
                 accamt2 = random.nextInt(40) + 1;
                 thornsamt2 = random.nextInt(5) + 1;
-                if(dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
-                if(blockamt2 > blockamt) blockamt = blockamt2;
-                if(vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
-                if(vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
-                if(vitamt2 > vitamt) vitamt = vitamt2;
-                if(dexamt2 > dexamt) dexamt = dexamt2;
-                if(stramt2 > stramt) stramt = stramt2;
-                if(intamt2 > intamt) intamt = intamt2;
-                if(elemamt2 > elemamt) elemamt = elemamt2;
-                if(pureamt2 > pureamt) pureamt = pureamt2;
-                if(lifeamt2 > lifeamt) lifeamt = lifeamt2;
-                if(critamt2 > critamt) critamt = critamt2;
-                if(accamt2 > accamt) accamt = accamt2;
-                if(thornsamt2 > thornsamt) thornsamt = thornsamt2;
+                if (dodgeamt2 > dodgeamt) dodgeamt = dodgeamt2;
+                if (blockamt2 > blockamt) blockamt = blockamt2;
+                if (vsMonstersAmt2 > vsMonstersAmt) vsMonstersAmt = vsMonstersAmt2;
+                if (vsPlayersAmt2 > vsPlayersAmt) vsPlayersAmt = vsPlayersAmt2;
+                if (vitamt2 > vitamt) vitamt = vitamt2;
+                if (dexamt2 > dexamt) dexamt = dexamt2;
+                if (stramt2 > stramt) stramt = stramt2;
+                if (intamt2 > intamt) intamt = intamt2;
+                if (elemamt2 > elemamt) elemamt = elemamt2;
+                if (pureamt2 > pureamt) pureamt = pureamt2;
+                if (lifeamt2 > lifeamt) lifeamt = lifeamt2;
+                if (critamt2 > critamt) critamt = critamt2;
+                if (accamt2 > accamt) accamt = accamt2;
+                if (thornsamt2 > thornsamt) thornsamt = thornsamt2;
             }
             if (item == 0) {
                 name = "Frozen Staff";
@@ -1039,9 +1073,9 @@ public class Orbs implements Listener {
                 name = "Frozen Platemail Boots";
                 is.setType(Material.LEATHER_BOOTS);
             }
-            if(item > 3) Items.setItemBlueLeather(is);
+            if (item > 3) Items.setItemBlueLeather(is);
         }
-        if(Enchants.getPlus(is) < 4) {
+        if (Enchants.getPlus(is) < 4) {
             final double beforehp = Damage.getHp(is);
             final double beforehpgen = Damage.getHps(is);
             final int beforenrg = Damage.getEnergy(is);
@@ -1054,7 +1088,7 @@ public class Orbs implements Listener {
                 case 3:
                     double addedmin2 = 0;
                     double addedmax2 = 0;
-                    switch(Enchants.getPlus(is)) {
+                    switch (Enchants.getPlus(is)) {
                         case 0:
                             addedmin2 = beforemin * 20 / 100;
                             addedmax2 = beforemax * 20 / 100;
@@ -1090,7 +1124,7 @@ public class Orbs implements Listener {
                     double added2 = 0;
                     int addedEnergy = beforenrg;
                     double addedhps2 = 0;
-                    switch(Enchants.getPlus(is)) {
+                    switch (Enchants.getPlus(is)) {
                         case 0:
                             added2 = beforehp * 20 / 100;
                             addedEnergy += 4;
@@ -1144,10 +1178,10 @@ public class Orbs implements Listener {
                 lore.add(ChatColor.RED + "LIFE STEAL: " + lifeamt + "%");
                 name = "Vampyric " + name;
             }
-            if(vsMonsters == 1) {
+            if (vsMonsters == 1) {
                 lore.add(ChatColor.RED + "VS MONSTERS: " + vsMonstersAmt + "%");
             }
-            if(vsPlayers == 1) {
+            if (vsPlayers == 1) {
                 lore.add(ChatColor.RED + "VS PLAYERS: " + vsPlayersAmt + "%");
             }
             if (crit == 1) {
@@ -1156,15 +1190,15 @@ public class Orbs implements Listener {
             }
             if (elem == 3) {
                 lore.add(ChatColor.RED + "ICE DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Ice";
+                name = name + " of Ice";
             }
             if (elem == 2) {
                 lore.add(ChatColor.RED + "POISON DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Poison";
+                name = name + " of Poison";
             }
             if (elem == 1) {
                 lore.add(ChatColor.RED + "FIRE DMG: +" + elemamt);
-                name = String.valueOf(name) + " of Fire";
+                name = name + " of Fire";
             }
         }
         if (item == 4 || item == 5 || item == 6 || item == 7) {
@@ -1199,9 +1233,21 @@ public class Orbs implements Listener {
                 name = "Protective " + name;
             }
             if (oldlore.get(2).contains("ENERGY REGEN:")) {
-                name = String.valueOf(name) + " of Fortitude";
+                name = name + " of Fortitude";
             }
         }
+        int plus = Enchants.getPlus(is);
+        NBTAccessor nbt = new NBTAccessor(is).check();
+        if (oldName != null && nbt.getInteger("namedElite") == 1) {
+            name = oldName;
+            for (String line : oldlore) {
+                if (line.startsWith(ChatColor.GRAY.toString())) {
+                    lore.add(line);
+                }
+            }
+        }
+
+
         lore.addAll(rare);
         if (tier == 1) {
             name = ChatColor.WHITE + name;
@@ -1221,19 +1267,19 @@ public class Orbs implements Listener {
         if (tier == 6) {
             name = ChatColor.BLUE + name;
         }
-        if (Enchants.getPlus(is) > 4) {
-            name = ChatColor.RED + "[+" + Enchants.getPlus(is) + "] " + name;
-        }
-        if(Enchants.getPlus(is) < 5) {
+        int newPlus = 0;
+        if (plus <= 4) newPlus = 4;
+        if (plus > 4) newPlus = plus;
+        if (ChatColor.stripColor(name).contains("[+")) {
+            name = name.replace("[+" + plus + "]", "[+" + newPlus + "]");
+        } else if (!ChatColor.stripColor(name).contains("[+") && newPlus >= 4) {
+            name = ChatColor.RED + "[+" + newPlus + "] " + name;
+        } else {
             name = ChatColor.RED + "[+4] " + name;
         }
+
         final ItemMeta im = is.getItemMeta();
-        if (!im.getDisplayName().contains("EC")) {
-            im.setDisplayName(name);
-        }else if(Enchants.getPlus(is) < 4) {
-            name = ChatColor.RED + "[+4] " + (Enchants.getPlus(is) == 0 ? is.getItemMeta().getDisplayName() : is.getItemMeta().getDisplayName().split("]")[1]);
-            im.setDisplayName(name);
-        }
+        im.setDisplayName(name);
         im.setLore(lore);
         is.setItemMeta(im);
         return is;

@@ -9,10 +9,16 @@
  */
 package me.retrorealms.practiceserver.mechanics.item;
 
+import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
+import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
+import me.retrorealms.practiceserver.mechanics.money.Banks;
+import me.retrorealms.practiceserver.mechanics.money.Money;
+import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -67,6 +73,54 @@ public class Items {
         return color;
     }
 
+    public static void giveDonorItems(Player player) {
+        if(ModerationMechanics.isDonator(player)) {
+
+            RankEnum rank = ModerationMechanics.getRank(player);
+            ItemStack orbItem = orb(false).clone();
+            ItemStack legOrbItem = legendaryOrb(false).clone();
+            ItemStack bankNote = Money.createBankNote(40000).clone();
+            ItemStack armEnchant = enchant(5, 1, false).clone();
+            ItemStack wepEnchant = enchant(5, 0, false).clone();
+
+            ProfessionMechanics.getDonorPicked(player);
+
+            switch (rank) {
+                case SUB:
+                    orbItem.setAmount(32);
+                    legOrbItem.setAmount(6);
+                    armEnchant.setAmount(12);
+                    wepEnchant.setAmount(12);
+                    break;
+                case SUB1:
+                    orbItem.setAmount(45);
+                    legOrbItem.setAmount(15);
+                    armEnchant.setAmount(16);
+                    wepEnchant.setAmount(16);
+                    bankNote = Money.createBankNote(65000).clone();
+                    break;
+                case SUB2:
+                    orbItem.setAmount(64);
+                    legOrbItem.setAmount(25);
+                    armEnchant.setAmount(26);
+                    wepEnchant.setAmount(26);
+                    bankNote = Money.createBankNote(100000).clone();
+                    break;
+                case SUPPORTER:
+                    orbItem.setAmount(64);
+                    legOrbItem.setAmount(32);
+                    armEnchant.setAmount(32);
+                    wepEnchant.setAmount(32);
+                    bankNote = Money.createBankNote(140000).clone();
+                    break;
+            }
+            player.getInventory().addItem(orbItem);
+            player.getInventory().addItem(legOrbItem);
+            player.getInventory().addItem(armEnchant);
+            player.getInventory().addItem(wepEnchant);
+            player.getInventory().addItem(bankNote);
+        }
+    }
     public static ItemStack setItemBlueLeather(ItemStack itemStack) {
         LeatherArmorMeta leather = (LeatherArmorMeta) itemStack.getItemMeta();
         leather.setColor(Color.fromRGB(40, 40, 240));

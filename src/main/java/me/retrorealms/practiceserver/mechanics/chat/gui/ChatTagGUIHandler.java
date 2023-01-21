@@ -59,7 +59,7 @@ public class ChatTagGUIHandler implements Listener {
                     player.closeInventory();
 
                     StringUtil.sendCenteredMessage(player, ChatColor.translateAlternateColorCodes('&', "&dYou do &l&nNOT&d own this chat-tag!"));
-                    StringUtil.sendCenteredMessage(player, ChatColor.translateAlternateColorCodes('&', "&aPurchase it at store.autismrealms.club"));
+                    StringUtil.sendCenteredMessage(player, ChatColor.translateAlternateColorCodes('&', "&aPurchase it by messaging RED"));
 
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 10F, 1F);
                     return;

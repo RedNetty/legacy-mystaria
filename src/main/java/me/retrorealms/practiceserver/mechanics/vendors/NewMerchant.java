@@ -3,6 +3,7 @@ package me.retrorealms.practiceserver.mechanics.vendors;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
+import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.item.Durability;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
@@ -27,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Random;
 
 public class NewMerchant implements Listener {
@@ -129,17 +131,22 @@ public class NewMerchant implements Listener {
                 if (inventory.getItem(i) != null && inventory.getItem(i).getType() != Material.AIR) {
                     ItemStack is = inventory.getItem(i);
                     double reward = 0;
-                    if (is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
+                    if (!is.getType().toString().contains("_PICKAXE") && is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
                         int oreAmount = is.getAmount();
                         int oreTier = ProfessionMechanics.getOreTier(is.getType());
                         reward = 20;
                         reward = (int) ((reward * oreAmount * oreTier) * 1.23);
                         inventory.setItem(i, null);
                     }
-                    if (Durability.isArmor(is) || Listeners.isWeapon(is)) {
+                    if ((Durability.isArmor(is) || Listeners.isWeapon(is)) && !is.getType().toString().contains("_PICKAXE")) {
                         Random r = new Random();
-                        int t = Items.getTierFromColor(is);
+                        int t = Items.getTierFromColor(is) * 2;
                         reward = (((t / 10D) + 1D) * (t * t)) * 12D;
+                        if(is.hasItemMeta() && is.getItemMeta().hasLore()) {
+                            List<String> itemlore = is.getItemMeta().getLore();
+                            int rarity = Altar.RarityToInt(itemlore.get(itemlore.size() - 1));
+                            reward = (reward * rarity) - (reward * .25);
+                        }
                         reward = r.nextInt((int) reward / 3) + (int) reward;
                         inventory.setItem(i, null);
                     }
@@ -153,10 +160,11 @@ public class NewMerchant implements Listener {
 
     public void acceptTrade(Player player) {
         Inventory inventory = tradeMap.get(player);
+        double rew = 0;
         if (inventory != null) {
-            double rew = calculateTradeValue(inventory);
+            rew = calculateTradeValue(inventory);
             if ((ModerationMechanics.isDonator(player)) || (ModerationMechanics.isStaff(player))) {
-                rew *= 1.20D;
+                rew *= 1.50D;
             }
             if (rew != 0) {
                 player.getInventory().addItem(Money.createBankNote((int) rew));
@@ -171,7 +179,9 @@ public class NewMerchant implements Listener {
         }
         tradeMap.remove(player);
         player.closeInventory();
-        player.sendMessage(ChatColor.GRAY + "You have accepted your merchant trade.");
+        int donorAmt = (int)rew - (int)(rew * 0.5);
+        String donatorAdded = ModerationMechanics.isDonator(player) ? ChatColor.GREEN + "(+" + donorAmt + " gems received from Donor Perks)" : "";
+        player.sendMessage(ChatColor.GRAY + "You have accepted your merchant trade. " + donatorAdded);
     }
 }
 

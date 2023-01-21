@@ -69,6 +69,7 @@ public class Deadman implements Listener{
     public void onMove(PlayerMoveEvent e){
         if(!deadman || stage > 1) return;
         Player p = e.getPlayer();
+        p.sendMessage("222");
         if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
             p.sendMessage(ChatColor.RED + "You cannot exit deadpeaks until the event begins.");
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);

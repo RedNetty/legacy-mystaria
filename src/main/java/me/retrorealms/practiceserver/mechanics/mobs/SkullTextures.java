@@ -1,5 +1,7 @@
 package me.retrorealms.practiceserver.mechanics.mobs;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.apache.commons.codec.binary.Base64;
@@ -7,7 +9,11 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 
 /**
@@ -16,6 +22,7 @@ import java.util.UUID;
 public enum SkullTextures {
 
     CHERRY("d525707696bcd15a173056fa39296e80ff41168bb0add552f4523e2558a3119"),
+    FROST("ab2344a2aace0350158750ce137ae6d337edbcaee2e894aa69eaac0bf9b5869c"),
     APPLE("cbb311f3ba1c07c3d1147cd210d81fe11fd8ae9e3db212a0fa748946c3633"),
     WITHER_KING("68c0165e9b2dbd78dac91277e97d9a02648f3059e126a5941a84d05429ce"),
     DEMON("d2975b67c19f9ba2344f8eee956c5015ad63d9e88ad4882ae79369374fb3975"),
@@ -59,6 +66,18 @@ public enum SkullTextures {
         return skull;
     }
 
+    public ItemStack getFrostSkull() {
+        try {
+            ItemStack head = new ItemStack(Material.SKULL, 1, (short) 3);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwner("87d0088a-09c2-4765-8f9c-9a2f5db7acbc");
+            head.setItemMeta(meta);
+
+            return head;
+        }catch (Exception e) {
+            return CHERRY.getSkullByURL();
+        }
+    }
     /**
      * Create a textured skull via a mojang texture URL.
      *

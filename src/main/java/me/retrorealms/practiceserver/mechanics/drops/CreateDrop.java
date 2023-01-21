@@ -91,7 +91,7 @@ public class CreateDrop {
         int hp = (r.nextInt((int)base_hp /4)  + (int)base_hp);
         if(item == 6 || item == 7) hp *= 1.5;
 
-        double dpsmax = tier*(1D+(tier/2D));
+        double dpsmax = tier*(1D+(tier/1.7D));
         double dpsmin = dpsmax / 1.5D;
 
         int nrghp = ThreadLocalRandom.current().nextInt(3);
@@ -110,7 +110,7 @@ public class CreateDrop {
         int dpsi = (int)dpsmin;
         int dpsa = (int)dpsmax;
 
-        int randomDps = r.nextInt(2) + 1;
+        int randomDps = r.nextInt(4) + 1;
 
         //Create Item
         ItemStack newItem = new ItemStack(Material.getMaterial(mat_string + "_" + item_string));
@@ -214,6 +214,7 @@ public class CreateDrop {
 
     //Set Items Rarity
     public static String getRarity(int rarity){
+        System.out.println(rarity);
         switch (rarity) {
             case 1: return ChatColor.GRAY + "Common";
             case 2: return ChatColor.GREEN + "Uncommon";

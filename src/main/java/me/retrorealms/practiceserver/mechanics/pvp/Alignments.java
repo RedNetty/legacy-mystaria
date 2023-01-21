@@ -6,6 +6,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import me.retrorealms.practiceserver.PracticeServer;
+import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
 import me.retrorealms.practiceserver.mechanics.donations.StatTrak.WepTrak;
@@ -80,7 +81,7 @@ public class Alignments
                                 p.sendMessage(ChatColor.YELLOW + "          * YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
                                 p.sendMessage(ChatColor.GRAY + "While neutral, players who kill you will not become chaotic. You have a 50% chance of dropping your weapon, and a 25% chance of dropping each piece of equiped armor on death. Neutral alignment will expire 2 minutes after last hit on player.");
                                 p.sendMessage(ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
-                                //       TTA_Methods.sendActionBar(p, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 60);
+                                ActionBar.sendActionBar(p, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 4);
                             } else {
                                 chaotic.put(p.getName(), --time);
                             }
@@ -150,13 +151,10 @@ public class Alignments
                                             + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth());
                             playerBossBars.get(p).setProgress(pcnt);
                         }
-                    } else {
-
-                        p.setLevel((int) p.getHealth());
                     }
                 }
             }
-        }.runTaskTimerAsynchronously(PracticeServer.plugin, 20, 20);
+        }.runTaskTimer(PracticeServer.plugin, 20, 20);
         if(PracticeServer.DATABASE) return;
         File file = new File(PracticeServer.plugin.getDataFolder(), "alignments.yml");
         YamlConfiguration config = new YamlConfiguration();
@@ -185,6 +183,7 @@ public class Alignments
             }
         }
     }
+    
 
     public void onDisable() {
         PracticeServer.log.info("[Alignments] has been disabled.");
@@ -225,7 +224,7 @@ public class Alignments
         Player p = e.getPlayer();
         if (isSafeZone(e.getFrom()) && chaotic.containsKey(p.getName())) {
             p.sendMessage(ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.");
-            ///   TTA_Methods.sendActionBar(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.", 50);
+            ActionBar.sendActionBar(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.", 50);
             p.teleport(TeleportBooks.generateRandomSpawnPoint(p.getName()));
             return;
         }
@@ -233,7 +232,7 @@ public class Alignments
             if (chaotic.containsKey(p.getName())) {
                 p.teleport(e.getFrom());
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
-                //  TTA_Methods.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 50);
+                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 3);
                 return;
             }
             if (Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) <= 10000) {
@@ -243,20 +242,20 @@ public class Alignments
                 int time = (int) (10 - Math.round(left));
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat.");
                 p.sendMessage(ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s");
-                // TTA_Methods.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 50);
+                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 3);
                 return;
             }
         }
         if (!isSafeZone(e.getFrom()) && isSafeZone(e.getTo())) {
             StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF)***");
-            //    TTA_Methods.sendTitle(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***", 20, 20, 20, ChatColor.GRAY + "(PVP-OFF) (MONSTERS-OFF)", 20, 20, 20);
+            ActionBar.sendActionBar(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***" + ChatColor.GRAY + " (PVP-OFF) (MONSTERS-OFF)", 2);
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
 
 
         }
         if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
             StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON)***");
-            //     TTA_Methods.sendTitle(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE ***", 20, 20, 20, ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 20, 20, 20);
+            ActionBar.sendActionBar(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE *** " + ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 2);
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
         }
 
@@ -271,7 +270,7 @@ public class Alignments
         if (isSafeZone(e.getTo())) {
             if (chaotic.containsKey(p.getName())) {
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
-                //    TTA_Methods.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 50);
+                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 3);
                 e.setCancelled(true);
                 return;
             }
@@ -281,20 +280,22 @@ public class Alignments
                 int time = (int) (10 - Math.round(left));
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat.");
                 p.sendMessage(ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s");
-                //  TTA_Methods.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 50);
+                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 3);
                 e.setCancelled(true);
                 return;
             }
         }
         if (!isSafeZone(e.getFrom()) && isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF) ***");
-            //   TTA_Methods.sendTitle(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***", 20, 20, 20, ChatColor.GRAY + "(PVP-OFF) (MONSTERS-OFF)", 20, 20, 20);
-            p.playSound(e.getTo(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
+            StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF)***");
+            ActionBar.sendActionBar(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***" + ChatColor.GRAY + " (PVP-OFF) (MONSTERS-OFF)", 2);
+            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
+
+
         }
         if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON) ***");
-            //   TTA_Methods.sendTitle(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE ***", 20, 20, 20, ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 20, 20, 20);
-            p.playSound(e.getTo(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
+            StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON)***");
+            ActionBar.sendActionBar(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE *** " + ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 2);
+            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
         }
     }
 
@@ -313,8 +314,12 @@ public class Alignments
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        updatePlayerAlignment(p);
-        Scoreboards.updatePlayerHealth();
+        new BukkitRunnable() {
+            public void run() {
+                updatePlayerAlignment(p);
+                Scoreboards.updatePlayerHealth();
+            }
+        }.runTaskLater(PracticeServer.getInstance(), 1L);
     }
 
     public void onMobSpawn(CreatureSpawnEvent event) {
@@ -342,7 +347,7 @@ public class Alignments
                         d.sendMessage(ChatColor.YELLOW + "          * YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
                         d.sendMessage(ChatColor.GRAY + "While neutral, players who kill you will not become chaotic. You have a 50% chance of dropping your weapon, and a 25% chance of dropping each piece of equiped armor on death. Neutral alignment will expire 2 minutes after last hit on player.");
                         d.sendMessage(ChatColor.YELLOW + "          * YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
-                        //     TTA_Methods.sendActionBar(d, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 60);
+                        ActionBar.sendActionBar(d, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 3);
                         neutral.put(d.getName(), NEUTRAL_SECONDS);
                         updatePlayerAlignment(d);
                     }
@@ -361,7 +366,7 @@ public class Alignments
                     d.sendMessage(ChatColor.YELLOW + "          * YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
                     d.sendMessage(ChatColor.GRAY + "While neutral, players who kill you will not become chaotic. You have a 50% chance of dropping your weapon, and a 25% chance of dropping each piece of equiped armor on death. Neutral alignment will expire 2 minutes after last hit on player.");
                     d.sendMessage(ChatColor.YELLOW + "          * YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *");
-                    //     TTA_Methods.sendActionBar(d, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 60);
+                    ActionBar.sendActionBar(d, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 3);
                     neutral.put(d.getName(), NEUTRAL_SECONDS);
                     updatePlayerAlignment(d);
                 }
@@ -390,11 +395,12 @@ public class Alignments
             if (chaotic.containsKey(d.getName())) {
                 time = chaotic.get(d.getName());
                 if(time + CHAOTIC_SECONDS > 1200) {
-                    chaotic.put(d.getName(), 1200);
+                    chaotic.put(d.getName(), CHAOTIC_SECONDS);
                 }else{
-                    chaotic.put(d.getName(), time + CHAOTIC_SECONDS);
+                    chaotic.put(d.getName(), CHAOTIC_SECONDS);
                 }
-                d.sendMessage("\u00a7cLAWFUL player slain, \u00a7l+600s \u00a7cadded to Chaotic timer");
+                d.sendMessage("\u00a7cLAWFUL player slain, chaotic timer reset.");
+                ActionBar.sendActionBar(d, ChatColor.RED + "* YOU ARE NOW " + ChatColor.BOLD + "CHAOTIC" + ChatColor.RED + " ALIGNMENT *", 5);
                 neutral.remove(d.getName());
                 updatePlayerAlignment(d);
             } else {
@@ -402,7 +408,7 @@ public class Alignments
                 d.sendMessage(ChatColor.GRAY + "While chaotic, you cannot enter any major cities or safe zones. If you are killed while chaotic, you will lose everything in your inventory. Chaotic alignment will expire 10 minutes after your last player kill.");
                 d.sendMessage(ChatColor.RED + "          * YOU ARE NOW " + ChatColor.BOLD + "CHAOTIC" + ChatColor.RED + " ALIGNMENT *");
                 d.sendMessage(ChatColor.RED + "LAWFUL player slain, " + ChatColor.BOLD + "+" + CHAOTIC_SECONDS + "s" + ChatColor.RED + " added to Chaotic timer.");
-                // TTA_Methods.sendActionBar(d, ChatColor.RED + "* YOU ARE NOW " + ChatColor.BOLD + "CHAOTIC" + ChatColor.RED + " ALIGNMENT *", 60);
+                ActionBar.sendActionBar(d, ChatColor.RED + "* YOU ARE NOW " + ChatColor.BOLD + "CHAOTIC" + ChatColor.RED + " ALIGNMENT *", 5);
                 chaotic.put(d.getName(), CHAOTIC_SECONDS);
                 neutral.remove(d.getName());
                 updatePlayerAlignment(d);
@@ -411,7 +417,7 @@ public class Alignments
 //      t  if (neutral.containsKey(p.getName()) && !chaotic.containsKey(p.getName()) && chaotic.containsKey(d.getName())) {
 //            time = chaotic.get(d.getName());
 //            if(time + (CHAOTIC_SECONDS / 2) > 1200) {
-//                chaotic.put(d.getName(), 1200);
+//       R         chaotic.put(d.getName(), 1200);
 //            }else{
 //                chaotic.put(d.getName(), time + (CHAOTIC_SECONDS / 2));
 //            }

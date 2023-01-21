@@ -1,0 +1,66 @@
+# for items its Item: 1(Staff), 2(Polearm), 3(Sword), 4(Axe), 5(Helmet), 6(Chestplate), 7(Pants), 8(Boots)
+# Rarity: 1(Common) 2(Uncommon) 3(Rare) 4(Unique)
+frostwing:
+    3:
+        name: "&eFrost-Wing's Frosted Blade"
+        min-min: 750
+        min-max: 800
+        max-min: 850
+        max-max: 920
+        crit: 15
+        ice: 50
+        poison: 50
+        vsplayers: 15
+        vsmonsters: 15
+        lifesteal: 5
+        accuracy: 35
+        rarity: 4
+        lore: "Cold to the touch with a visible layer of ice surrounding it"
+    5:
+        name: "&eFrost-Wing's x Off-White Beanie"
+        health: "7400-8000"
+        armor-dps: "Armor"
+        armor-dps-amt: 12
+        energy: 8
+        vit: 350
+        dex: 350
+        block: 5
+        dodge: 9
+        rarity: 4
+        lore: "Cold to the touch with a visible layer of ice surrounding it"
+    6:
+        name: "&eFrost-Wing's Frozen Legendary Breastplate"
+        health: "8500-9500"
+        armor-dps: "Armor"
+        armor-dps-amt: 12
+        energy: 8
+        vit: 350
+        dex: 350
+        block: 8
+        dodge: 5
+        rarity: 4
+        lore: "Cold to the touch with a visible layer of ice surrounding it"
+    7:
+        name: "&eFrost-Wing's Chilled Leggings"
+        health: "8500-9500"
+        armor-dps: "Armor"
+        armor-dps-amt: 12
+        energy: 8
+        vit: 350
+        dex: 350
+        block: 7
+        dodge: 5
+        rarity: 4
+        lore: "Cold to the touch with a visible layer of ice surrounding it"
+    8:
+        name: "&eFrost-Wing's Slick Sneakers"
+        health: "7400-8000"
+        armor-dps: "Armor"
+        armor-dps-amt: 12
+        energy: 8
+        vit: 350
+        dex: 350
+        block: 7
+        dodge: 9
+        rarity: 4
+        lore: "Cold to the touch with a visible layer of ice surrounding it"

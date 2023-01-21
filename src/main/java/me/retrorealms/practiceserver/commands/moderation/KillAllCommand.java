@@ -1,5 +1,6 @@
 package me.retrorealms.practiceserver.commands.moderation;
 
+import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
 import me.retrorealms.practiceserver.mechanics.mobs.Spawners;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -18,7 +19,7 @@ public class KillAllCommand implements CommandExecutor {
                 if (cmd.getName().equalsIgnoreCase("killall")) {
                     for (final Entity e : Bukkit.getWorlds().get(0).getEntities()) {
                         if (e instanceof LivingEntity && !(e instanceof Player)) {
-                            e.remove();
+                            if(!MobHandler.isWorldBoss(e)) e.remove();
                         }
                     }
                     Spawners.mobs.clear();

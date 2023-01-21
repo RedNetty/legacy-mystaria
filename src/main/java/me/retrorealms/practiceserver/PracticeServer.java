@@ -8,11 +8,13 @@ import java.util.logging.Logger;
 import me.retrorealms.practiceserver.commands.items.*;
 import me.retrorealms.practiceserver.commands.misc.*;
 import me.retrorealms.practiceserver.commands.moderation.*;
+import me.retrorealms.practiceserver.commands.toggles.*;
 import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
 import me.retrorealms.practiceserver.mechanics.loot.LootChests;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.GolemElite;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
 import me.retrorealms.practiceserver.mechanics.player.*;
 import me.retrorealms.practiceserver.mechanics.pvp.Deadman;
 import me.retrorealms.practiceserver.mechanics.vendors.*;
@@ -46,11 +48,6 @@ import me.retrorealms.practiceserver.commands.party.PInviteCommand;
 import me.retrorealms.practiceserver.commands.party.PKickCommand;
 import me.retrorealms.practiceserver.commands.party.PQuitCommand;
 import me.retrorealms.practiceserver.commands.party.PartyCommand;
-import me.retrorealms.practiceserver.commands.toggles.ToggleChaosCommand;
-import me.retrorealms.practiceserver.commands.toggles.ToggleCommand;
-import me.retrorealms.practiceserver.commands.toggles.ToggleDebugCommand;
-import me.retrorealms.practiceserver.commands.toggles.ToggleFFCommand;
-import me.retrorealms.practiceserver.commands.toggles.TogglePVPCommand;
 import me.retrorealms.practiceserver.manager.ManagerHandler;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.chat.gui.ChatTagGUIHandler;
@@ -152,7 +149,7 @@ public class PracticeServer extends JavaPlugin {
 	public static final String VERSION_STRING = "1.1.2.4";
 	public static boolean ALIGNMENT_GLOW = false;
 	public static boolean DATABASE = true;
-	public static boolean t6 = true;
+	public static boolean t6 = false;
 
 	public static PracticeServer plugin;
 	public static Logger log;
@@ -205,6 +202,7 @@ public class PracticeServer extends JavaPlugin {
 	private static Vendor vendor;
 	private static ModerationMechanics moderationMechanics;
 	private static SQLMain sqlmain;
+	private static WorldBossHandler worldBoss;
 	private static PracticeServer instance;
 	private static MarketData marketData;
 	private static PlayerData playerData;
@@ -236,6 +234,9 @@ public class PracticeServer extends JavaPlugin {
 
 	public static BuffHandler buffHandler() {
 		return buffHandler;
+	}
+	public static WorldBossHandler getWorldBossHandler() {
+	    return worldBoss;
 	}
 
 	public static PatchIO getPatchIO() {
@@ -296,6 +297,7 @@ public class PracticeServer extends JavaPlugin {
 		pickTrak = new PickTrak();
 		alignments = new Alignments();
 		antibuild = new Antibuild();
+		worldBoss = new WorldBossHandler();
 		banks = new Banks();
 		buddies = new Buddies();
 		ff = new ForceField();
@@ -349,6 +351,7 @@ public class PracticeServer extends JavaPlugin {
 		damage.onEnable();
 		durability.onEnable();
 		enchants.onEnable();
+		worldBoss.onLoad();
 		nt.onEnable();
 		duels.onEnable();
 		wepTrak.onEnable();
@@ -547,6 +550,7 @@ public class PracticeServer extends JavaPlugin {
 		getCommand("deploy").setExecutor(new DeployCommand(this));
 		getCommand("rrversion").setExecutor(new RRVersionCommand());
 		getCommand("togglegm").setExecutor(new ToggleGMCommand());
+		getCommand("togglegems").setExecutor(new ToggleGemCommand());
 		getCommand("togglealignmentglow").setExecutor(new ToggleAlignmentGlowCommand());
 		getCommand("elytra").setExecutor(new ElytraCommand());
 		getCommand("scrap").setExecutor(new ScrapItem());

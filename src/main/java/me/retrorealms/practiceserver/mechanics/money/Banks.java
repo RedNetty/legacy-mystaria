@@ -39,7 +39,7 @@ public class Banks implements Listener {
     public void onEnable() {
         PracticeServer.log.info("[Banks] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         File file = new File(PracticeServer.plugin.getDataFolder(), "banks");
         if (!file.exists()) {
             file.mkdirs();
@@ -48,7 +48,7 @@ public class Banks implements Listener {
 
     public void onDisable() {
         PracticeServer.log.info("[Banks] has been disabled.");
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         File file = new File(PracticeServer.plugin.getDataFolder(), "banks");
         if (!file.exists()) {
             file.mkdirs();
@@ -57,10 +57,10 @@ public class Banks implements Listener {
 
     @EventHandler
     public void onClick(PlayerInteractEvent e) {
-    	 if (DeployCommand.patchlockdown) {
-    		 e.setCancelled(true);
-    		 return;
-    	 }
+        if (DeployCommand.patchlockdown) {
+            e.setCancelled(true);
+            return;
+        }
         Player p = e.getPlayer();
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.ENDER_CHEST && !Duels.duelers.containsKey(p)) {
             e.setCancelled(true);
@@ -80,8 +80,12 @@ public class Banks implements Listener {
     public void onClose(InventoryCloseEvent e) {
         Player p = (Player) e.getPlayer();
         if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
-            int page =  Integer.valueOf(e.getInventory().getName().substring(12,13));
-            this.saveBank(e.getInventory(), p, page);
+            int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
+            new BukkitRunnable() {
+                public void run() {
+                    saveBank(e.getInventory(), p, page);
+                }
+            }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 2L);
             if (Banks.banksee.containsKey(p)) {
                 Banks.banksee.remove(p);
             }
@@ -119,7 +123,7 @@ public class Banks implements Listener {
         if (banksee.containsKey(p)) {
             name = banksee.get(p);
         }
-        if(PracticeServer.DATABASE) {
+        if (PracticeServer.DATABASE) {
             SQLMain.saveBank(inv, name, page);
             return;
         }
@@ -144,7 +148,7 @@ public class Banks implements Listener {
         if (banksee.containsKey(p)) {
             name = banksee.get(p);
         }
-        if(PracticeServer.DATABASE) {
+        if (PracticeServer.DATABASE) {
             return SQLMain.getBank(name, page);
         }
         File file;
@@ -190,23 +194,23 @@ public class Banks implements Listener {
             ItemMeta meta = glass.getItemMeta();
             meta.setDisplayName(" ");
             glass.setItemMeta(meta);
-            int i = banksize-9;
+            int i = banksize - 9;
             while (i < banksize) {
                 inv.setItem(i, glass);
                 ++i;
             }
-            inv.setItem(banksize-5, getGemBankItem((Player) e.getPlayer()));
-            inv.setItem(banksize-1, pageArrow(true));
-            inv.setItem(banksize-9, pageArrow(false));
+            inv.setItem(banksize - 5, getGemBankItem((Player) e.getPlayer()));
+            inv.setItem(banksize - 1, pageArrow(true));
+            inv.setItem(banksize - 9, pageArrow(false));
         }
     }
 
-    public ItemStack pageArrow(boolean next){
+    public ItemStack pageArrow(boolean next) {
         ItemStack is = new ItemStack(Material.ARROW);
         ItemMeta im = is.getItemMeta();
-        if(next) {
+        if (next) {
             im.setDisplayName(ChatColor.GREEN + "Next Page");
-        }else{
+        } else {
             im.setDisplayName(ChatColor.GREEN + "Previous Page");
         }
         is.setItemMeta(im);
@@ -290,7 +294,7 @@ public class Banks implements Listener {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FLAP, 1.0f, 1.2f);
         }
         if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
-            if (e.getClick() == ClickType.RIGHT && e.getSlot() == banksize-5) {
+            if (e.getClick() == ClickType.RIGHT && e.getSlot() == banksize - 5) {
                 e.setCancelled(true);
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD)
                         .append("Current Balance: ").append(ChatColor.GREEN)
@@ -308,33 +312,33 @@ public class Banks implements Listener {
                     }
                 }.runTaskLater(PracticeServer.plugin, 1L);
             }
-            if(e.getSlot() == banksize-9){
-                int page =  Integer.valueOf(e.getInventory().getName().substring(12,13));
+            if (e.getSlot() == banksize - 9) {
+                int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
                 p.closeInventory();
-                if(page-1 < 1) {
+                if (page - 1 < 1) {
                     e.setCancelled(true);
                     return;
                 }
-                p.openInventory(getBank(p, page-1));
+                p.openInventory(getBank(p, page - 1));
                 p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.25f);
                 e.setCancelled(true);
                 return;
             }
-            if(e.getSlot() == banksize-1){
-                int page =  Integer.valueOf(e.getInventory().getName().substring(12,13));
+            if (e.getSlot() == banksize - 1) {
+                int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
                 PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
                 p.closeInventory();
-                if(page+1 > pp.bankpages) {
+                if (page + 1 > pp.bankpages) {
                     p.sendMessage(ChatColor.RED + "You do not have access to that many bank pages.");
                     e.setCancelled(true);
                     return;
                 }
-                p.openInventory(getBank(p, page+1));
+                p.openInventory(getBank(p, page + 1));
                 p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.25f);
                 e.setCancelled(true);
                 return;
             }
-            for (int i = banksize-9; i < banksize; ++i) {
+            for (int i = banksize - 9; i < banksize; ++i) {
                 if (e.getSlot() == i) {
                     e.setCancelled(true);
                 }
@@ -350,7 +354,7 @@ public class Banks implements Listener {
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -358,7 +362,7 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 e.setCurrentItem(null);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }
@@ -371,7 +375,7 @@ public class Banks implements Listener {
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -379,7 +383,7 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 e.setCurrentItem(null);
-                if(!PracticeServer.DATABASE){
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }
@@ -400,7 +404,7 @@ public class Banks implements Listener {
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -408,20 +412,20 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 GemPouches.setPouchBal(e.getCurrentItem(), 0);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }
             }
             if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.EMERALD) {
-                if (e.getRawSlot() > banksize-10) {
+                if (e.getRawSlot() > banksize - 10) {
                     return;
                 }
                 final int amt = e.getCursor().getAmount();
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -429,20 +433,20 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 e.setCursor(null);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }
             }
             if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.PAPER) {
-                if (e.getRawSlot() > banksize-10) {
+                if (e.getRawSlot() > banksize - 10) {
                     return;
                 }
                 final int amt = this.getGems(e.getCursor());
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -450,14 +454,14 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 e.setCursor(null);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }
             }
             if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.INK_SACK
                     && e.getCursor().getDurability() == 0) {
-                if (e.getRawSlot() > banksize-10) {
+                if (e.getRawSlot() > banksize - 10) {
                     return;
                 }
                 final int amt = GemPouches.getCurrentValue(e.getCursor());
@@ -467,7 +471,7 @@ public class Banks implements Listener {
                 e.setCancelled(true);
                 Economy.depositPlayer(p.getUniqueId(), amt);
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize-5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
+                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
                 p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
                         .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
@@ -475,7 +479,7 @@ public class Banks implements Listener {
                         .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
                         .toString());
                 GemPouches.setPouchBal(e.getCursor(), 0);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
                     nonStaticConfig.save();
                 }

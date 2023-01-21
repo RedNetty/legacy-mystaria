@@ -19,6 +19,8 @@ import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.bosses.Frostwing;
 import me.retrorealms.practiceserver.mechanics.party.Parties;
 import me.retrorealms.practiceserver.mechanics.player.Energy;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
@@ -69,12 +71,14 @@ public class Damage implements Listener {
 
 	public void onEnable() {
 		Bukkit.getPluginManager().registerEvents(this, PracticeServer.getInstance());
+
 		new BukkitRunnable() {
 
 			public void run() {
 
 				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
 					double healthPercentage = (p.getHealth() / p.getMaxHealth());
+					String safeZone = Alignments.isSafeZone(p.getLocation()) ? ChatColor.GRAY + " - " + ChatColor.GREEN.toString() + ChatColor.BOLD + "SAFE-ZONE" : "";
 					if (healthPercentage * 100.0F > 100.0F) {
 						healthPercentage = 1.0;
 					}
@@ -86,7 +90,7 @@ public class Damage implements Listener {
 						BossBar bossBar = Bukkit.createBossBar(
 								titleColor + "" + ChatColor.BOLD + "HP " + titleColor
 										+ (int) p.getHealth() + titleColor + ChatColor.BOLD + " / "
-										+ titleColor + (int) p.getMaxHealth(),
+										+ titleColor + (int) p.getMaxHealth() + safeZone,
 								barColor, BarStyle.SOLID);
 						bossBar.addPlayer(p);
 						Alignments.playerBossBars.put(p, bossBar);
@@ -96,7 +100,7 @@ public class Damage implements Listener {
 						Alignments.playerBossBars.get(p)
 								.setTitle(titleColor + "" + ChatColor.BOLD + "HP "
 										+ titleColor + (int) p.getHealth() + titleColor
-										+ ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth());
+										+ ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth() + safeZone);
 						Alignments.playerBossBars.get(p).setProgress(pcnt);
 					}
 				}
@@ -128,12 +132,20 @@ public class Damage implements Listener {
 	}
 
 	public static BarColor getBarColor(Player player) {
-		if(Alignments.isSafeZone(player.getLocation())) return BarColor.GREEN;
+		double maxHealth = player.getMaxHealth();
+		double currentHealth = player.getHealth();
+		if((currentHealth / maxHealth) > .5) return BarColor.GREEN;
+		if((currentHealth / maxHealth) < .25) return BarColor.RED;
+		if((currentHealth / maxHealth) < .5) return BarColor.YELLOW;
 		return BarColor.RED;
 	}
 
 	public static ChatColor barTitleColor(Player player){
-		if(Alignments.isSafeZone(player.getLocation())) return ChatColor.GREEN;
+		double maxHealth = player.getMaxHealth();
+		double currentHealth = player.getHealth();
+		if((currentHealth / maxHealth) > .5) return ChatColor.GREEN;
+		if((currentHealth / maxHealth) < .25) return ChatColor.RED;
+		if((currentHealth / maxHealth) < .5) return ChatColor.YELLOW;
 		return ChatColor.RED;
 	}
 
@@ -188,6 +200,8 @@ public class Damage implements Listener {
 		}
 		return 0;
 	}
+
+
 
 	public static int getHps(ItemStack is) {
 		List<String> lore;
@@ -299,7 +313,7 @@ public class Damage implements Listener {
 		if (e.getEntity() instanceof Player) {
 			Player p = (Player) e.getEntity();
 
-			if (p.hasMetadata("NPC") || p.getPlayerListName().equals("")) {
+			if (p.hasMetadata("NPC")) {
 				e.setCancelled(true);
 				e.setDamage(0.0);
 			}
@@ -555,26 +569,26 @@ public class Damage implements Listener {
 						e.setCancelled(true);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 						callHGDMG(d, p, "block", 0);
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+						if(Toggles.getToggleStatus(d, "Debug")) d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					} else if (dodger <= dodge) {
 						e.setDamage(0.0);
 						e.setCancelled(true);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
 						callHGDMG(d, p, "dodge", 0);
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT DODGED* ("
+						if(Toggles.getToggleStatus(d, "Debug"))d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT DODGED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* ("
+						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					} else if (blockr <= 80 && p.isBlocking()) {
 						e.setDamage((double) ((int) e.getDamage() / 2));
 						callHGDMG(d, p, "block", 0);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+						if(Toggles.getToggleStatus(d, "Debug")) d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+						if(Toggles.getToggleStatus(p, "Debug")) p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
 				} else if (e.getDamager() instanceof LivingEntity) {
@@ -592,20 +606,20 @@ public class Damage implements Listener {
 						e.setCancelled(true);
 						callHGDMG(p, li, "block", 0);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
 					} else if (dodger <= dodge) {
 						e.setDamage(0.0);
 						e.setCancelled(true);
 						callHGDMG(p, li, "dodge", 0);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
-						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* (" + mname
+						if(Toggles.getToggleStatus(p, "Debug")) p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* (" + mname
 								+ ChatColor.GREEN + ")");
 					} else if (blockr <= 80 && p.isBlocking()) {
 						e.setDamage((double) ((int) e.getDamage() / 2));
 						callHGDMG(p, li, "block", 0);
 						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+						if(Toggles.getToggleStatus(p , "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
 					}
 				}
@@ -843,6 +857,13 @@ public class Damage implements Listener {
 			double armorPen = 0;
 			if (e.getDamager() instanceof LivingEntity && !(e.getDamager() instanceof Player)) {
 				LivingEntity mobDamager = (LivingEntity) e.getDamager();
+				if(WorldBossHandler.getActiveBoss() != null && WorldBossHandler.getActiveBoss() instanceof Frostwing) {
+					Frostwing frostwing = (Frostwing) WorldBossHandler.getActiveBoss();
+					if(frostwing.isBezerk()) {
+						dmg = (e.getDamage() * .5) + e.getDamage();
+
+					}
+				}
 				if (Mobs.isFrozenBoss(mobDamager) || Mobs.isGolemBoss(mobDamager)) {
 					armorPen = arm / 3;
 				}
@@ -865,7 +886,8 @@ public class Damage implements Listener {
 			if (arm > 80)
 				arm = 80;
 			if (arm > 0.0) {
-				double divide = arm / 100.0;
+				double divide = (arm / 1.3) / 100.0; //Artificially Lowers the Armor a Little so its not so OP
+				if(divide > 0.65) divide = 0.65;
 				double pre = dmg * divide;
 				int cleaned = (int) (dmg - pre);
 				if (cleaned <= 1) {

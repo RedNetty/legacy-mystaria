@@ -1,5 +1,6 @@
 package me.retrorealms.practiceserver.commands.moderation;
 
+import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import org.bukkit.Bukkit;
@@ -21,7 +22,7 @@ public class TellAllCommand implements CommandExecutor {
                 String allArgs = sb.toString().trim();
                 Bukkit.broadcastMessage(ChatColor.AQUA.toString() + ChatColor.BOLD + ">>> " + ChatColor.AQUA + allArgs);
                 for (Player pl : Bukkit.getOnlinePlayers()) {
-                    //        TTA_Methods.sendActionBar(pl, ChatColor.AQUA + allArgs, 140);
+                    ActionBar.sendActionBar(pl, ChatColor.AQUA.toString() + ChatColor.BOLD + ">>> " + ChatColor.AQUA + allArgs + ChatColor.AQUA + ChatColor.BOLD + " <<<", 5);
                     pl.playSound(pl.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1, 1);
                     pl.playSound(pl.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
                 }
