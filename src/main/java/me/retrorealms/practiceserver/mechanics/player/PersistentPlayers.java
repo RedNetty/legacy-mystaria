@@ -5,7 +5,7 @@ import me.retrorealms.practiceserver.commands.misc.LeaderboardCommand;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
-import net.minecraft.server.v1_9_R2.EntityShulker;
+import net.minecraft.server.v1_12_R1.EntityShulker;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -71,7 +71,7 @@ public class PersistentPlayers implements Listener {
                 }
                 newtokens += mobKills / 200;
                 newtokens += maxHP / 2000;
-                newtokens += oreMined / 500;
+                newtokens += oreMined / 64;
                 tokens.put(UUID.fromString(rs.getString("UUID")), newtokens);
                 //PersistentPlayer pp = (PersistentPlayer) e.getValue();
                 //pp.tokens += newtokens;
@@ -187,7 +187,7 @@ public class PersistentPlayers implements Listener {
                         ChatColor.GRAY + "Have over 200 Mob kills with less than 10 deaths",
                         ChatColor.GRAY + "Gain a Token for each 200 Mob Kills",
                         ChatColor.GRAY + "Gain a Token for each 2000 Max HP",
-                        ChatColor.GRAY + "Gain a Token for each 500 Ore Mined",
+                        ChatColor.GRAY + "Gain a Token for each 64 Ore Mined",
                         "",
                         ChatColor.GREEN + "Click here to refund your upgrades for 20% of",
                         ChatColor.GREEN + "Tokens spent on them. This penalty is reduced ",

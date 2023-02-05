@@ -92,7 +92,6 @@ import me.retrorealms.practiceserver.mechanics.pvp.Respawn;
 import me.retrorealms.practiceserver.mechanics.shard.Shard;
 import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
-import me.retrorealms.practiceserver.mechanics.useless.EntityRegistry;
 import me.retrorealms.practiceserver.mechanics.useless.command.CommandStart;
 import me.retrorealms.practiceserver.mechanics.world.Antibuild;
 import me.retrorealms.practiceserver.mechanics.world.Logout;
@@ -139,13 +138,13 @@ public class PracticeServer extends JavaPlugin {
 	public static final boolean OPEN_BETA_STATS = true;
 	public static final boolean FFA = false;
 	public static final boolean BETA_VENDOR_ENABLED = false;
-	public static final double MIN_DAMAGE_MULTIPLIER = 1.3;
+	public static final double MIN_DAMAGE_MULTIPLIER = 1;
 	public static final boolean DOUBLE_DROP_RATE = false;
-	public static final double MAX_DAMAGE_MULTIPLIER = 1.5;
-	public static final double HPS_MULTIPLIER = 3.5;
+	public static final double MAX_DAMAGE_MULTIPLIER = 1;
+	public static final double HPS_MULTIPLIER = 5;
 	public static final boolean GLOWING_NAMED_ELITE_DROP = true;
 	public static final boolean RANDOM_DURA_NAMED_ELITE_DROP = false;
-	public static final double HP_MULTIPLIER = 1.7;
+	public static final double HP_MULTIPLIER = 1.35;
 	public static final String VERSION_STRING = "1.1.2.4";
 	public static boolean ALIGNMENT_GLOW = false;
 	public static boolean DATABASE = true;
@@ -404,7 +403,6 @@ public class PracticeServer extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(gemGambling, this);
 
 		buffHandler.init();
-		EntityRegistry.registerEntities();
 		getServer().getPluginManager().registerEvents(new OreMerchant(), this);
 		getServer().getPluginManager().registerEvents(new Enchanter(), this);
 		Fishing.checkMonkRegion();
@@ -463,6 +461,8 @@ public class PracticeServer extends JavaPlugin {
 	}
 
 	public void registerCommands() {
+		getCommand("setrates").setExecutor(new SetRatesCommand());
+		getCommand("droprates").setExecutor(new DropRatesCommand());
 		getCommand("givemask").setExecutor(new GiveMaskCommand()); // share all
 		getCommand("givecandy").setExecutor(new GiveCandyCommand()); // tjis
 		getCommand("givehallowcrate").setExecutor(new HalloweenCrateCommand()); // this

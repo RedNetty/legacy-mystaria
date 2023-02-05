@@ -12,7 +12,7 @@ public class SpawnCommand implements CommandExecutor {
         if (sender instanceof Player) {
             final Player p = (Player) sender;
             if (p.isOp()) {
-                p.teleport(TeleportBooks.DeadPeaks);
+                p.teleport(TeleportBooks.stonePeaks);
             }
         }
         return false;

@@ -29,7 +29,7 @@ public class AvalonPortal implements Listener {
     public static List<Player> glidingPlayers = new ArrayList<>();
 
     //Location the Portal Leads to
-    public Location portalEndLoc = new Location(Bukkit.getWorld("jew"), 601.125, 44.817, 405.947);
+    public Location portalEndLoc = new Location(Bukkit.getWorld("jew"), 653.125, 130.817, 481.947);
 
     //Checks if a given location is the world Guard portal tp
     public static boolean isPortalZone(Location loc) {
@@ -74,6 +74,8 @@ public class AvalonPortal implements Listener {
         }
     }
 
+
+
     public void stopGliding(Player player) {
         if (glidingPlayers.contains(player)) {
             player.setGliding(false);
@@ -107,7 +109,6 @@ public class AvalonPortal implements Listener {
         }
         if (e.getEntity() instanceof Player) {
             Player p = (Player) e.getEntity();
-            System.out.println(glidingPlayers.contains(p));
 
             if (e.getCause() == EntityDamageEvent.DamageCause.FALL || e.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION || e.getCause() == EntityDamageEvent.DamageCause.CONTACT || e.getCause() == EntityDamageEvent.DamageCause.FALLING_BLOCK || e.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL || e.getCause() == EntityDamageEvent.DamageCause.CUSTOM || e.getCause() == EntityDamageEvent.DamageCause.DROWNING || e.getCause() == EntityDamageEvent.DamageCause.DROWNING) {
                 if (p.isGliding() || glidingPlayers.contains(p)) {

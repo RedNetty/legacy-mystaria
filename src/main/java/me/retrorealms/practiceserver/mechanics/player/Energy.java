@@ -138,7 +138,11 @@ public class Energy
         if (energy > 100.0f) {
             energy = 100.0f;
         }
-        p.setExp(energy / 100.0f);
+        if(energy / 100.0f < 0) {
+            p.setExp(0);
+        }else {
+            p.setExp((energy / 100.0f));
+        }
         p.setLevel((int) energy);
     }
 

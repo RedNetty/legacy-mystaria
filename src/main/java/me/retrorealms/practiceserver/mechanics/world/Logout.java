@@ -1,6 +1,6 @@
 /*
  * Decompiled with CFR 0_118.
- * 
+ *
  * Could not load the following classes:
  *  org.bukkit.Bukkit
  *  org.bukkit.ChatColor
@@ -56,44 +56,47 @@ public class Logout implements Listener {
 
             public void run() {
                 for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                    if (!logging.containsKey(p.getName())) continue;
-                    if (logging.get(p.getName()) == 0) {
-                        logging.remove(p.getName());
-                        loggingloc.remove(p.getName());
+                    try {
+                        if (!logging.containsKey(p.getName())) continue;
+                        if (logging.get(p.getName()) == 0) {
+                            logging.remove(p.getName());
+                            loggingloc.remove(p.getName());
 
-                        if (Alignments.tagged.containsKey(p.getName())) {
-                            Alignments.tagged.remove(p.getName());
+                            if (Alignments.tagged.containsKey(p.getName())) {
+                                Alignments.tagged.remove(p.getName());
+                            }
+                            if (Listeners.combat.containsKey(p.getName())) {
+                                Alignments.tagged.remove(p.getName());
+                            }
+                            p.saveData();
+                            p.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+                            ServerUtil.sendToServer(p.getName(), "lobby");
+                            continue;
                         }
-                        if (Listeners.combat.containsKey(p.getName())) {
-                            Alignments.tagged.remove(p.getName());
-                        }
-                        p.saveData();
-                        p.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
-                        ServerUtil.sendToServer(p.getName(), "lobby");
-                        continue;
+                        p.sendMessage(ChatColor.RED + "Logging out in ... " + ChatColor.BOLD + logging.get(p.getName()) + "s");
+                        logging.put(p.getName(), logging.get(p.getName()) - 1);
+                    } catch (Exception e) {
+
                     }
-                    p.sendMessage(ChatColor.RED + "Logging out in ... " + ChatColor.BOLD + logging.get(p.getName()) + "s");
-                    logging.put(p.getName(), logging.get(p.getName()) - 1);
                 }
             }
         }.runTaskTimer(PracticeServer.plugin, 10, 10);
     }
 
     public void onDisable(boolean patch) {
-    	if (patch) {
-    		 Bukkit.getOnlinePlayers().forEach(player -> {
-    	            player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out for the content patch." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
-    	        });
-    	        PracticeServer.log.info("[Logout] has been disabled."); 
-    	} 
-    	
+        if (patch) {
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out for the content patch." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+            });
+            PracticeServer.log.info("[Logout] has been disabled.");
+        }
+
         Bukkit.getOnlinePlayers().forEach(player -> {
             player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
         });
-        PracticeServer.log.info("[Logout] has been disabled."); 
+        PracticeServer.log.info("[Logout] has been disabled.");
         return;
     }
-    
 
 
     @EventHandler

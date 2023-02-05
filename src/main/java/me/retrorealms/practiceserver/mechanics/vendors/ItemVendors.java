@@ -1,6 +1,6 @@
 /*
  * Decompiled with CFR 0_118.
- * 
+ *
  * Could not load the following classes:
  *  org.bukkit.Bukkit
  *  org.bukkit.ChatColor
@@ -39,16 +39,15 @@ import me.retrorealms.practiceserver.mechanics.profession.Fishing;
 import me.retrorealms.practiceserver.mechanics.profession.Mining;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -64,37 +63,11 @@ import java.util.*;
 
 public class ItemVendors
         implements Listener {
+    private static final String ITEM_VENDOR = "Item Vendor";
+    private static final String FISHERMAN = "Fisherman";
     public static HashMap<String, ItemStack> buyingitem = new HashMap<String, ItemStack>();
     public static HashMap<String, Integer> buyingprice = new HashMap<String, Integer>();
     public static ArrayList<Player> fixList = new ArrayList<>();
-
-    public void onEnable() {
-        PracticeServer.log.info("[ItemVendors] has been enabled.");
-        Bukkit.getServer().getPluginManager().registerEvents((Listener) this, PracticeServer.plugin);
-    }
-
-    public void onDisable() {
-        PracticeServer.log.info("[ItemVendors] has been disabled.");
-    }
-
-    public static Integer getPriceFromLore(ItemStack is) {
-        int price = 0;
-        if (is != null && is.getType() != Material.AIR && is.getItemMeta().hasLore()) {
-            for (String line : is.getItemMeta().getLore()) {
-                if (!line.contains("Price: ")) continue;
-                String val = line;
-                val = ChatColor.stripColor((String) val);
-                val = val.substring(7, val.length() - 1);
-                try {
-                    price = Integer.parseInt(val);
-                    continue;
-                } catch (Exception e) {
-                    price = 0;
-                }
-            }
-        }
-        return price;
-    }
 
     public static Integer getGuildPriceFromLore(ItemStack is) {
         int price = 0;
@@ -102,7 +75,7 @@ public class ItemVendors
             for (String line : is.getItemMeta().getLore()) {
                 if (!line.contains("Price: ")) continue;
                 String val = line;
-                val = ChatColor.stripColor((String) val);
+                val = ChatColor.stripColor(val);
                 val = val.substring(7, val.length() - 2);
                 try {
                     price = Integer.parseInt(val);
@@ -113,6 +86,132 @@ public class ItemVendors
             }
         }
         return price;
+    }
+
+    public static ItemStack createFishingPole(int tier) {
+        ItemStack rawStack = null;
+        String name = "";
+        ArrayList<String> lore = new ArrayList<>();
+        rawStack = new ItemStack(Material.FISHING_ROD, 1);
+
+        ItemMeta meta = rawStack.getItemMeta();
+        meta.addEnchant(Enchantment.LURE, 3, false);
+        String expBar = ChatColor.RED + "||||||||||||||||||||" + "||||||||||||||||||||" + "||||||||||";
+        int lvl = 100;
+        lore.add(ChatColor.GRAY + "Level: " + ChatColor.GREEN + lvl);
+        lore.add(ChatColor.GRAY.toString() + 0 + ChatColor.GRAY + " / " + ChatColor.GRAY + Mining.getEXPNeeded(lvl));
+        lore.add(ChatColor.GRAY + "EXP: " + expBar);
+
+        switch (tier) {
+            case 1:
+                name = ChatColor.WHITE + "Basic Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of wood and thread.");
+                break;
+            case 2:
+                name = ChatColor.GREEN + "Advanced Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of oak wood and thread.");
+                break;
+            case 3:
+                name = ChatColor.AQUA + "Expert Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of ancient oak wood and spider silk.");
+                break;
+            case 4:
+                name = ChatColor.LIGHT_PURPLE + "Supreme Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of jungle bamboo and spider silk.");
+                break;
+            case 5:
+                name = ChatColor.YELLOW + "Master Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of rich mahogany and enchanted silk");
+                break;
+            case 6:
+                name = ChatColor.BLUE + "Grand Master Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of frozen birch and enchanted silk");
+                break;
+            default:
+                break;
+        }
+
+        meta.setDisplayName(name);
+        meta.setLore(lore);
+        rawStack.setItemMeta(meta);
+        rawStack.addEnchantment(Enchantment.LURE, 3);
+        net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(rawStack);
+        NBTTagCompound tag = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
+        tag.setString("type", "rod");
+        tag.setInt("itemTier", 6);
+        tag.setInt("level", 120);
+        tag.setInt("XP", 0);
+        tag.setInt("maxXP", Fishing.getEXPNeeded(lvl));
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public static ItemStack createFishingPoleShop(int tier) {
+        ItemStack rawStack = null;
+        String name = "";
+        ArrayList<String> lore = new ArrayList<>();
+        rawStack = new ItemStack(Material.FISHING_ROD, 1);
+
+        ItemMeta meta = rawStack.getItemMeta();
+        meta.addEnchant(Enchantment.LURE, 3, false);
+        String expBar = ChatColor.RED + "||||||||||||||||||||" + "||||||||||||||||||||" + "||||||||||";
+        int lvl = 100;
+        lore.add(ChatColor.GRAY + "Level: " + ChatColor.GREEN + lvl);
+        lore.add(ChatColor.GRAY.toString() + 0 + ChatColor.GRAY + " / " + ChatColor.GRAY + Mining.getEXPNeeded(lvl));
+        lore.add(ChatColor.GRAY + "EXP: " + expBar);
+
+        switch (tier) {
+            case 1:
+                name = ChatColor.WHITE + "Basic Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of wood and thread.");
+                break;
+            case 2:
+                name = ChatColor.GREEN + "Advanced Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of oak wood and thread.");
+                break;
+            case 3:
+                name = ChatColor.AQUA + "Expert Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of ancient oak wood and spider silk.");
+                break;
+            case 4:
+                name = ChatColor.LIGHT_PURPLE + "Supreme Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of jungle bamboo and spider silk.");
+                break;
+            case 5:
+                name = ChatColor.YELLOW + "Master Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of rich mahogany and enchanted silk");
+                break;
+            case 6:
+                name = ChatColor.BLUE + "Grand Master Fishingrod";
+                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of frozen birch and enchanted silk");
+                break;
+            default:
+                break;
+        }
+        lore.add(ChatColor.GREEN + "Price: " + ChatColor.WHITE + 2000 + "g");
+
+        meta.setDisplayName(name);
+        meta.setLore(lore);
+        rawStack.setItemMeta(meta);
+        rawStack.addEnchantment(Enchantment.LURE, 3);
+        net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(rawStack);
+        NBTTagCompound tag = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
+        tag.setString("type", "rod");
+        tag.setInt("itemTier", 6);
+        tag.setInt("level", 120);
+        tag.setInt("XP", 0);
+        tag.setInt("maxXP", Fishing.getEXPNeeded(lvl));
+        nmsStack.setTag(tag);
+        return CraftItemStack.asBukkitCopy(nmsStack);
+    }
+
+    public void onEnable() {
+        PracticeServer.log.info("[ItemVendors] has been enabled.");
+        Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
+    }
+
+    public void onDisable() {
+        PracticeServer.log.info("[ItemVendors] has been disabled.");
     }
 
     ItemStack food(int type) {
@@ -139,315 +238,214 @@ public class ItemVendors
             price = 10;
         }
         ItemMeta im = is.getItemMeta();
-        im.setLore(Arrays.asList(ChatColor.GREEN + "Price: " + ChatColor.WHITE + price + "g"));
+        im.setLore(Collections.singletonList(ChatColor.GREEN + "Price: " + ChatColor.WHITE + price + "g"));
         is.setItemMeta(im);
         return is;
     }
 
-    public static ItemStack createFishingPole(int tier) {
-        ItemStack rawStack = null;
-        String name = "";
-        ArrayList<String> lore = new ArrayList<>();
-        rawStack = new ItemStack(Material.FISHING_ROD, 1);
-
-        ItemMeta meta = rawStack.getItemMeta();
-        meta.addEnchant(Enchantment.LURE, 3, false);
-        String expBar = ChatColor.RED + "||||||||||||||||||||" + "||||||||||||||||||||" + "||||||||||";
-        int lvl = 100;
-        lore.add(ChatColor.GRAY.toString() + "Level: " + ChatColor.GREEN + lvl);
-        lore.add(ChatColor.GRAY.toString() + 0 + ChatColor.GRAY.toString() + " / " + ChatColor.GRAY + Mining.getEXPNeeded(lvl));
-        lore.add(ChatColor.GRAY.toString() + "EXP: " + expBar);
-
-        switch (tier) {
-            case 1:
-                name = ChatColor.WHITE + "Basic Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of wood and thread.");
-                break;
-            case 2:
-                name = ChatColor.GREEN.toString() + "Advanced Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of oak wood and thread.");
-                break;
-            case 3:
-                name = ChatColor.AQUA.toString() + "Expert Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of ancient oak wood and spider silk.");
-                break;
-            case 4:
-                name = ChatColor.LIGHT_PURPLE.toString() + "Supreme Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of jungle bamboo and spider silk.");
-                break;
-            case 5:
-                name = ChatColor.YELLOW.toString() + "Master Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of rich mahogany and enchanted silk");
-                break;
-            case 6:
-                name = ChatColor.BLUE.toString() + "Grand Master Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of frozen birch and enchanted silk");
-                break;
-            default:
-                break;
-        }
-
-        meta.setDisplayName(name);
-        meta.setLore(lore);
-        rawStack.setItemMeta(meta);
-        rawStack.addEnchantment(Enchantment.LURE, 3);
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(rawStack);
-        NBTTagCompound tag = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
-        tag.setString("type", "rod");
-        tag.setInt("itemTier", 6);
-        tag.setInt("level", 120);
-        tag.setInt("XP", 0);
-        tag.setInt("maxXP", Fishing.getEXPNeeded(lvl));
-        nmsStack.setTag(tag);
-        return CraftItemStack.asBukkitCopy(nmsStack);
-    }
-
-    public static ItemStack createFishingPoleShop(int tier) {
-        ItemStack rawStack = null;
-        String name = "";
-        ArrayList<String> lore = new ArrayList<>();
-        rawStack = new ItemStack(Material.FISHING_ROD, 1);
-
-        ItemMeta meta = rawStack.getItemMeta();
-        meta.addEnchant(Enchantment.LURE, 3, false);
-        String expBar = ChatColor.RED + "||||||||||||||||||||" + "||||||||||||||||||||" + "||||||||||";
-        int lvl = 100;
-        lore.add(ChatColor.GRAY.toString() + "Level: " + ChatColor.GREEN + lvl);
-        lore.add(ChatColor.GRAY.toString() + 0 + ChatColor.GRAY.toString() + " / " + ChatColor.GRAY + Mining.getEXPNeeded(lvl));
-        lore.add(ChatColor.GRAY.toString() + "EXP: " + expBar);
-
-        switch (tier) {
-            case 1:
-                name = ChatColor.WHITE + "Basic Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of wood and thread.");
-                break;
-            case 2:
-                name = ChatColor.GREEN.toString() + "Advanced Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of oak wood and thread.");
-                break;
-            case 3:
-                name = ChatColor.AQUA.toString() + "Expert Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of ancient oak wood and spider silk.");
-                break;
-            case 4:
-                name = ChatColor.LIGHT_PURPLE.toString() + "Supreme Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of jungle bamboo and spider silk.");
-                break;
-            case 5:
-                name = ChatColor.YELLOW.toString() + "Master Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of rich mahogany and enchanted silk");
-                break;
-            case 6:
-                name = ChatColor.BLUE.toString() + "Grand Master Fishingrod";
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A fishing rod made of frozen birch and enchanted silk");
-                break;
-            default:
-                break;
-        }
-        lore.add(ChatColor.GREEN + "Price: " + ChatColor.WHITE + 2000 + "g");
-
-        meta.setDisplayName(name);
-        meta.setLore(lore);
-        rawStack.setItemMeta(meta);
-        rawStack.addEnchantment(Enchantment.LURE, 3);
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(rawStack);
-        NBTTagCompound tag = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
-        tag.setString("type", "rod");
-        tag.setInt("itemTier", 6);
-        tag.setInt("level", 120);
-        tag.setInt("XP", 0);
-        tag.setInt("maxXP", Fishing.getEXPNeeded(lvl));
-        nmsStack.setTag(tag);
-        return CraftItemStack.asBukkitCopy(nmsStack);
-    }
-
-
     @EventHandler
     public void onBankClick(PlayerInteractEntityEvent e) {
-    	if (DeployCommand.patchlockdown) {
-        	e.setCancelled(true);
-        	return;
-        }
-        if (e.getRightClicked() instanceof HumanEntity) {
-            HumanEntity p = (HumanEntity) e.getRightClicked();
-            if (p.getName() == null) {
-                return;
-            }
-            if (!p.hasMetadata("NPC")) {
-                return;
-            }
-            if(fixList.contains(e.getPlayer())) {
-                return;
-            }
-            fixList.add(e.getPlayer());
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    fixList.remove(e.getPlayer());
-                }
-            }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 5L);
-
-            if (p.getName().equals("Banker")) {
-                e.getPlayer().sendMessage(ChatColor.GRAY + "Banker: " + ChatColor.WHITE + "Use these bank chests to store your precious items.");
-            } else if(p.getName().equalsIgnoreCase("Medic")) {
-                e.getPlayer().sendMessage(ChatColor.GREEN + "You are all healed up, get in there!");
-                e.getPlayer().setHealth(e.getPlayer().getMaxHealth());
-                e.getPlayer().playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 10, 10);
-            } else if (p.getName().equals("Item Vendor")) {
-                e.getPlayer().sendMessage(ChatColor.GRAY + "Item Vendor: " + ChatColor.WHITE + "I will take your gems in return for special items.");
-                Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
-                inv.addItem(new ItemStack[]{Items.orb(true)});
-                inv.addItem(new ItemStack[]{Items.legendaryOrb(true)});
-                inv.addItem(new ItemStack[]{Items.enchant(1, 0, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(1, 1, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(2, 0, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(2, 1, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(3, 0, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(3, 1, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(4, 0, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(4, 1, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(5, 0, true)});
-                inv.addItem(new ItemStack[]{Items.enchant(5, 1, true)});
-                if(PracticeServer.t6) {
-                    inv.addItem(new ItemStack[]{Items.enchant(6, 0, true)});
-                    inv.addItem(new ItemStack[]{Items.enchant(6, 1, true)});
-                }
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            } else if (p.getName().equals("Upgrade Vendor")) {
-                e.getPlayer().sendMessage(ChatColor.GRAY + "Upgrade Vendor: " + ChatColor.WHITE + "I will take your tokens in exchange for permanent upgrades.");
-                Inventory inv = Bukkit.getServer().createInventory(null, 18, "Upgrade Vendor");
-                Player pl = e.getPlayer();
-                PersistentPlayer pp = PersistentPlayers.persistentPlayers.get(pl.getUniqueId());
-                inv.addItem(PersistentPlayers.getItem("Mount", pp.mount));
-                inv.addItem(PersistentPlayers.getItem("BankPages", pp.bankpages));
-                inv.addItem(PersistentPlayers.getItem("Pickaxe", pp.pickaxe));
-                inv.addItem(PersistentPlayers.getItem("Farmer", pp.farmer));
-                inv.addItem(PersistentPlayers.getItem("LastStand", pp.laststand));
-                inv.addItem(PersistentPlayers.getItem("OrbRolls", pp.orbrolls));
-                inv.addItem(PersistentPlayers.getItem("Luck", pp.luck));
-                inv.addItem(PersistentPlayers.getItem("Reaper", pp.reaper));
-                inv.addItem(PersistentPlayers.getItem("KitWeapon", pp.kitweapon));
-                inv.addItem(PersistentPlayers.getItem("KitHelm", pp.kithelm));
-                inv.addItem(PersistentPlayers.getItem("KitChest", pp.kitchest));
-                inv.addItem(PersistentPlayers.getItem("KitLegs", pp.kitlegs));
-                inv.addItem(PersistentPlayers.getItem("KitBoots", pp.kitboots));
-                inv.setItem(17, PersistentPlayers.getItem("Tokens", pp.tokens));
-
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            } else if (p.getName().equals("Fisherman")) {
-                e.getPlayer().sendMessage(ChatColor.GRAY + "Fisherman: " + ChatColor.WHITE + "These fish can give you special powers.");
-                Inventory inv = Bukkit.getServer().createInventory(null, 9, "Fisherman");
-                inv.addItem(new ItemStack[]{Speedfish.fish(2, true)});
-                inv.addItem(new ItemStack[]{Speedfish.fish(3, true)});
-                inv.addItem(new ItemStack[]{Speedfish.fish(4, true)});
-                inv.addItem(new ItemStack[]{Speedfish.fish(5, true)});
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            } else if (p.getName().equals("Food Vendor")) {
-                Inventory inv = Bukkit.getServer().createInventory(null, 9, "Food Vendor");
-                inv.addItem(new ItemStack[]{this.food(0)});
-                inv.addItem(new ItemStack[]{this.food(1)});
-                inv.addItem(new ItemStack[]{this.food(2)});
-                inv.addItem(new ItemStack[]{this.food(3)});
-                inv.addItem(new ItemStack[]{this.food(4)});
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            } else if (p.getName().equals("Book Vendor")) {
-                Inventory inv = Bukkit.getServer().createInventory(null, 18, "Book Vendor");
-                inv.addItem(new ItemStack[]{TeleportBooks.deadpeaks_book(true)});
-                inv.addItem(new ItemStack[]{TeleportBooks.tripoli_book(true)});
-                inv.addItem(new ItemStack[]{TeleportBooks.avalonBook(true)});
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-            }else if(p.getName().equalsIgnoreCase("Trick or Treat")) { //Halloween Vendor
-                PracticeServer.getManagerHandler().getHalloween().trickOrTreat(e.getPlayer(), false);
-                return;
-            } else if (p.getName().equals("Dungeoneer")) {
-                ScrollGUI scrollGUI = new ScrollGUI(e.getPlayer());
-                scrollGUI.openFor(e.getPlayer());
-            }
-        }
-    }
-
-
-    /*Halloween Candy Shit*/
-    @EventHandler
-    public void onInvClick(InventoryClickEvent e) {
-    	if (DeployCommand.patchlockdown) {
-        	e.setCancelled(true);
-        	return;
-        }
-        Player p = (Player) e.getWhoClicked();
-        if (e.getInventory().getTitle().contains("ArmorSee")) {
+        if (DeployCommand.patchlockdown) {
             e.setCancelled(true);
             return;
         }
-        if (e.getInventory().getTitle().equals("Item Vendor")) {
-            List<String> lore;
-            e.setCancelled(true);
-            if (e.getCurrentItem() != null && (e.getCurrentItem().getType() == Material.MAGMA_CREAM || e.getCurrentItem().getType() == Material.EMPTY_MAP) && e.getCurrentItem().getItemMeta().hasLore() && ((String) (lore = e.getCurrentItem().getItemMeta().getLore()).get(lore.size() - 1)).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    ItemStack is = new ItemStack(e.getCurrentItem().getType());
-                    ItemMeta im = is.getItemMeta();
-                    im.setDisplayName(e.getCurrentItem().getItemMeta().getDisplayName());
-                    lore.remove(lore.size() - 1);
-                    im.setLore(lore);
-                    is.setItemMeta(im);
-                    buyingitem.put(p.getName(), is);
-                    buyingprice.put(p.getName(), price);
-                    p.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
-                    p.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-                    p.closeInventory();
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + e.getCurrentItem().getItemMeta().getDisplayName());
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
-                }
+
+        if(e.getRightClicked() instanceof HumanEntity) {
+            HumanEntity clickedEntity = (HumanEntity) e.getRightClicked();
+            if (!isNPC(clickedEntity)) {
+                return;
             }
-        } else if (e.getCurrentItem() != null && e.getInventory().getTitle().equals("Fisherman")) {
-            List<String> lore;
-            e.setCancelled(true);
-            if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.RAW_FISH && e.getCurrentItem().getItemMeta().hasLore() && ((String) (lore = e.getCurrentItem().getItemMeta().getLore()).get(lore.size() - 1)).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    ItemStack is = new ItemStack(e.getCurrentItem().getType());
-                    ItemMeta im = is.getItemMeta();
-                    im.setDisplayName(e.getCurrentItem().getItemMeta().getDisplayName());
-                    lore.remove(lore.size() - 1);
-                    im.setLore(lore);
-                    is.setItemMeta(im);
-                    buyingitem.put(p.getName(), is);
-                    buyingprice.put(p.getName(), price);
-                    p.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
-                    p.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-                    p.closeInventory();
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + e.getCurrentItem().getItemMeta().getDisplayName());
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
-                }
+            if (isRecentlyInteracted(e.getPlayer())) {
+                return;
             }
-        } else if (e.getCurrentItem() != null && (e.getInventory().getTitle().equals("Food Vendor") || e.getInventory().getTitle().equals("Book Vendor"))) {
-            e.setCancelled(true);
-            if (e.getCurrentItem() != null && (e.getCurrentItem().getType() == Material.BOOK || e.getCurrentItem().getType() == Material.MELON || e.getCurrentItem().getType() == Material.APPLE || e.getCurrentItem().getType() == Material.BREAD || e.getCurrentItem().getType() == Material.PUMPKIN_PIE || e.getCurrentItem().getType() == Material.COOKED_BEEF) && e.getCurrentItem().getItemMeta().hasLore() && ((String) (e.getCurrentItem().getItemMeta().getLore()).get(0)).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    ItemStack is = new ItemStack(e.getCurrentItem().getType());
-                    buyingitem.put(p.getName(), is);
-                    buyingprice.put(p.getName(), price);
-                    p.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
-                    p.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-                    p.closeInventory();
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + e.getCurrentItem().getType().name());
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
-                }
+            addToRecentlyInteracted(e.getPlayer());
+
+            String npcName = clickedEntity.getName();
+            Player player = e.getPlayer();
+            Inventory inventory = null;
+            switch (npcName) {
+                case "Banker":
+                    player.sendMessage(ChatColor.GRAY + "Banker: " + ChatColor.WHITE + "Use these bank chests to store your precious items.");
+                    break;
+                case "Medic":
+                    player.sendMessage(ChatColor.GREEN + "You are all healed up, get in there!");
+                    player.setHealth(player.getMaxHealth());
+                    player.playSound(clickedEntity.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 10, 10);
+                    break;
+                case "Book Vendor":
+                    player.sendMessage(ChatColor.GRAY + "Book-Vendor: " + ChatColor.WHITE + "I will take your gems in return for Teleport Books.");
+                    inventory = openBookVendorInventory(player);
+                    player.playSound(player.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+                    break;
+                case "Fisherman":
+                    player.sendMessage(ChatColor.GRAY + "Fisherman: " + ChatColor.WHITE + "I will take your gems in return for Magical Fish.");
+                    inventory = openFishermanInventory(player);
+                    player.playSound(player.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+                    break;
+                case "Dungeoneer":
+                    player.sendMessage(ChatColor.GRAY + "Dungeoneer: " + ChatColor.WHITE + "I will take your gems in return for mystical items.");
+                    ScrollGUI scrollGUI = new ScrollGUI(e.getPlayer());
+                    scrollGUI.openFor(e.getPlayer());
+                    player.playSound(player.getLocation(), Sound.AMBIENT_CAVE, 1.0f, 1.0f);
+                    break;
+                case "Item Vendor":
+                    player.sendMessage(ChatColor.GRAY + "Item Vendor: " + ChatColor.WHITE + "I will take your gems in return for special items.");
+                    inventory = openItemVendorInventory(player);
+                    player.playSound(player.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+                    break;
+                case "Upgrade Vendor":
+                    player.sendMessage(ChatColor.GRAY + "Upgrade Vendor: " + ChatColor.WHITE + "I will take your tokens in exchange for permanent upgrades.");
+                    inventory = openUpgradeVendorInventory(player);
+                    player.playSound(player.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+                    break;
+            }
+            if (inventory != null) player.openInventory(inventory);
+        }
+    }
+
+    private boolean isNPC(HumanEntity entity) {
+        return entity.hasMetadata("NPC");
+    }
+
+    public static boolean isRecentlyInteracted(Player player) {
+        return fixList.contains(player);
+    }
+
+    public static void addToRecentlyInteracted(Player player) {
+        fixList.add(player);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                fixList.remove(player);
+            }
+        }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 5L);
+    }
+
+    private Inventory openItemVendorInventory(Player player) {
+        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
+        inv.addItem(Items.orb(true));
+        inv.addItem(Items.legendaryOrb(true));
+        inv.addItem(Items.enchant(1, 0, true).clone());
+        inv.addItem(Items.enchant(1, 1, true).clone());
+        inv.addItem(Items.enchant(2, 0, true).clone());
+        inv.addItem(Items.enchant(2, 1, true).clone());
+        inv.addItem(Items.enchant(3, 0, true).clone());
+        inv.addItem(Items.enchant(3, 1, true).clone());
+        inv.addItem(Items.enchant(4, 0, true).clone());
+        inv.addItem(Items.enchant(4, 1, true).clone());
+        inv.addItem(Items.enchant(5, 0, true).clone());
+        inv.addItem(Items.enchant(5, 1, true).clone());
+        if (PracticeServer.t6) {
+            inv.addItem(Items.enchant(6, 0, true));
+            inv.addItem(Items.enchant(6, 1, true));
+        }
+        return inv;
+    }
+
+    private Inventory openFishermanInventory(Player player) {
+        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
+        inv.addItem(Speedfish.fish(2, true).clone());
+        inv.addItem(Speedfish.fish(3, true).clone());
+        inv.addItem(Speedfish.fish(4, true).clone());
+        inv.addItem(Speedfish.fish(5, true).clone());
+        return inv;
+    }
+    private Inventory openBookVendorInventory(Player player) {
+        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
+        inv.addItem(TeleportBooks.deadpeaks_book(true).clone());
+        inv.addItem(TeleportBooks.tripoli_book(true).clone());
+        inv.addItem(TeleportBooks.avalonBook(true).clone());
+        return inv;
+    }
+    private Inventory openUpgradeVendorInventory(Player player) {
+        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Upgrade Vendor");
+        PersistentPlayer pp = PersistentPlayers.persistentPlayers.get(player.getUniqueId());
+        inv.addItem(PersistentPlayers.getItem("Mount", pp.mount));
+        inv.addItem(PersistentPlayers.getItem("BankPages", pp.bankpages));
+        inv.addItem(PersistentPlayers.getItem("Pickaxe", pp.pickaxe));
+        inv.addItem(PersistentPlayers.getItem("Farmer", pp.farmer));
+        inv.addItem(PersistentPlayers.getItem("LastStand", pp.laststand));
+        inv.addItem(PersistentPlayers.getItem("OrbRolls", pp.orbrolls));
+        inv.addItem(PersistentPlayers.getItem("Luck", pp.luck));
+        inv.addItem(PersistentPlayers.getItem("Reaper", pp.reaper));
+        inv.addItem(PersistentPlayers.getItem("KitWeapon", pp.kitweapon));
+        inv.addItem(PersistentPlayers.getItem("KitHelm", pp.kithelm));
+        inv.addItem(PersistentPlayers.getItem("KitChest", pp.kitchest));
+        inv.addItem(PersistentPlayers.getItem("KitLegs", pp.kitlegs));
+        inv.addItem(PersistentPlayers.getItem("KitBoots", pp.kitboots));
+        inv.setItem(17, PersistentPlayers.getItem("Tokens", pp.tokens));
+        return inv;
+    }
+
+    @EventHandler
+    public void onInvClick1(InventoryClickEvent event) {
+        if (DeployCommand.patchlockdown) {
+            event.setCancelled(true);
+            return;
+        }
+
+        Player player = (Player) event.getWhoClicked();
+        Inventory inventory = event.getInventory();
+
+        if (inventory.getTitle().contains("ArmorSee")) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (inventory.getTitle().equalsIgnoreCase("Item Vendor") || inventory.getTitle().equalsIgnoreCase("Fisherman") || inventory.getTitle().equalsIgnoreCase("Book Vendor")) {
+            handleInventoryClick(event, player);
+        }
+    }
+
+
+    private void handleInventoryClick(InventoryClickEvent event, Player player) {
+        ItemStack item = event.getCurrentItem();
+        if (item == null) {
+            return;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return;
+        }
+
+        List<String> lore = meta.getLore();
+        if (lore == null) {
+            return;
+        }
+
+        int price = getPriceFromLore(item);
+
+        if (price < 0) {
+            return;
+        }
+
+        if (!Money.hasEnoughGems(player, price)) {
+            player.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + item.getItemMeta().getDisplayName());
+            player.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
+            player.closeInventory();
+            return;
+        }
+
+        buyingitem.put(player.getName(), item);
+        buyingprice.put(player.getName(), price);
+        player.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
+        player.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
+        event.setCancelled(true);
+        player.closeInventory();
+    }
+
+    public static int getPriceFromLore(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        List<String> lore = meta.getLore();
+        for (String str : lore) {
+            if (str.contains("Price:")) {
+                String priceString = str.substring(str.indexOf(":") + 2).replaceFirst("[^\\d]+", "");
+                priceString = priceString.substring(0, priceString.length()-1);
+                return Integer.parseInt(priceString);
             }
         }
+        return -1;
     }
 
 
@@ -486,9 +484,9 @@ public class ItemVendors
             }
             int empty = 0;
             ItemStack hand = p.getInventory().getItemInMainHand();
-            if(is.getType() == Material.WOOD_PICKAXE){
+            if (is.getType() == Material.WOOD_PICKAXE) {
                 PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-                for(int i = 0; i < (pp.pickaxe * 20)-1; i++){
+                for (int i = 0; i < (pp.pickaxe * 20) - 1; i++) {
                     ProfessionMechanics.addExp(p, is, 10000, false);
                 }
             }
@@ -509,6 +507,7 @@ public class ItemVendors
                         p.getInventory().setItem(p.getInventory().firstEmpty(), is);
                         ++i;
                     }
+                    p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1F, 1F);
                     p.sendMessage(ChatColor.RED + "-" + amt * price + ChatColor.BOLD + "G");
                     p.sendMessage(ChatColor.GREEN + "Transaction successful.");
                     Money.takeGems(p, amt * price);

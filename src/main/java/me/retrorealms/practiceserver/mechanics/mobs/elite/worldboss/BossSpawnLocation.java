@@ -5,9 +5,9 @@ import org.bukkit.Location;
 
 public enum BossSpawnLocation {
     CASTLE(new Location(Bukkit.getWorld("jew"), 392, 45, -122)),
-    AVALON_ENTRANCE(new Location(Bukkit.getWorld("jew"), 638, 5, 68)),
+    DRAGONS_DEN(new Location(Bukkit.getWorld("jew"), 580, 5, 69)),
     TRIPOLI(new Location(Bukkit.getWorld("jew"), 872, 7, -39)),
-    AVALON_BRIDGE(new Location(Bukkit.getWorld("jew"), 612, 78, 369));
+    THE_BENEATH(new Location(Bukkit.getWorld("jew"), 605, 15, 352));
 
     public Location location;
 

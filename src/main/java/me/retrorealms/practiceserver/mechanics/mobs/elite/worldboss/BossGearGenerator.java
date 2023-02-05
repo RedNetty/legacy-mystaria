@@ -73,7 +73,6 @@ public class BossGearGenerator {
         if(config != null && file != null) {
             String configString = boss.toLowerCase() + "." + piece + "." + stat.toLowerCase();
             if(config.contains(configString)) {
-                System.out.println(config.getInt(configString));
                 return config.getInt(configString);
 
             }else{

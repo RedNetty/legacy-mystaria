@@ -18,6 +18,7 @@ import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,6 +45,7 @@ public class Merchant implements Listener {
                 if ((e.getPlayer().getItemInHand().getType() != Material.AIR) && (Items.isItemTradeable(e.getPlayer().getItemInHand())) &&
                         ((Altar.isArmour(e.getPlayer().getItemInHand())) || (Altar.isWeapon(e.getPlayer().getItemInHand()) || (e.getPlayer().getItemInHand().getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(e.getPlayer().getItemInHand().getType()) > 0)))) {
                     merchant(e.getPlayer(), e.getPlayer().getItemInHand());
+                    e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
                 }else {
                     e.getPlayer().sendMessage(ChatColor.RED + "You must be holding a tradeable item to trade.");
                 }

@@ -1,27 +1,4 @@
-/*
- * Decompiled with CFR 0_118.
- *
- * Could not load the following classes:
- *  org.bukkit.Bukkit
- *  org.bukkit.ChatColor
- *  org.bukkit.Location
- *  org.bukkit.Material
- *  org.bukkit.Sound
- *  org.bukkit.entity.HumanEntity
- *  org.bukkit.entity.Item
- *  org.bukkit.entity.Player
- *  org.bukkit.event.EventHandler
- *  org.bukkit.event.EventPriority
- *  org.bukkit.event.Listener
- *  org.bukkit.event.inventory.InventoryClickEvent
- *  org.bukkit.event.player.PlayerPickupItemEvent
- *  org.bukkit.inventory.Inventory
- *  org.bukkit.inventory.ItemStack
- *  org.bukkit.inventory.PlayerInventory
- *  org.bukkit.inventory.meta.ItemMeta
- *  org.bukkit.plugin.Plugin
- *  org.bukkit.plugin.PluginManager
- */
+
 package me.retrorealms.practiceserver.mechanics.money;
 
 import me.retrorealms.practiceserver.PracticeServer;

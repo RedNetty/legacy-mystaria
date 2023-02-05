@@ -1,9 +1,10 @@
 package me.retrorealms.practiceserver.mechanics.dungeon.api;
 
-import net.minecraft.server.v1_9_R2.IChatBaseComponent;
-import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
+import net.minecraft.server.v1_12_R1.ChatMessageType;
+import net.minecraft.server.v1_12_R1.IChatBaseComponent;
+import net.minecraft.server.v1_12_R1.PacketPlayOutChat;
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 /**
@@ -31,6 +32,6 @@ public class Actionbar {
      */
     public void send() {
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(new PacketPlayOutChat
-                (IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + ChatColor.translateAlternateColorCodes('&', this.message) + "\"}"), (byte) 2));
+                (IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + ChatColor.translateAlternateColorCodes('&', this.message) + "\"}"), ChatMessageType.GAME_INFO));
     }
 }

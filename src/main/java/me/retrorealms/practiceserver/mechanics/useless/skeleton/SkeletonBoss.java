@@ -3,16 +3,17 @@ package me.retrorealms.practiceserver.mechanics.useless.skeleton;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.drops.EliteDrops;
 import me.retrorealms.practiceserver.mechanics.useless.reflect.Reflection;
-import net.minecraft.server.v1_9_R2.EntitySkeleton;
-import net.minecraft.server.v1_9_R2.GenericAttributes;
-import net.minecraft.server.v1_9_R2.PathfinderGoalSelector;
+import net.minecraft.server.v1_12_R1.EntitySkeleton;
+import net.minecraft.server.v1_12_R1.GenericAttributes;
+import net.minecraft.server.v1_12_R1.PathfinderGoalSelector;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.WitherSkeleton;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -58,8 +59,7 @@ public class SkeletonBoss extends EntitySkeleton {
     }
 
     void spawn(Location location) {
-        Skeleton skeleton = (Skeleton) this.getBukkitEntity();
-        skeleton.setSkeletonType(Skeleton.SkeletonType.WITHER);
+        WitherSkeleton skeleton = (WitherSkeleton) this.getBukkitEntity();
 
         this.spawnIn(((CraftWorld) location.getWorld()).getHandle());
         this.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());

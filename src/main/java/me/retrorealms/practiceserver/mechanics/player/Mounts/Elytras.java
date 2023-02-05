@@ -229,8 +229,8 @@ public class Elytras implements Listener {
 					}
 					event.setCancelled(true);
 					if (isFrostFall(player)) {
-						if (!player.getLocation().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
-								|| player.getLocation().add(new Vector(0, 15, 0)).getY() >= 196) {
+						if (!player.getLocation().clone().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
+								|| player.getLocation().clone().add(new Vector(0, 15, 0)).getY() >= 196) {
 							launched = false;
 							player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString()
 									+ "Unable to launch elytra mount, something would block your flight above you, or you are too high up to launch.");
@@ -239,8 +239,8 @@ public class Elytras implements Listener {
 						}
 					} else if (isAvalon(player)) {
 
-						if (!player.getLocation().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
-								|| player.getLocation().add(new Vector(0, 15, 0)).getY() >= 130) {
+						if (!player.getLocation().clone().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
+								|| player.getLocation().clone().add(new Vector(0, 15, 0)).getY() >= 130) {
 							launched = false;
 							player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString()
 									+ "Unable to launch elytra mount, something would block your flight above you, or you are too high up to launch.");
@@ -248,8 +248,8 @@ public class Elytras implements Listener {
 							return;
 						}
 					} else if (isDeadpeaks(player)) {
-						if (!player.getLocation().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
-								|| player.getLocation().add(new Vector(0, 15, 0)).getY() >= 70) {
+						if (!player.getLocation().clone().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)
+								|| player.getLocation().clone().add(new Vector(0, 15, 0)).getY() >= 70) {
 							launched = false;
 							player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString()
 									+ "Unable to launch elytra mount, something would block your flight above you, or you are too high up to launch.");
@@ -258,7 +258,7 @@ public class Elytras implements Listener {
 						}
 
 					} else {
-						if (!player.getLocation().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)) {
+						if (!player.getLocation().clone().add(new Vector(0, 15, 0)).getBlock().getType().equals(Material.AIR)) {
 							player.sendMessage(ChatColor.RED + ChatColor.BOLD.toString()
 									+ "Unable to launch elytra mount, this is not a safe mount location.");
 

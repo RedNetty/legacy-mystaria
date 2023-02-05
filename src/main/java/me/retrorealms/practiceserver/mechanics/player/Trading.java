@@ -165,7 +165,7 @@ public class Trading implements Listener {
         for (@SuppressWarnings("unused") final Player pl : Trading.trade_map.keySet()) {
             try {
                 // ParticleEffect.sendToLocation(ParticleEffect.VILLAGER_HAPPY,
-                // pl.getLocation().add(0.0, 2.0, 0.0), new
+                // pl.getLocation().clone().add(0.0, 2.0, 0.0), new
                 // Random().nextFloat(), new Random().nextFloat(), new
                 // Random().nextFloat(), 2.0f, 1);
             } catch (Exception ex) {

@@ -4,8 +4,8 @@ import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.API;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftCreature;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftCreature;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.*;
 import org.bukkit.metadata.FixedMetadataValue;
 

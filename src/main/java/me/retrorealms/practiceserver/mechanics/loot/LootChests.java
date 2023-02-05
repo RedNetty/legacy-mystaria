@@ -40,13 +40,17 @@ public class LootChests implements Listener {
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
             public void run() {
+                try{
                 for (Location location : loot.keySet()) {
                     Location cloneLocation = location.clone().add(0.5, 1.5, 0.5);
                     cloneLocation.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, cloneLocation, 1, .1, .1, .1, -0.0005);
                 }
+                }catch (Exception e) {
+
+                }
             }
         };
-        runnable.runTaskTimer(PracticeServer.plugin, 0, 1);
+        runnable.runTaskTimer(PracticeServer.plugin, 0, 5);
         new BukkitRunnable() {
 
             public void run() {

@@ -26,13 +26,7 @@ import me.retrorealms.practiceserver.mechanics.player.Energy;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.vendors.Merchant;
 import me.retrorealms.practiceserver.utils.Particles;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
-import org.bukkit.EntityEffect;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -51,6 +45,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -335,7 +330,7 @@ public class Damage implements Listener {
 			float y = r.nextFloat();
 			float z = r.nextFloat();
 			int dmgs = dmg;
-			Hologram hg = new Hologram("dmg", le.getLocation().add(x, 0.5 + y, z));
+			Hologram hg = new Hologram("dmg", le.getLocation().clone().add(x, 0.5 + y, z));
 			if (d.equalsIgnoreCase("dmg")) {
 				HologramLine line = new TextLine(hg, ChatColor.RED + "-" + dmg + "❤");
 				hg.addLine(line);
@@ -656,7 +651,10 @@ public class Damage implements Listener {
 				for (String line : lore) {
 					int eldmg;
 					if (line.contains("ICE DMG")) {
-						li.getWorld().playEffect(li.getLocation().add(0.0, 1.3, 0.0), Effect.POTION_BREAK, 8194);
+						DyeColor blockColor = DyeColor.LIGHT_BLUE;
+						MaterialData data = new MaterialData(Material.STAINED_GLASS_PANE, (byte)3);
+						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.01, data);
+						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "ICE DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
 						dmg += elemult;
@@ -678,7 +676,11 @@ public class Damage implements Listener {
 						}
 					}
 					if (line.contains("POISON DMG")) {
-						li.getWorld().playEffect(li.getLocation().add(0.0, 1.3, 0.0), Effect.POTION_BREAK, 8196);
+						boolean color = ThreadLocalRandom.current().nextBoolean();
+						byte bytes = color ? (byte)5 : (byte)13;
+						MaterialData data = new MaterialData(Material.STAINED_GLASS, bytes);
+						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0,1,0), 10, 0.5, 0.5, 0.5, 0.01, data);
+						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "POISON DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
 						dmg += elemult;

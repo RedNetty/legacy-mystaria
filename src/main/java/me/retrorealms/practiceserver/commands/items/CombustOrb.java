@@ -14,8 +14,11 @@ import java.util.stream.IntStream;
 
 public class CombustOrb implements CommandExecutor {
 
-    private int orbs = 0;
 
+    private final String orbName = Items.orb(false).getItemMeta().getDisplayName() != null ? Items.orb(false).getItemMeta().getDisplayName() : "";
+
+
+    private final String legOrbName = Items.legendaryOrb(false).getItemMeta().getDisplayName() != null ? Items.legendaryOrb(false).getItemMeta().getDisplayName() : "";
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         if (sender instanceof Player) {
@@ -29,41 +32,42 @@ public class CombustOrb implements CommandExecutor {
 
         HashMap<Integer, ? extends ItemStack> invOrbs = player.getInventory().all(Material.MAGMA_CREAM);
 
-        sortOrb(invOrbs, 64, Material.IRON_ORE, player);
+        int orbsToGive = sortOrb(invOrbs, 64, player);
+        IntStream.range(0, orbsToGive).forEach(consumer ->
+            player.getInventory().addItem(Items.legendaryOrb(false)));
+        player.sendMessage(ChatColor.GREEN + "You have created " + orbsToGive + " " + legOrbName + "(s)");
 
-        IntStream.range(0, orbs).forEach(consumer -> {
-            player.getInventory().addItem(Items.legendaryOrb(false));
-        });
 
-        player.sendMessage(ChatColor.GREEN + "Your created " + orbs + " Legendary orbs!");
-
-        orbs = 0;
 
     }
-
-    public void sortOrb(HashMap<Integer, ? extends ItemStack> oreMap, int removeAmt, Material mat, Player p){
-        int ore= 0;
+    public int sortOrb(HashMap<Integer, ? extends ItemStack> oreMap, int removeAmt, Player p) {
+        int ore = 0;
         for (ItemStack itemStack : oreMap.values()) {
-            if(itemStack.getItemMeta().getDisplayName().contains(ChatColor.LIGHT_PURPLE + "Orb of Alteration")){
-                ore += itemStack.getAmount();
-
+            if (itemStack.getItemMeta().getDisplayName().contains(ChatColor.LIGHT_PURPLE + "Orb of Alteration")) {
+                if (itemStack.getAmount() >= 64) {
+                    ore += 64 * (itemStack.getAmount() / 64);
+                    int remaining = itemStack.getAmount() % 64;
+                    if (remaining > 0) {
+                        itemStack.setAmount(remaining);
+                        p.getInventory().addItem(itemStack);
+                    } else {
+                        p.getInventory().setItem(p.getInventory().first(itemStack), null);
+                    }
+                } else {
+                    ore += itemStack.getAmount();
+                    p.getInventory().setItem(p.getInventory().first(itemStack), null);
+                }
             }
         }
-        while (ore >= removeAmt) {
-            ore -= removeAmt;
-            removeOrbs(p);
-            orbs++;
+        int legendaryOrbs = ore / removeAmt;
+        int remainingOrbs = ore % removeAmt;
+        if (remainingOrbs > 0) {
+            ItemStack orbsLeft = Items.orb(false);
+            orbsLeft.setAmount(remainingOrbs);
+            IntStream.range(0, remainingOrbs).forEach(consumer ->
+                    p.getInventory().addItem(Items.orb(false)));
+            p.sendMessage(ChatColor.GREEN + "You have " + remainingOrbs + " remaining " + orbName + "(s)");
         }
-    }
-
-    public void removeOrbs(Player p) {
-        int i = 0;
-        while (i < p.getInventory().getSize()) {
-            ItemStack is = p.getInventory().getItem(i);
-            if (is != null && is.getAmount() == 64 && is.getItemMeta().getDisplayName().contains(ChatColor.LIGHT_PURPLE + "Orb of Alteration")) {
-                p.getInventory().setItem(i, null);
-            }
-        ++i;
-        }
+        return legendaryOrbs;
     }
 }

@@ -41,10 +41,10 @@ public class Hearthstone
                         Hearthstone.casting.remove(p.getName());
                         Hearthstone.castingloc.remove(p.getName());
                         p.eject();
-                        p.teleport(TeleportBooks.DeadPeaks);
+                        p.teleport(TeleportBooks.stonePeaks);
                         continue;
                     }
-                    Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().add(0.0, 0.15, 0.0), 20.0);
+                    Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 0.15, 0.0), 20.0);
                     p.sendMessage(ChatColor.BOLD + "TELEPORTING" + ChatColor.WHITE + " ... " + Hearthstone.casting.get(p.getName()) + "s");
                     Hearthstone.casting.put(p.getName(), Hearthstone.casting.get(p.getName()) - 1);
                 }

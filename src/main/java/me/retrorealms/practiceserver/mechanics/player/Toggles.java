@@ -56,11 +56,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Toggles implements Listener {
-    public static ConcurrentHashMap<UUID, ArrayList<String>> toggles = new ConcurrentHashMap<>();
+    public static HashMap<UUID, ArrayList<String>> toggles = new HashMap<>();
 
     public static boolean hasTrading(Player player) {
         ArrayList<String> toggles = Toggles.getToggles(player.getUniqueId());

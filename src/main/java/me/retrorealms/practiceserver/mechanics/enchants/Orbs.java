@@ -9,6 +9,7 @@ import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
+import me.retrorealms.practiceserver.mechanics.vendors.ItemVendors;
 import me.retrorealms.practiceserver.utils.Particles;
 import org.bukkit.*;
 import org.bukkit.entity.EntityType;
@@ -1303,6 +1304,10 @@ public class Orbs implements Listener {
         if (e.getSlotType() == InventoryType.SlotType.ARMOR) {
             return;
         }
+        if(ItemVendors.isRecentlyInteracted(p)) {
+            e.setCancelled(true);
+            return;
+        }
         if (e.getCursor() != null && e.getCursor().getType() == Material.MAGMA_CREAM && e.getCursor().getItemMeta().hasDisplayName() && e.getCursor().getItemMeta().getDisplayName().equals(ChatColor.YELLOW + "Legendary Orb of Alteration") && e.getCurrentItem() != null && e.getCurrentItem().getType() != Material.AIR && !Duels.duelers.containsKey(p)) {
             final ItemStack is = e.getCurrentItem();
             if (is.getItemMeta().hasLore() && getItemTier(is) > 0 && getItemTier(is) < 7 && getItemType(is) > -1 && getItemType(is) <= 7) {
@@ -1329,6 +1334,7 @@ public class Orbs implements Listener {
                 }
                 newis.setDurability((short) 0);
                 e.setCurrentItem(newis);
+                ItemVendors.addToRecentlyInteracted(p);
             }
         }
 
@@ -1358,6 +1364,7 @@ public class Orbs implements Listener {
                 }
                 newis.setDurability((short) 0);
                 e.setCurrentItem(newis);
+                ItemVendors.addToRecentlyInteracted(p);
             }
         }
     }

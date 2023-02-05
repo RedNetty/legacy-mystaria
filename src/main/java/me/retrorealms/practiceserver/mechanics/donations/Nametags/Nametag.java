@@ -3,14 +3,16 @@ package me.retrorealms.practiceserver.mechanics.donations.Nametags;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
+import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
-import net.minecraft.server.v1_9_R2.ItemArmor;
+import net.minecraft.server.v1_12_R1.ItemArmor;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -113,7 +115,7 @@ public class Nametag implements Listener {
 
     public static boolean containsSymbols(final String s) {
 
-        return s.contains("-") || s.contains("[") || s.contains("]") || s.contains("%") || s.contains("$") || s.contains("#") || s.contains("@") || s.contains("!") || (s.contains("|") || s.contains("^") || s.contains("+") || s.contains("="));
+        return !StringUtils.isAlphanumeric(s);
     }
 
     @EventHandler
@@ -148,11 +150,11 @@ public class Nametag implements Listener {
                 ItemMeta im = is.getItemMeta();
                 final ChatColor cc = getTierColor(getItemTier(is));
                 String i_name = String.valueOf(cc.toString()) + ChatColor.ITALIC + msg + ChatColor.RESET + cc.toString() + ChatColor.BOLD + " EC";
+                int plus = Enchants.getPlus(is);
                 if (im.hasDisplayName()) {
                     final String old_name = im.getDisplayName();
-                    if (old_name.startsWith(String.valueOf(ChatColor.RED.toString()) + "[+")) {
-                        final String scrolled_status = old_name.substring(0, old_name.indexOf(" "));
-                        i_name = String.valueOf(scrolled_status) + " " + i_name;
+                    if (ChatColor.stripColor(old_name).contains("[+") && plus >= 1) {
+                        i_name = ChatColor.RED + "[+" + Enchants.getPlus(is) + "] " + i_name;
                     }
                 }
                 im.setDisplayName(i_name);
@@ -217,4 +219,6 @@ public class Nametag implements Listener {
             }, 2L);
         }
     }
+
+
 }

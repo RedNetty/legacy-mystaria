@@ -1,5 +1,7 @@
 package me.retrorealms.practiceserver.mechanics.player;
 
+import com.vexsoftware.votifier.model.Vote;
+import com.vexsoftware.votifier.model.VotifierEvent;
 import lombok.Getter;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.API;
@@ -10,6 +12,7 @@ import me.retrorealms.practiceserver.commands.moderation.ToggleGMCommand;
 import me.retrorealms.practiceserver.commands.moderation.VanishCommand;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
+import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
 import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
 import me.retrorealms.practiceserver.mechanics.drops.EliteDrops;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
@@ -27,8 +30,10 @@ import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.inventory.*;
+import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 import org.bukkit.event.EventHandler;
@@ -135,10 +140,10 @@ public class Listeners implements Listener {
 						continue;
 					if (ModerationMechanics.getRank(p) == RankEnum.SUB) {
 						Particles.VILLAGER_HAPPY.display(0.125f, 0.125f, 0.125f, 0.02f, 10,
-								p.getLocation().add(x, y, z), 20.0);
+								p.getLocation().clone().add(x, y, z), 20.0);
 					}
 					if (ModerationMechanics.getRank(p) == RankEnum.SUB1) {
-						Particles.FLAME.display(0.0f, 0.0f, 0.0f, 0.02f, 10, p.getLocation().add(x, y, z), 20.0);
+						Particles.FLAME.display(0.0f, 0.0f, 0.0f, 0.02f, 10, p.getLocation().clone().add(x, y, z), 20.0);
 					}
 					if (ModerationMechanics.getRank(p) == RankEnum.SUPPORTER
 							|| ModerationMechanics.getRank(p) == RankEnum.SUB3) {
@@ -165,7 +170,7 @@ public class Listeners implements Listener {
 					}
 
 					if (ModerationMechanics.getRank(p) == RankEnum.SUB2) {
-						Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 1.0f, 10, p.getLocation().add(x, y, z), 20.0);
+						Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 1.0f, 10, p.getLocation().clone().add(x, y, z), 20.0);
 					}
 				}
 			}
@@ -300,6 +305,38 @@ public class Listeners implements Listener {
 		P.setItemMeta(pickmeta);
 		return P;
 	}
+
+	@EventHandler(priority=EventPriority.NORMAL)
+	public void onVotifierEvent(VotifierEvent event) {
+		Vote vote = event.getVote();
+		if(Bukkit.getPlayer(event.getVote().getUsername()) != null) {
+			Player player = Bukkit.getPlayer(event.getVote().getUsername());
+			player.getInventory().addItem(CratesMain.createCrate(0, false));
+		}
+		/*
+		 * Process Vote record as you see fit
+		 */
+	}
+
+	@EventHandler
+	public void onEntityDamage(EntityDamageEvent event) {
+		Entity entity = event.getEntity();
+		if (event.getCause() == EntityDamageEvent.DamageCause.HOT_FLOOR && entity instanceof Player) {
+			Player player = (Player) entity;
+			Block damager = player.getLocation().getBlock();
+			if (damager.getType() == Material.MAGMA) {
+				event.setCancelled(true);
+			}
+		}
+	}
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void on(ServerListPingEvent event) {
+		try {
+			event.setMotd(ChatColor.translateAlternateColorCodes('&', "                    &3&lMYSTARIA&r\n            &7&oA Minecraft MMORPG/Looter"));
+		}catch (Exception e) {
+
+		}
+	}
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 
@@ -325,10 +362,21 @@ public class Listeners implements Listener {
 		IntStream.range(0, 20).forEach(number -> player.sendMessage(" "));
 
 		StringUtil.sendCenteredMessage(player,
-				ChatColor.BOLD + "Autism Realms Patch " + PracticeServer.getInstance().getDescription().getVersion());
+				ChatColor.BOLD + "Mystaria Patch " + PracticeServer.getInstance().getDescription().getVersion());
 		player.sendMessage("");
 		StringUtil.sendCenteredMessage(player,
 				ChatColor.GRAY + "" + ChatColor.ITALIC + "This server is still in early development, expect bugs.");
+		StringUtil.sendCenteredMessage(player,
+				ChatColor.GRAY + "" + ChatColor.ITALIC + "(New Map Coming in 1-2 Weeks)");
+		player.sendMessage("");
+		StringUtil.sendCenteredMessage(player,
+				ChatColor.GRAY + "" +  "Voting Links");
+		StringUtil.sendCenteredMessage(player,
+				ChatColor.GRAY + "" + ChatColor.ITALIC + "http://bit.ly/3j5hdLb");
+		StringUtil.sendCenteredMessage(player,
+				ChatColor.GRAY + "" + ChatColor.ITALIC + "https://bit.ly/3kHRaKd");
+		StringUtil.sendCenteredMessage(player,
+				ChatColor.GRAY + "" + ChatColor.ITALIC + "http://bit.ly/407DSXE");
 
 		e.setJoinMessage(ChatColor.AQUA + "[+] " + ChatColor.GRAY + player.getName());
 		hpCheck(player); /*
@@ -849,7 +897,7 @@ public class Listeners implements Listener {
 					if (Alignments.chaotic.containsKey(pl.getName())) {
 						p.teleport(TeleportBooks.generateRandomSpawnPoint(pl.getName()));
 					} else {
-						p.teleport(TeleportBooks.DeadPeaks);
+						p.teleport(TeleportBooks.stonePeaks);
 					}
 				}
 			} else if (e.getCause().equals(DamageCause.FALL)) {
@@ -1056,9 +1104,6 @@ public class Listeners implements Listener {
 				i.addItem(new ItemStack[] { s });
 			}
 		}
-		p.getPlayer().getInventory().addItem(new ItemStack(Material.BREAD));
-		p.getPlayer().getInventory().addItem(new ItemStack(Material.BREAD));
-		p.getPlayer().getInventory().addItem(new ItemStack(Material.BREAD));
 
         p.getInventory().addItem(Horses.mount(Horses.horseTier.get(p), false));
 		p.getInventory().addItem(Hearthstone.hearthstone());

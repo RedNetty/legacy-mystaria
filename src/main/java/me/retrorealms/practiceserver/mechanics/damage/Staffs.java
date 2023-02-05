@@ -1,6 +1,6 @@
 /*
  * Decompiled with CFR 0_118.
- * 
+ *
  * Could not load the following classes:
  *  org.bukkit.Bukkit
  *  org.bukkit.Location
@@ -40,21 +40,26 @@
  */
 package me.retrorealms.practiceserver.mechanics.damage;
 
-import com.google.common.collect.Lists;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.guilds.GuildMechanics;
 import me.retrorealms.practiceserver.mechanics.party.Parties;
+import me.retrorealms.practiceserver.mechanics.player.Buddies;
 import me.retrorealms.practiceserver.mechanics.player.Energy;
-import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.player.Toggles;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.utils.BoundingBox;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.RayTrace;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -67,13 +72,113 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class Staffs implements Listener {
+    private static final String STAFF_COOLDOWN = "staffCD";
     public static HashMap<Player, ItemStack> staff = new HashMap<>();
     public PracticeServer m;
 
-    private static final String STAFF_COOLDOWN = "staffCD";
+    public static void shootMagic(LivingEntity shooter, StaffType type) {
+        shooter.getWorld().playSound(shooter.getLocation(), Sound.ENTITY_ENDERPEARL_THROW, 1F, 1F);
+
+        new BukkitRunnable() {
+            RayTrace magic = new RayTrace(shooter.getEyeLocation().add(0, -0.25, 0).toVector(), shooter.getEyeLocation().getDirection());
+            Iterator trail = magic.traverse(15, 1).iterator();
+
+            @Override
+            public void run() {
+                try {
+                    if (!trail.hasNext()) {
+                        this.cancel();
+                        return;
+                    }
+
+                    Vector pos = (Vector) trail.next();
+                    Block block = shooter.getWorld().getBlockAt(pos.toLocation(shooter.getWorld()));
+
+                    BoundingBox box = new BoundingBox(block) == null ? null : new BoundingBox(block);
+                    if (block != null && block.getType().isSolid() && box != null && magic.intersectsBox(pos, box)) {
+                        Particles.CLOUD.display(0F, 0F, 0F, 0.5F, 15, pos.toLocation(shooter.getWorld()), 30D);
+                        this.cancel();
+                        return;
+                    }
+
+                    for (Entity e : shooter.getWorld().getNearbyEntities(pos.toLocation(shooter.getWorld()), 1F, 1F, 1F)) {
+                        if (!(e instanceof LivingEntity))
+                            return;
+
+                        if (e == shooter)
+                            return;
+
+                        LivingEntity le = (LivingEntity) e;
+
+                        if (magic.intersectsBox(pos, 0.5, new BoundingBox(le))) {
+                            if (le instanceof Player && shooter instanceof Player) {
+                                if (Duels.duelers.containsKey(le))
+                                    continue;
+
+                                if (GuildMechanics.getInstance().isInSameGuild((Player) shooter, (Player) le)) {
+                                    continue;
+                                }
+                                if (Parties.arePartyMembers((Player) shooter, (Player) le)) {
+                                    continue;
+                                }
+
+                                if (Toggles.getToggles(((Player) shooter).getUniqueId()).contains("Anti PVP")
+                                        || (Toggles.getToggles(((Player) shooter).getUniqueId()).contains("Chaotic")
+                                        && Alignments.get((Player) le).equals("&aLAWFUL"))) {
+                                    continue;
+                                }
+                            }
+                            if (le instanceof Horse && le.getPassenger() != null) {
+                                if (shooter instanceof Player) {
+                                    Player d = (Player) shooter;
+                                    ArrayList<String> toggles = Toggles.getToggles(d.getUniqueId());
+                                    ArrayList<String> buddies = Buddies.getBuddies(d.getName());
+                                    if (buddies.contains(le.getPassenger().getName().toLowerCase()) && !toggles.contains("Friendly Fire")) {
+                                        return;
+                                    }
+                                    if (toggles.contains("Anti PVP")) {
+                                        return;
+                                    }
+                                    if (!Alignments.neutral.containsKey(le.getName()) && !Alignments.chaotic.containsKey(le.getName()) && toggles.contains("Chaotic")) {
+                                        return;
+                                    }
+
+                                    le.damage(1);
+                                    le.remove();
+                                } else {
+                                    le.damage(1);
+                                    le.remove();
+                                }
+                            }
+                            if (!shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE"))
+                                continue;
+
+                            if (shooter instanceof Player && shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) {
+                                staff.put((Player) shooter, ((Player) shooter).getInventory().getItemInMainHand());
+                                le.damage(1, shooter);
+                                staff.remove((Player) shooter);
+                            } else {
+                                le.damage(1, shooter);
+                            }
+                            Particles.VILLAGER_HAPPY.display(1F, 1F, 1F, 0.75F, 10, pos.toLocation(shooter.getWorld()), 30D);
+                            this.cancel();
+                            break;
+                        }
+                    }
+
+                    Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
+                    Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
+                } catch (Exception e) {
+
+                }
+            }
+        }.runTaskTimer(PracticeServer.plugin, 0L, 1L);
+    }
 
     public void onEnable() {
         PracticeServer.log.info("[Staffs] has been enabled.");
@@ -97,7 +202,7 @@ public class Staffs implements Listener {
         if ((e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) && (p = e.getPlayer()).getInventory().getItemInMainHand() != null && p.getInventory().getItemInMainHand().getType() != Material.AIR && p.getInventory().getItemInMainHand().getType().name().contains("_HOE") && p.getInventory().getItemInMainHand().getItemMeta().hasLore()) {
             if (Alignments.isSafeZone(p.getLocation())) {
                 p.playSound(p.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 1.0f, 1.25f);
-                Particles.CRIT_MAGIC.display(0.0f, 0.0f, 0.0f, 0.5f, 20, p.getLocation().add(0.0, 1.0, 0.0), 20.0);
+                Particles.CRIT_MAGIC.display(0.0f, 0.0f, 0.0f, 0.5f, 20, p.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
             } else {
                 if (Energy.nodamage.containsKey(p.getName()) && System.currentTimeMillis() - Energy.nodamage.get(p.getName()) < 100) {
                     e.setCancelled(true);
@@ -126,81 +231,6 @@ public class Staffs implements Listener {
                 }
             }
         }
-    }
-
-    public static void shootMagic(LivingEntity shooter, StaffType type) {
-        shooter.getWorld().playSound(shooter.getLocation(), Sound.ENTITY_ENDERPEARL_THROW, 1F, 1F);
-
-        new BukkitRunnable() {
-            RayTrace magic = new RayTrace(shooter.getEyeLocation().add(0, -0.25, 0).toVector(), shooter.getEyeLocation().getDirection());
-            Iterator trail = magic.traverse(15, 1).iterator();
-
-            @Override
-            public void run() {
-                if (!trail.hasNext()) {
-                    this.cancel();
-                    return;
-                }
-
-                Vector pos = (Vector) trail.next();
-                Block block = shooter.getWorld().getBlockAt(pos.toLocation(shooter.getWorld()));
-
-                if (block != null && block.getType().isSolid() && magic.intersectsBox(pos, new BoundingBox(block))) {
-                    Particles.CLOUD.display(0F, 0F, 0F, 0.5F, 15, pos.toLocation(shooter.getWorld()), 30D);
-                    this.cancel();
-                    return;
-                }
-
-                for (Entity e : shooter.getWorld().getNearbyEntities(pos.toLocation(shooter.getWorld()), 1F, 1F ,1F)) {
-                    if (!(e instanceof LivingEntity))
-                        return;
-
-                    if (e == shooter)
-                        return;
-
-                    LivingEntity le = (LivingEntity) e;
-
-                    if (magic.intersectsBox(pos, 0.5, new BoundingBox(le))) {
-                        if (le instanceof Player && shooter instanceof Player) {
-                            if (Duels.duelers.containsKey(le))
-                                continue;
-
-                            if (GuildMechanics.getInstance().isInSameGuild((Player) shooter, (Player) le)) {
-                                continue;
-                            }
-                            if (Parties.arePartyMembers((Player) shooter, (Player) le)) {
-                                continue;
-                            }
-
-                            if (Toggles.getToggles(((Player) shooter).getUniqueId()).contains("Anti PVP")
-                                    || (Toggles.getToggles(((Player) shooter).getUniqueId()).contains("Chaotic")
-                                    && Alignments.get((Player) le).equals("&aLAWFUL"))) {
-                                continue;
-                            }
-                        }
-                        if(le instanceof Horse && le.getPassenger() != null) {
-                            le.damage(1);
-                            le.remove();
-                        }
-                        if(!shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) continue;
-
-                        if (shooter instanceof Player && shooter.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) {
-                            staff.put((Player) shooter, ((Player) shooter).getInventory().getItemInMainHand());
-                            le.damage(1, shooter);
-                            staff.remove((Player) shooter);
-                        } else {
-                            le.damage(1, shooter);
-                        }
-                        Particles.VILLAGER_HAPPY.display(1F, 1F, 1F, 0.75F, 10, pos.toLocation(shooter.getWorld()), 30D);
-                        this.cancel();
-                        break;
-                    }
-                }
-
-                Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
-                Particles.REDSTONE.display(type.color, pos.toLocation(shooter.getWorld()), 30D);
-            }
-        }.runTaskTimer(PracticeServer.plugin, 0L, 1L);
     }
 
     public enum StaffType {

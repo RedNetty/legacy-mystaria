@@ -4,12 +4,12 @@ import me.retrorealms.practiceserver.apis.nbt.NBTAccessor;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.pets.base.PetType;
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +38,7 @@ public class PetGUI {
 
 
             ItemStack item = new ItemStack(Material.MONSTER_EGG, 1);
-            net.minecraft.server.v1_9_R2.ItemStack stack = CraftItemStack.asNMSCopy(item);
+            net.minecraft.server.v1_12_R1.ItemStack stack = CraftItemStack.asNMSCopy(item);
             NBTTagCompound tagCompound = stack.getTag();
             if (tagCompound == null) {
                 tagCompound = new NBTTagCompound();
@@ -74,7 +74,7 @@ public class PetGUI {
             inventory.addItem(accessor.update());
             counter++;
         }
-        ItemStack delete = new ItemStack(Material.STAINED_GLASS_PANE, 1, DyeColor.RED.getData());
+        ItemStack delete = new ItemStack(Material.STAINED_GLASS_PANE, 1, DyeColor.RED.getDyeData());
         ItemMeta meta = delete.getItemMeta();
         meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Remove Pet");
         delete.setItemMeta(meta);

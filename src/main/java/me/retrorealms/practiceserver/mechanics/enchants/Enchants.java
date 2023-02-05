@@ -8,6 +8,7 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
+import me.retrorealms.practiceserver.mechanics.vendors.ItemVendors;
 import me.retrorealms.practiceserver.utils.Particles;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
@@ -168,6 +169,10 @@ public class Enchants implements Listener {
                 e.setCancelled(true);
                 return;
             }
+            if(ItemVendors.isRecentlyInteracted(p)) {
+                e.setCancelled(true);
+                return;
+            }
             final double beforehp = Damage.getHp(e.getCurrentItem());
             final double beforehpgen = Damage.getHps(e.getCurrentItem());
             final int beforenrg = Damage.getEnergy(e.getCurrentItem());
@@ -212,6 +217,7 @@ public class Enchants implements Listener {
                 im.setLore(lore);
                 is.setItemMeta(im);
                 e.setCurrentItem(is);
+                ItemVendors.addToRecentlyInteracted(p);
             }
             if (plus >= 3 && plus < 12) {
                 if (e.getCursor().getAmount() > 1) {
@@ -279,6 +285,7 @@ public class Enchants implements Listener {
                     is2.addUnsafeEnchantment(Enchants.glow, 1);
                     e.setCurrentItem(is2);
                     e.setCurrentItem(ItemAPI.removeProtection(is2));
+                    ItemVendors.addToRecentlyInteracted(p);
                 }
             }
         }
@@ -302,6 +309,10 @@ public class Enchants implements Listener {
                 name2 = name2.split("] ")[1];
             }if(Duels.duelers.containsKey(p)){
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " use this item while in a duel");
+                e.setCancelled(true);
+                return;
+            }
+            if(ItemVendors.isRecentlyInteracted(p)) {
                 e.setCancelled(true);
                 return;
             }
@@ -343,6 +354,7 @@ public class Enchants implements Listener {
                 im3.setLore(lore3);
                 is3.setItemMeta(im3);
                 e.setCurrentItem(is3);
+                ItemVendors.addToRecentlyInteracted(p);
             }
             if (plus2 >= 3 && plus2 < 12) {
                 if (e.getCursor().getAmount() > 1) {
@@ -406,6 +418,7 @@ public class Enchants implements Listener {
                     is4.addUnsafeEnchantment(Enchants.glow, 1);
                     e.setCurrentItem(is4);
                     e.setCurrentItem(ItemAPI.removeProtection(is4));
+                    ItemVendors.addToRecentlyInteracted(p);
                 }
             }
         }

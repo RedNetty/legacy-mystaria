@@ -27,7 +27,7 @@ public class Shard implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (event.getInventory().getTitle().equalsIgnoreCase("Autism Realms - SERVERS")) {
+        if (event.getInventory().getTitle().equalsIgnoreCase("Mystaria - SERVERS")) {
             Player p = Bukkit.getPlayer(event.getWhoClicked().getName());
             event.setCancelled(true);
             if (event.getCurrentItem().getType() == null || event.getCurrentItem().getType() == Material.AIR || !event.getCurrentItem().getItemMeta().hasDisplayName())

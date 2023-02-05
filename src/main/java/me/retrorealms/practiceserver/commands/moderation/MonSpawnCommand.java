@@ -26,7 +26,7 @@ public class MonSpawnCommand implements CommandExecutor {
                         return true;
                     }
                     final String data = args[0];
-                    final Location loc = p.getTargetBlock((HashSet<Byte>) null, 100).getLocation();
+                    final Location loc = p.getTargetBlock( null, 100).getLocation();
                     if (Spawners.isCorrectFormat(data)) {
                         if (data.contains(",")) {
                             String[] split;

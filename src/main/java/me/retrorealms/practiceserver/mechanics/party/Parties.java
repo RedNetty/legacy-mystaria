@@ -253,12 +253,17 @@ public class Parties implements Listener {
         new BukkitRunnable() {
             public void run() {
                 for (final Player p : Bukkit.getOnlinePlayers()) {
+                    try{
                     Parties.refreshScoreboard(p);
+                    }catch (Exception e) {
+
+                    }
                 }
             }
         }.runTaskTimer(PracticeServer.plugin, 1L, 1L);
         new BukkitRunnable() {
             public void run() {
+                try{
                 for (final Player p : Parties.invite.keySet()) {
                     if (Parties.invitetime.containsKey(p) && System.currentTimeMillis() - Parties.invitetime.get(p) > 30000L) {
                         if (p.isOnline()) {
@@ -270,6 +275,9 @@ public class Parties implements Listener {
                         Parties.invite.remove(p);
                         Parties.invitetime.remove(p);
                     }
+                }
+                }catch (Exception e) {
+
                 }
             }
         }.runTaskTimer(PracticeServer.plugin, 20L, 20L);

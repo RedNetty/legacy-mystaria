@@ -1,7 +1,7 @@
 package me.retrorealms.practiceserver.apis.itemapi;
 
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
  */
 public class NBTAccessor {
 
-    private net.minecraft.server.v1_9_R2.ItemStack itemStack;
+    private net.minecraft.server.v1_12_R1.ItemStack itemStack;
 
     public NBTAccessor(ItemStack itemStack) {
         this.itemStack = CraftItemStack.asNMSCopy(itemStack);

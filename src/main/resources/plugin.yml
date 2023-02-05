@@ -6,6 +6,8 @@ loadbefore:
   [Essentials, BungeeTabListPlus]
 softdepend: ['BungeeTabListPlus']
 commands:
+  setrates:
+  droprates:
   food:
   pet:
   psmute:

@@ -1,11 +1,11 @@
 package me.retrorealms.practiceserver.apis;
 
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
-import net.minecraft.server.v1_9_R2.NBTTagInt;
-import net.minecraft.server.v1_9_R2.NBTTagString;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
+import net.minecraft.server.v1_12_R1.NBTTagInt;
+import net.minecraft.server.v1_12_R1.NBTTagString;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -67,7 +67,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setNBTString(String identifier, String content) {
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound nbtTagCompound = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
         nbtTagCompound.set(identifier, new NBTTagString(content));
         nmsStack.setTag(nbtTagCompound);
@@ -76,7 +76,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setNBTInt(String identifier, int content) {
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound nbtTagCompound = nmsStack.getTag() == null ? new NBTTagCompound() : nmsStack.getTag();
         nbtTagCompound.set(identifier, new NBTTagInt(content));
         nmsStack.setTag(nbtTagCompound);

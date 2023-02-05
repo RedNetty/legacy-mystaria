@@ -41,7 +41,7 @@ public class Halloween extends Manager implements Listener {
                 for (Player player : Bukkit.getServer().getOnlinePlayers()) {
                     if (player.getInventory().getHelmet() != null) {
                         if (player.getInventory().getHelmet().getType() == Material.JACK_O_LANTERN) {
-                            Particles.FLAME.display(0.1f, 0.1f, 0.1f, 0.02f, 10, player.getLocation().add(0, 2, 0), 20.0);
+                            Particles.FLAME.display(0.1f, 0.1f, 0.1f, 0.02f, 10, player.getLocation().clone().add(0, 2, 0), 20.0);
                         }
                     }
                 }

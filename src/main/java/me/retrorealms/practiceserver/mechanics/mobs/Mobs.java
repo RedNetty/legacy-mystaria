@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.damage.Staffs;
@@ -243,33 +244,37 @@ public class Mobs implements Listener {
                             Mobs.crit.put(l, --step);
                             l.getWorld().playSound(l.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 4.0f);
                             Particles.EXPLOSION_LARGE.display(0.0f, 0.0f, 0.0f, 0.3f, 40,
-                                    l.getLocation().add(0.0, 1.0, 0.0), 20.0);
+                                    l.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
                         }
                         if (step == 0) {
                             Mobs.crit.remove(l);
                             if (isFrozenBoss(l) && l.getHealth() < (PracticeServer.t6 ? 100000 : 50000)) {
                                 crit.put(l, 3);
                             }
-                            for (Entity e : l.getNearbyEntities(8.0, 8.0, 8.0)) {
-                                if (!(e instanceof Player))
-                                    continue;
-                                if (Listeners.mobd.containsKey(l.getUniqueId())) {
+                            try {
+                                ItemStack itemStack = l.getEquipment().getItemInMainHand();
+                                int min = Damage.getDamageRange(itemStack).get(0);
+                                int max = Damage.getDamageRange(itemStack).get(1);
+                                int dmg = (ThreadLocalRandom.current().nextInt(max - min + 1) + min) * 3;
+                                for (Entity e : l.getNearbyEntities(8.0, 8.0, 8.0)) {
+                                    if (!(e instanceof Player))
+                                        continue;
                                     Listeners.mobd.remove(l.getUniqueId());
+                                    Player p = (Player) e;
+                                    crit.put(l, 0);
+                                    p.damage(dmg, l);
+                                    crit.remove(l);
+                                    Vector v = p.getLocation().clone().toVector().subtract(l.getLocation().toVector());
+                                    if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
+                                        v.normalize();
+                                    }
+                                    if (isFrozenBoss(l)) {
+                                        p.setVelocity(v.multiply(-3));
+                                    } else {
+                                        p.setVelocity(v.multiply(3));
+                                    }
                                 }
-                                Player p = (Player) e;
-                                crit.put(l, 0);
-                                p.damage(l.getLastDamage(), l);
-                                crit.remove(l);
-                                Vector v = p.getLocation().clone().toVector().subtract(l.getLocation().toVector());
-                                if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
-                                    v.normalize();
-                                }
-                                if (isFrozenBoss(l)) {
-                                    p.setVelocity(v.multiply(-3));
-                                } else {
-                                    p.setVelocity(v.multiply(3));
-                                }
-                            }
+                            }catch (Exception e) {}
 
                             l.getWorld().playSound(l.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.5f);
                             Particles.EXPLOSION_HUGE.display(0.0f, 0.0f, 0.0f, 1.0f, 40,
@@ -307,6 +312,7 @@ public class Mobs implements Listener {
         new BukkitRunnable() {
 
             public void run() {
+                try{
                 if (DeployCommand.patchlockdown)
                     return;
                 for (Entity ent : Bukkit.getWorlds().get(0).getEntities()) {
@@ -321,7 +327,10 @@ public class Mobs implements Listener {
                     }
                     if (step != 0)
                         continue;
-                    Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 0.5f, 35, l.getLocation().add(0.0, 1.0, 0.0), 20.0);
+                    Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 0.5f, 35, l.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
+                }
+                }catch (Exception e) {
+
                 }
             }
         }.runTaskTimer(PracticeServer.plugin, 20, 10);
@@ -609,26 +618,44 @@ public class Mobs implements Listener {
 		}
 	}
 
-	@EventHandler
-	public void onSafeSpot(EntityDamageByEntityEvent e) {
-		if (e.getEntity() instanceof LivingEntity && !(e.getEntity() instanceof Player)
-				&& e.getDamager() instanceof Player) {
-			if (e.getDamage() <= 0.0) {
-				return;
-			}
-			LivingEntity s = (LivingEntity) e.getEntity();
-			if (s.getType().equals(EntityType.ARMOR_STAND))
-				return;
+    public boolean isSafeSpot(Player player, LivingEntity mob) {
+        Location target = player.getLocation();
+        Location mobLoc = mob.getLocation();
+        // Check if there is a clear line of sight between the player and the mob
+        if (!mob.hasLineOfSight(player)) {
+            return true;
+        }
+        double distance = target.distanceSquared(mob.getLocation());
 
-			Player p = (Player) e.getDamager();
-			Random random = new Random();
-			int rcrt = random.nextInt(10) + 1;
-			if (rcrt == 1 && p.getLocation().getY() - s.getLocation().getY() > 1.0
-					&& p.getLocation().distance(s.getLocation()) <= 6.0) {
-				s.teleport(p.getLocation().add(0.0, 0.25, 0.0));
-			}
-		}
-	}
+        // Check if there is a solid block between the player and the mob
+        if(target.getBlockY() > (mob.getLocation().getBlockY()) && (mob.getLocation().clone().add(0,1,0).getBlock().isLiquid())) {
+            return true;
+        }
+        if (distance >= 3 && distance <= 6 * 6 && target.getBlockY() > (mob.getLocation().clone().getBlockY() + 1)){
+            return true;
+        }
+        // If none of the above conditions are met, the player is not safespotting
+        return false;
+    }
+
+
+    @EventHandler
+    public void onSafeSpot(EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof LivingEntity && !(e.getEntity() instanceof Player)
+                && e.getDamager() instanceof Player) {
+            if (e.getDamage() <= 0.0) {
+                return;
+            }
+            LivingEntity s = (LivingEntity) e.getEntity();
+            if (s.getType().equals(EntityType.ARMOR_STAND))
+                return;
+
+            Player p = (Player) e.getDamager();
+            if(isSafeSpot(p, s)) {
+                s.teleport(p.getLocation().clone().add(0,1,0));
+            }
+        }
+    }
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onMobHitMob(EntityDamageByEntityEvent e) {

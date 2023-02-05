@@ -10,9 +10,9 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.Speedfish;
 import me.retrorealms.practiceserver.utils.StringUtil;
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -221,9 +221,9 @@ public class Fishing {
 
                 itemStack.setAmount(gemAmount);
 
-                player.getWorld().dropItem(player.getLocation().add(0, 1, 0), gemsStack);
-                player.getWorld().dropItem(player.getLocation().add(0, 1, 0), gemsStack);
-                player.getWorld().dropItem(player.getLocation().add(0, 1, 0), gemsStack);
+                player.getWorld().dropItem(player.getLocation().clone().add(0, 1, 0), gemsStack);
+                player.getWorld().dropItem(player.getLocation().clone().add(0, 1, 0), gemsStack);
+                player.getWorld().dropItem(player.getLocation().clone().add(0, 1, 0), gemsStack);
 
                 player.sendMessage("");
                 StringUtil.sendCenteredMessage(player, "&7[  &eYOU'VE CAUGHT A &nMONKFISH&7  ]");
@@ -310,7 +310,7 @@ public class Fishing {
      * @since 1.0
      */
     public static boolean isDRFishingPole(ItemStack stack) {
-        net.minecraft.server.v1_9_R2.ItemStack nms = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_12_R1.ItemStack nms = CraftItemStack.asNMSCopy(stack);
         return nms != null && nms.hasTag() && nms.getTag().hasKey("type") && nms.getTag().getString("type").equalsIgnoreCase("rod") && stack.getType() == Material.FISHING_ROD;
     }
 
@@ -322,7 +322,7 @@ public class Fishing {
      * @param stack
      */
     public static void gainExp(ItemStack stack, Player p, int exp) {
-        net.minecraft.server.v1_9_R2.ItemStack nms = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_12_R1.ItemStack nms = CraftItemStack.asNMSCopy(stack);
         int currentXP = nms.getTag().getInt("XP");
         int maxXP = nms.getTag().getInt("maxXP");
         int tier = nms.getTag().getInt("itemTier");
@@ -567,7 +567,7 @@ public class Fishing {
     private static void lvlUp(int tier, Player p) {
         PlayerDeathEvent deathEvent;
         ItemStack rod = p.getEquipment().getItemInMainHand();
-        net.minecraft.server.v1_9_R2.ItemStack nms = CraftItemStack.asNMSCopy(rod);
+        net.minecraft.server.v1_12_R1.ItemStack nms = CraftItemStack.asNMSCopy(rod);
         int lvl;
 
         if (nms.getTag().hasKey("level")) {
@@ -818,7 +818,7 @@ public class Fishing {
         String statBuff = ChatColor.RED + enchant.name + " " + stat + "%";
         ItemStack stack = new ItemBuilder().setItem(Material.EMPTY_MAP, (short) 0, ChatColor.WHITE + ChatColor.BOLD.toString() + "Scroll: " + ChatColor.YELLOW + "Fishingrod Enchant", new String[]{statBuff, ChatColor.GRAY + "Imbues a fishingrod with special attributes."}).build();
 
-        net.minecraft.server.v1_9_R2.ItemStack nms = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_12_R1.ItemStack nms = CraftItemStack.asNMSCopy(stack);
         nms.getTag().setString("type", "fishingenchant");
         nms.getTag().setInt(enchant.name(), stat);
         return CraftItemStack.asBukkitCopy(nms);
@@ -827,7 +827,7 @@ public class Fishing {
     public static ItemStack getEnchant(int tier, FishingRodEnchant enchant, int percent) {
         String statBuff = ChatColor.RED + enchant.name + " " + percent + "%";
         ItemStack stack = new ItemBuilder().setItem(Material.EMPTY_MAP, (short) 0, ChatColor.WHITE + ChatColor.BOLD.toString() + "Scroll: " + ChatColor.YELLOW + "Fishingrod Enchant", new String[]{statBuff, ChatColor.GRAY + "Imbues a fishingrod with special attributes."}).build();
-        net.minecraft.server.v1_9_R2.ItemStack nms = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_12_R1.ItemStack nms = CraftItemStack.asNMSCopy(stack);
         nms.getTag().setString("type", "fishingenchant");
         nms.getTag().setInt(enchant.name(), percent);
         return CraftItemStack.asBukkitCopy(nms);

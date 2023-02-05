@@ -67,9 +67,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 
 public class TeleportBooks implements Listener {
-    public static Location DeadPeaks;
-    public static Location Avalon;
-    public static Location Tripoli;
+    public static Location stonePeaks;
+    public static Location theBeneath;
+    public static Location tripoli;
 
     public static HashMap<String, Location> teleporting_loc;
     public static HashMap<String, Location> casting_loc;
@@ -87,9 +87,9 @@ public class TeleportBooks implements Listener {
         avalonPortal = new AvalonPortal();
         Bukkit.getServer().getPluginManager().registerEvents(avalonPortal, PracticeServer.getInstance());
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        Tripoli = new Location(Bukkit.getWorlds().get(0), 817.0, 9.0, -80.0, 1.0f, 1.0f);
-        DeadPeaks = new Location(Bukkit.getWorlds().get(0), 603.0, 35.0, -281.0, 1.0f, 1.0f);
-        Avalon = new Location(Bukkit.getWorlds().get(0), 636.0, 97.0, 243.0, 1.0f, 1.0f);
+        tripoli = new Location(Bukkit.getWorlds().get(0), 807.0, 19.0, 49.0, 1.0f, 1.0f);
+        stonePeaks = new Location(Bukkit.getWorlds().get(0), 662.0, 29.0, -273.0, 1.0f, 1.0f);
+        theBeneath = new Location(Bukkit.getWorlds().get(0), 600.0, 99.0, 517.0, 1.0f, 1.0f);
 
         avalonPortal.onLoad();
 
@@ -99,7 +99,7 @@ public class TeleportBooks implements Listener {
                 for (Player p : Bukkit.getServer().getOnlinePlayers()) {
                     if (!TeleportBooks.casting_time.containsKey(p.getName())) continue;
                     if (TeleportBooks.casting_time.get(p.getName()) == 0) {
-                        Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 0.2f, 200, p.getLocation().add(0.0, 1.0, 0.0), 20.0);
+                        Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 0.2f, 200, p.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
                         p.eject();
                         p.teleport(TeleportBooks.teleporting_loc.get(p.getName()));
                         p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 2));
@@ -111,9 +111,9 @@ public class TeleportBooks implements Listener {
                     p.sendMessage(ChatColor.BOLD + "CASTING" + ChatColor.WHITE + " ... " + TeleportBooks.casting_time.get(p.getName()) + ChatColor.BOLD + "s");
                     TeleportBooks.casting_time.put(p.getName(), TeleportBooks.casting_time.get(p.getName()) - 1);
                     Particles.PORTAL.display(0.0f, 0.0f, 0.0f, 4.0f, 300, p.getLocation(), 20.0);
-                    p.getWorld().playEffect(p.getLocation().add(0, 0, 0), Effect.STEP_SOUND, Material.PORTAL);
-                    p.getWorld().playEffect(p.getLocation().add(0, 1, 0), Effect.STEP_SOUND, Material.PORTAL);
-                    p.getWorld().playEffect(p.getLocation().add(0, 2, 0), Effect.STEP_SOUND, Material.PORTAL);
+                    p.getWorld().playEffect(p.getLocation().clone().add(0, 0, 0), Effect.STEP_SOUND, Material.PORTAL);
+                    p.getWorld().playEffect(p.getLocation().clone().add(0, 1, 0), Effect.STEP_SOUND, Material.PORTAL);
+                    p.getWorld().playEffect(p.getLocation().clone().add(0, 2, 0), Effect.STEP_SOUND, Material.PORTAL);
                 }
             }
         }.runTaskTimer(PracticeServer.plugin, 20, 20);
@@ -126,11 +126,11 @@ public class TeleportBooks implements Listener {
     public static ItemStack avalonBook(boolean inshop) {
         ItemStack is = new ItemStack(Material.BOOK);
         ItemMeta im = is.getItemMeta();
-        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Avalon");
+        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " The Beneath");
         if (inshop == false) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the lost city of Avalon."));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to The Beneath."));
         } else if (inshop == true) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the lost city of Avalon.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g"));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to The Beneath.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g"));
         }
         is.setItemMeta(im);
         return is;
@@ -140,11 +140,11 @@ public class TeleportBooks implements Listener {
     public static ItemStack deadpeaks_book(boolean inshop) {
         ItemStack is = new ItemStack(Material.BOOK);
         ItemMeta im = is.getItemMeta();
-        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Deadpeaks Mountain Camp");
+        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Stonepeaks Mountain Camp");
         if (!inshop) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the Deadpeaks."));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to Stonepeaks Mountain Camp."));
         } else{
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the Deadpeaks.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "50g"));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the Stonepeaks Mountain Camp.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "50g"));
         }
         is.setItemMeta(im);
         return is;
@@ -278,31 +278,31 @@ public class TeleportBooks implements Listener {
 
 
     Location getLocationFromString(String s) {
-        if (s.toLowerCase().contains("avalon")) {
-            return Avalon;
+        if (s.toLowerCase().contains("beneath")) {
+            return theBeneath;
         }
 
-        if (s.toLowerCase().contains("deadpeaks mountain camp")) {
-            return DeadPeaks;
+        if (s.toLowerCase().contains("stonepeaks")) {
+            return stonePeaks;
         }
 
         if (s.toLowerCase().contains("tripoli")) {
-            return Tripoli;
+            return tripoli;
         }
-        return DeadPeaks;
+        return stonePeaks;
     }
 
     String getTeleportMessage(String s) {
-        if (s.toLowerCase().contains("avalon")) {
-            return "Teleport Scroll: Avalon";
+        if (s.toLowerCase().contains("the beneath")) {
+            return "Teleport Scroll: The Beneath";
         }
-        if (s.toLowerCase().contains("deadpeaks mountain camp")) {
-            return "Teleport Scroll: Deadpeaks Mountain Camp";
+        if (s.toLowerCase().contains("stonepeaks")) {
+            return "Teleport Scroll: Stonepeaks Mountain Camp";
         }
         if (s.toLowerCase().contains("tripoli")) {
             return "Teleport Scroll: Tripoli";
         }
-        return "Teleport Scroll: Deadpeaks Mountain Camp";
+        return "Teleport Scroll: Stonepeaks Mountain Camp";
     }
 
     @EventHandler
@@ -326,7 +326,7 @@ public class TeleportBooks implements Listener {
             spawns.add(new Location(Bukkit.getWorlds().get(0), 609.0, 5.0, -237.0));
             return spawns.get(new Random().nextInt(spawns.size()));
         }
-        return DeadPeaks;
+        return stonePeaks;
     }
 
 }

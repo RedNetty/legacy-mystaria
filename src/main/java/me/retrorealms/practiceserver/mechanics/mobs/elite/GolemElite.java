@@ -32,6 +32,7 @@ public class GolemElite implements Listener {
         golems  = new HashMap<>();
         new BukkitRunnable() {
             public void run(){
+                try{
                 Spawners.mobs.keySet().forEach(livingEntity -> {
                     if(!Mobs.isGolemBoss(livingEntity)) return;
                     double health = livingEntity.getHealth();
@@ -80,6 +81,9 @@ public class GolemElite implements Listener {
                         }
                     }
                 });
+                }catch (Exception e) {
+
+                }
 
             }
         }.runTaskTimer(PracticeServer.plugin, 20, 20);
@@ -117,7 +121,7 @@ public class GolemElite implements Listener {
         }
 
         s.getWorld().playSound(s.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.5f);
-        Particles.EXPLOSION_HUGE.display(0.0f, 0.0f, 0.0f, 1.0f, 40, s.getLocation().add(0.0, 1.0, 0.0), 20.0);
+        Particles.EXPLOSION_HUGE.display(0.0f, 0.0f, 0.0f, 1.0f, 40, s.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
 
         s.setCustomName(Mobs.generateOverheadBar(s, s.getHealth(), s.getMaxHealth(), Mobs.getMobTier(s), true));
         s.setCustomNameVisible(true);

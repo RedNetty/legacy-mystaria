@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <!--<parent>-->
-        <!--<artifactId>ps</artifactId>-->
+    <!--<artifactId>ps</artifactId>-->
     <!--</parent>-->
     <modelVersion>4.0.0</modelVersion>
 
@@ -65,27 +65,30 @@
             <id>inventive-repo</id>
             <url>https://repo.inventivetalent.org/content/groups/public/</url>
         </repository>
-
+        <repository>
+            <id>Sparky</id>
+            <url>https://nexus.sparky.ac/repository/Sparky/</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-        <groupId>fr.rhaz.sockets</groupId>
-        <artifactId>socket4mc</artifactId>
-        <version>3.2.8</version>
-        <scope>system</scope>
-        <systemPath>${basedir}/lib/socket4mc-3.2.8.jar</systemPath>
+            <groupId>fr.rhaz.sockets</groupId>
+            <artifactId>socket4mc</artifactId>
+            <version>3.2.8</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/socket4mc-3.2.8.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.46</version>
+            <version>8.0.32</version>
         </dependency>
 
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>2.4.7</version>
+            <version>4.0.3</version>
         </dependency>
 
 
@@ -104,19 +107,12 @@
             <scope>system</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.vexsoftware</groupId>
-            <artifactId>votifier</artifactId>
-            <version>1.9</version>
-            <systemPath>${project.basedir}/lib/votifier-1.9.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
 
         <dependency>
-            <groupId>com.gmail.filoghost</groupId>
-            <artifactId>holographicdisplays.api</artifactId>
+            <groupId>com.votifier</groupId>
+            <artifactId>Votifier</artifactId>
             <version>2.1.3</version>
-            <systemPath>${project.basedir}/lib/HolographicDisplays.jar</systemPath>
+            <systemPath>${project.basedir}/lib/nuvotifier.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
@@ -133,7 +129,7 @@
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
             <version>1.0</version>
-            <systemPath>${project.basedir}/lib/craftbukkit-1.9.4-R0.1-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/lib/craftbukkit-1.12.2.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
@@ -173,7 +169,7 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>SpigotMC</artifactId>
             <version>1.0</version>
-            <systemPath>${project.basedir}/lib/Spigot.jar</systemPath>
+            <systemPath>${project.basedir}/lib/paper-1.12.2-1620.jar</systemPath>
             <scope>system</scope>
             <classifier>remapped-mojang</classifier>
         </dependency>
@@ -183,14 +179,6 @@
             <artifactId>BossBarAPI</artifactId>
             <version>1.0</version>
             <systemPath>${project.basedir}/lib/TabAPI.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>net.milkbowl.vault</groupId>
-            <artifactId>Vault</artifactId>
-            <version>1.0</version>
-            <systemPath>${project.basedir}/lib/Vault.jar</systemPath>
             <scope>system</scope>
         </dependency>
 

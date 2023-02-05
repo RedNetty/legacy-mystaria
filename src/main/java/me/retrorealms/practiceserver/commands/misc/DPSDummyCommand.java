@@ -71,7 +71,7 @@ public class DPSDummyCommand implements CommandExecutor, Listener {
 
 			// Check if player is on ground
 
-			Location loc = player.getLocation().add(new Vector(0, 1, 0));
+			Location loc = player.getLocation().clone().add(new Vector(0, 1, 0));
 			while (!loc.getBlock().getType().isSolid()) {
 				loc.add(new Vector(0, -1, 0));
 			}

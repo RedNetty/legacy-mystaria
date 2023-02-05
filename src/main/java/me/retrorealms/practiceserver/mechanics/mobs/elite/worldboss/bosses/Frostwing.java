@@ -5,6 +5,8 @@ import me.retrorealms.practiceserver.apis.HashMapSorter;
 import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGenerator;
+import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
+import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
 import me.retrorealms.practiceserver.mechanics.mobs.SkullTextures;
 import me.retrorealms.practiceserver.mechanics.mobs.Spawners;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.BossGearGenerator;
@@ -53,9 +55,11 @@ public class Frostwing extends WorldBoss implements Listener {
 
         new BukkitRunnable() {
             public void run() {
+                try{
                 if (livingEntity.isDead()) {
                     minionList.forEach(livingEntity -> {
                         if (!livingEntity.isDead()) {
+                            if(Spawners.mobs.containsKey(livingEntity)) Spawners.mobs.remove(livingEntity);
                             livingEntity.remove();
                         }
                     });
@@ -80,7 +84,9 @@ public class Frostwing extends WorldBoss implements Listener {
                     livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getEyeLocation(), 3, 0.5, 0.8, 0.5, 0.1);
 
                 }
+                }catch (Exception e) {
 
+                }
             }
         }.runTaskTimer(PracticeServer.getInstance(), 20L, 20L);
         return this;
@@ -119,6 +125,7 @@ public class Frostwing extends WorldBoss implements Listener {
                 int i = 0;
 
                 public void run() {
+                    try{
                     if (i < 5) {
                         i++;
                         summonMinionsAttack(livingEntity.getLocation(), 1);
@@ -134,7 +141,9 @@ public class Frostwing extends WorldBoss implements Listener {
                         healing = false;
                         this.cancel();
                     }
+                    }catch (Exception e) {
 
+                    }
                 }
             }.runTaskTimer(PracticeServer.getInstance(), 0L, 5L);
         }
@@ -148,10 +157,14 @@ public class Frostwing extends WorldBoss implements Listener {
         List<Location> particleLocations = new ArrayList<>();
         new BukkitRunnable() {
             public void run() {
+                try{
                 if (healing) {
                     livingEntity.teleport(bossLocation);
                 } else {
                     this.cancel();
+                }
+                }catch (Exception e) {
+
                 }
             }
 
@@ -160,6 +173,7 @@ public class Frostwing extends WorldBoss implements Listener {
             int ticks = 0;
 
             public void run() {
+                try{
                 if (ticks >= 10 || !healing) {
                     this.cancel();
                     return;
@@ -181,6 +195,9 @@ public class Frostwing extends WorldBoss implements Listener {
                     }
                 }
                 ticks++;
+                }catch (Exception e) {
+
+                }
             }
         }.runTaskTimer(PracticeServer.getInstance(), 0L, 2L);
     }
@@ -191,19 +208,23 @@ public class Frostwing extends WorldBoss implements Listener {
         Player winner;
         Player second;
         Player third;
+        int toSkip = 0;
 
-        if (players.size() > 0 && players.get(0).getValue() > 6500) {
+        if (players.size() > 0 && players.get(0).getValue() > 40000) {
             winner = players.get(0).getKey();
+            toSkip = 1;
         } else {
             winner = null;
         }
-        if (players.size() > 1 && players.get(1).getValue() > 6500) {
+        if (players.size() > 1 && players.get(1).getValue() > 40000) {
             second = players.get(1).getKey();
+            toSkip = 2;
         } else {
             second = null;
         }
-        if (players.size() > 2 && players.get(2).getValue() > 6500) {
+        if (players.size() > 2 && players.get(2).getValue() > 40000) {
             third = players.get(2).getKey();
+            toSkip = 3;
         } else {
             third = null;
         }
@@ -223,39 +244,40 @@ public class Frostwing extends WorldBoss implements Listener {
             player.sendMessage("");
         });
 
+
         getLoot(winner, 1);
         getLoot(second, 2);
         getLoot(third, 3);
-        players.stream().skip(2).forEach(player -> getLoot(player.getKey(), 4));
+        players.stream().skip(toSkip).forEach(p -> { if(p.getValue() > 10000) getLoot(p.getKey(), 4); });
     }
 
     public void getLoot(Player player, int place) {
         if (player != null) {
             List<ItemStack> lootDrops = new ArrayList<>();
-            int armChance = 50;
-            int wepChance = 50;
+            int armChance = 65;
+            int wepChance = 65;
             int legOrbAmount = 2;
             int t5ProtAmount = 2;
-            int bankNoteAmount = 10000;
+            int bankNoteAmount = 5000;
 
             switch (place) {
                 case 1:
-                    armChance = 4;
-                    wepChance = 6;
+                    armChance = 6;
+                    wepChance = 9;
                     legOrbAmount = 15;
                     t5ProtAmount = 10;
                     bankNoteAmount = 35000;
                     break;
                 case 2:
-                    armChance = 5;
-                    wepChance = 9;
+                    armChance = 8;
+                    wepChance = 13;
                     legOrbAmount = 10;
                     t5ProtAmount = 7;
                     bankNoteAmount = 25000;
                     break;
                 case 3:
-                    armChance = 8;
-                    wepChance = 14;
+                    armChance = 10;
+                    wepChance = 15;
                     legOrbAmount = 8;
                     t5ProtAmount = 4;
                     bankNoteAmount = 25000;
@@ -352,12 +374,6 @@ public class Frostwing extends WorldBoss implements Listener {
             for (int dx = -spotSize; dx <= spotSize; dx++) {
                 for (int dz = -spotSize; dz <= spotSize; dz++) {
                     Location particleLocation = spotLocation.clone().add(dx, 0, dz);
-                    new BukkitRunnable() {
-
-                        public void run() {
-
-                        }
-                    }.runTaskLater(PracticeServer.getInstance(), duration);
                     world.playSound(particleLocation, Sound.BLOCK_SNOW_BREAK, 1, 1);
                     world.spawnParticle(Particle.SNOW_SHOVEL, particleLocation, 3, 0.5, 0.8, 0.5, 0.1);
                 }
@@ -365,6 +381,7 @@ public class Frostwing extends WorldBoss implements Listener {
             new BukkitRunnable() {
 
                 public void run() {
+                    try{
                     if (ticks[0] >= duration) {
                         this.cancel();
                         return;
@@ -376,12 +393,16 @@ public class Frostwing extends WorldBoss implements Listener {
                         }
                     }
                     ticks[0]++;
+                    }catch (Exception e) {
+
+                    }
                 }
             }.runTaskTimer(PracticeServer.getInstance(), 0L, 20L);
         }
         new BukkitRunnable() {
 
             public void run() {
+                try{
                 if (ticks[0] >= duration) {
                     this.cancel();
                     return;
@@ -401,7 +422,11 @@ public class Frostwing extends WorldBoss implements Listener {
                         }
                     }
                 }
+                }catch (Exception e) {
+
+                }
             }
+
         }.runTaskTimer(PracticeServer.getInstance(), 0L, 20L);
     }
 
@@ -425,11 +450,13 @@ public class Frostwing extends WorldBoss implements Listener {
             int tick = 0;
 
             public void run() {
+                try{
                 if (tick >= 2) {
                     Location location = entity.getLocation();
                     World world = entity.getLocation().getWorld();
                     new BukkitRunnable() {
                         public void run() {
+                            try{
 
                             for (int i = 0; i < numberOfIceBlocks; i++) {
                                 final int[] currentRadius = {3};
@@ -459,6 +486,7 @@ public class Frostwing extends WorldBoss implements Listener {
                                 }.runTaskTimer(PracticeServer.getInstance(), 20L, 5L);
                                 new BukkitRunnable() {
                                     public void run() {
+                                        try{
                                         if (currentDuration[0] == duration) this.cancel();
                                         entity.teleport(location);
                                         if (iceBlock.isValid()) {
@@ -476,18 +504,26 @@ public class Frostwing extends WorldBoss implements Listener {
                                                 }
                                             }
                                         }
+                                        }catch (Exception e) {
+
+                                        }
                                     }
                                 }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
                             }
+                            }catch (Exception e) {
 
+                            }
                         }
                     }.runTaskLater(PracticeServer.getInstance(), 5L);
                     this.cancel();
                 }
                 tick++;
-                entity.getWorld().playEffect(entity.getLocation().add(0, 2, 0), Effect.STEP_SOUND, Material.FROSTED_ICE);
+                entity.getWorld().playEffect(entity.getLocation().clone().add(0, 2, 0), Effect.STEP_SOUND, Material.FROSTED_ICE);
+                }catch (Exception e) {
 
+                }
             }
+
         }.runTaskTimerAsynchronously(PracticeServer.getInstance(), 0L, 10L);
     }
 

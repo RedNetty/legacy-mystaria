@@ -210,7 +210,7 @@ public class Alignments
             p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
             e.setRespawnLocation(TeleportBooks.generateRandomSpawnPoint(p.getName()));
         } else {
-            e.setRespawnLocation(TeleportBooks.DeadPeaks);
+            e.setRespawnLocation(TeleportBooks.stonePeaks);
         }
     }
 
@@ -498,7 +498,6 @@ public class Alignments
             try{
                 meta = weapon.getItemMeta();
             }catch(Exception ex){
-                System.out.println("Null Weapon on Death");
                 return;
             }
             hoveredChat.add(meta.getDisplayName());

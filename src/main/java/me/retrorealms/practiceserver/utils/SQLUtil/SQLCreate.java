@@ -4,19 +4,19 @@ import java.sql.Connection;
 
 public class SQLCreate {
     public static String CreatePlayerStats = "CREATE TABLE IF NOT EXISTS  PlayerData (  " +
-            "UUID CHAR(36)," +
-            "Username CHAR(17)," +
+            "UUID  CHAR(36)," +
+            "Username  VARCHAR(17)," +
             "XCoord INT," +
             "YCoord INT," +
             "ZCoord INT," +
             "Yaw INT," +
             "Pitch INT," +
-            "Inventory VARCHAR(25000)," +
-            "Armor VARCHAR(20000)," +
+            "Inventory MEDIUMTEXT," +
+            "Armor MEDIUMTEXT," +
             "MaxHP INT," +
             "Gems INT," +
-            "GuildName  CHAR(50)," +
-            "Alignment  CHAR(10)," +
+            "GuildName  VARCHAR(50)," +
+            "Alignment  VARCHAR(10)," +
             "AlignTime  INT," +
             "HorseTier  INT," +
             "T1Kills  INT," +
@@ -29,21 +29,21 @@ public class SQLCreate {
             "PlayerKills  INT," +
             "OreMined  INT," +
             "ChestsOpened  INT," +
-            "RespawnData VARCHAR(15000)," +
+            "RespawnData MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateGuilds = "CREATE TABLE IF NOT EXISTS  Guilds (  " +
-            "Owner CHAR(36)," +
-            "GuildName  CHAR(50)," +
-            "GuildTag  CHAR(10)," +
-            "GuildMOTD  CHAR(200)," +
+            "Owner VARCHAR(36)," +
+            "GuildName  VARCHAR(50)," +
+            "GuildTag  VARCHAR(10)," +
+            "GuildMOTD  VARCHAR(200)," +
             "Officers  VARCHAR(1000)," +
             "Members  VARCHAR(2000)," +
             "PRIMARY KEY ( GuildName ) );";
 
     public static String CreatePersistentStats = "CREATE TABLE IF NOT EXISTS  PersistentData (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
+            "Username VARCHAR(17)," +
             "Rank CHAR(10)," +
             "Buddies VARCHAR(1000)," +
             "PVPToggle  BOOLEAN," +
@@ -77,39 +77,39 @@ public class SQLCreate {
 
     public static String CreateBanks = "CREATE TABLE IF NOT EXISTS  Banks (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
-            "Inventory VARCHAR(50000)," +
+            "Username VARCHAR(17)," +
+            "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks2 = "CREATE TABLE IF NOT EXISTS  Banks2 (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
-            "Inventory VARCHAR(50000)," +
+            "Username VARCHAR(17)," +
+            "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks3 = "CREATE TABLE IF NOT EXISTS  Banks3 (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
-            "Inventory VARCHAR(50000)," +
+            "Username VARCHAR(17)," +
+            "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks4 = "CREATE TABLE IF NOT EXISTS  Banks4 (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
-            "Inventory VARCHAR(50000)," +
+            "Username VARCHAR(17)," +
+            "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks5 = "CREATE TABLE IF NOT EXISTS  Banks5 (  " +
             "UUID CHAR(36)," +
-            "Username CHAR(17)," +
-            "Inventory VARCHAR(50000)," +
+            "Username VARCHAR(17)," +
+            "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateGuildBanks = "CREATE TABLE IF NOT EXISTS  GuildBanks (  " +
-            "GuildName CHAR(50)," +
-            "GuildBank VARCHAR(50000)," +
+            "GuildName VARCHAR(50)," +
+            "GuildBank MEDIUMTEXT," +
             "Mutex BOOLEAN," +
-            "OccupiedBy CHAR(17)," +
+            "OccupiedBy VARCHAR(17)," +
             "PRIMARY KEY ( GuildName ) );";
 
     public static void createTables(Connection con){

@@ -20,7 +20,7 @@ import java.util.Arrays;
 public class ServerGUI {
 
     public static Inventory serverGUI(Player player) {
-        Inventory inventory = Bukkit.createInventory(null, 9, "Autism Realms - SERVERS");
+        Inventory inventory = Bukkit.createInventory(null, 9, "Mystaria - SERVERS");
 
         /*TEST*/
         ItemStack testServer = new ItemStack(Material.COMMAND_CHAIN);

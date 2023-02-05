@@ -2,9 +2,7 @@ package me.retrorealms.practiceserver.mechanics.player.Mounts;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.tab.TabMenu;
-import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
-import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.Buddies;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.nonStaticConfig;
@@ -13,12 +11,12 @@ import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.vendors.ItemVendors;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
-import net.minecraft.server.v1_9_R2.GenericAttributes;
-import net.minecraft.server.v1_9_R2.PacketPlayOutMount;
+import net.minecraft.server.v1_12_R1.GenericAttributes;
+import net.minecraft.server.v1_12_R1.PacketPlayOutMount;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -34,67 +32,23 @@ import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.mcsg.double0negative.tabapi.TabAPI;
 
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 public class Horses
         implements Listener {
     public static HashMap<String, Integer> mounting = new HashMap<String, Integer>();
+    public static HashMap<Player, Integer> horseTier = new HashMap<>();
     static HashMap<String, Integer> horsetier = new HashMap<String, Integer>();
     static HashMap<String, Location> mountingloc = new HashMap<String, Location>();
     static HashMap<UUID, Location> currentLoc = new HashMap<UUID, Location>();
     static HashMap<String, ItemStack> buyingitem = new HashMap<String, ItemStack>();
     static HashMap<String, Integer> buyingprice = new HashMap<String, Integer>();
-    public static HashMap<Player, Integer> horseTier = new HashMap<>();
-
-    public void onEnable() {
-        PracticeServer.log.info("[Horses] has been enabled.");
-        Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        new BukkitRunnable() {
-
-            public void run() {
-                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                    if (!p.isOnline() || !Horses.mounting.containsKey(p.getName())) continue;
-                    Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().add(0.0, 0.15, 0.0), 20.0);
-                    if (Horses.mounting.get(p.getName()) == 0) {
-                        Particles.CRIT.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().add(0.0, 1.0, 0.0), 20.0);
-                        Horses.mounting.remove(p.getName());
-                        Horses.mountingloc.remove(p.getName());
-                        Horses.horse(p, Horses.horsetier.get(p.getName()));
-                        continue;
-                    }
-                    if (Horses.mounting.get(p.getName()) == 6) {
-                        String name = Horses.mount(Horses.horsetier.get(p.getName()), false).getItemMeta().getDisplayName();
-                        p.sendMessage(ChatColor.BOLD + "SUMMONING " + name + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
-                        Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
-                        continue;
-                    }
-                    p.sendMessage(ChatColor.BOLD + "SUMMONING" + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
-                    Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
-                }
-            }
-        }.runTaskTimer(PracticeServer.plugin, 20, 20);
-    }
-
-    public void onDisable() {
-        PracticeServer.log.info("[Horses] has been disabled.");
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onVehicleMove(VehicleMoveEvent event) {
-        if (event.getVehicle() instanceof Horse) {
-            Horse horse = (Horse) event.getVehicle();
-            if (currentLoc.containsKey(horse.getUniqueId())) {
-                currentLoc.remove(horse.getUniqueId());
-            }
-            currentLoc.put(horse.getUniqueId(), horse.getLocation());
-        }
-    }
 
     public static ItemStack mount(int tier, boolean inshop) {
         ItemStack is = new ItemStack(Material.SADDLE);
@@ -145,7 +99,7 @@ public class Horses
         }
         im.setLore(lore);
         is.setItemMeta(im);
-        if(tier < 2) return new ItemStack(Material.AIR);
+        if (tier < 2) return new ItemStack(Material.AIR);
         return is;
     }
 
@@ -183,9 +137,9 @@ public class Horses
             speed = 0.55;
             jump = 1.05;
         }
-        Horse h = (Horse) p.getWorld().spawnEntity(p.getLocation(), EntityType.HORSE);
+        EntityType horseType = EntityType.HORSE;
+        Horse h = (Horse) p.getWorld().spawnEntity(p.getLocation(), horseType);
         new CreatureSpawnEvent(h, CreatureSpawnEvent.SpawnReason.CUSTOM);
-        h.setVariant(Horse.Variant.HORSE);
         h.setAdult();
         h.setTamed(true);
         h.setOwner(p);
@@ -194,31 +148,14 @@ public class Horses
         h.setStyle(Horse.Style.NONE);
         h.setDomestication(100);
         h.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-        h.getInventory().setArmor(new ItemStack(Material.IRON_BARDING));
-        if (tier == 4) {
+        if (tier == 3)
+            h.getInventory().setArmor(new ItemStack(Material.IRON_BARDING));
+        if (tier == 4)
             h.getInventory().setArmor(new ItemStack(Material.DIAMOND_BARDING));
-        }
-        if (tier == 5) {
-            h.getInventory().setArmor(new ItemStack(Material.GOLD_BARDING));
-        }
-        if (ModerationMechanics.isDonator(p)) {
-            h.getInventory().setArmor(null);
 
-            if (ModerationMechanics.getRank(p) == RankEnum.SUB) {
-                h.setVariant(Horse.Variant.UNDEAD_HORSE);
-            }
-            if (ModerationMechanics.getRank(p) == RankEnum.SUB1) {
-                h.setColor(Horse.Color.GRAY);
-                h.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
-            }
-            if (ModerationMechanics.getRank(p) == RankEnum.SUB2) {
-                h.setVariant(Horse.Variant.SKELETON_HORSE);
-            }
-            if (ModerationMechanics.getRank(p) == RankEnum.SUPPORTER || ModerationMechanics.getRank(p) == RankEnum.SUB3) {
-                h.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 1));
-                h.setVariant(Horse.Variant.SKELETON_HORSE);
-            }
-        }
+        if (tier == 5)
+            h.getInventory().setArmor(new ItemStack(Material.GOLD_BARDING));
+
         h.setMaxHealth(20.0);
         h.setHealth(20.0);
         h.setJumpStrength(jump);
@@ -226,6 +163,52 @@ public class Horses
         h.setPassenger(p);
 
         return h;
+    }
+
+    public void onEnable() {
+        PracticeServer.log.info("[Horses] has been enabled.");
+        Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
+        new BukkitRunnable() {
+
+            public void run() {
+                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                    try {
+                        if (!p.isOnline() || !Horses.mounting.containsKey(p.getName())) continue;
+                        Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 0.15, 0.0), 20.0);
+                        if (Horses.mounting.get(p.getName()) == 0) {
+                            Particles.CRIT.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
+                            Horses.mounting.remove(p.getName());
+                            Horses.mountingloc.remove(p.getName());
+                            Horses.horse(p, Horses.horsetier.get(p.getName()));
+                            continue;
+                        }
+                        if (Horses.mounting.get(p.getName()) == 6) {
+                            String name = Horses.mount(Horses.horsetier.get(p.getName()), false).getItemMeta().getDisplayName();
+                            p.sendMessage(ChatColor.BOLD + "SUMMONING " + name + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
+                            Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
+                            continue;
+                        }
+                        p.sendMessage(ChatColor.BOLD + "SUMMONING" + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
+                        Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
+                    } catch (Exception e) {
+
+                    }
+                }
+            }
+        }.runTaskTimer(PracticeServer.plugin, 20, 20);
+    }
+
+    public void onDisable() {
+        PracticeServer.log.info("[Horses] has been disabled.");
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onVehicleMove(VehicleMoveEvent event) {
+        if (event.getVehicle() instanceof Horse) {
+            Horse horse = (Horse) event.getVehicle();
+            currentLoc.remove(horse.getUniqueId());
+            currentLoc.put(horse.getUniqueId(), horse.getLocation());
+        }
     }
 
     @EventHandler
@@ -255,7 +238,7 @@ public class Horses
                 int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
                 if (Money.hasEnoughGems(p, price)) {
                     int currtier = 0;
-                    if(Horses.horseTier.containsKey(p)) {
+                    if (Horses.horseTier.containsKey(p)) {
                         currtier = Horses.horseTier.get(p);
                     }
                     int newtier = Horses.getMountTier(e.getCurrentItem());
@@ -291,21 +274,21 @@ public class Horses
             @Override
             public void run() {
                 Player p = event.getPlayer();
-                if(PracticeServer.DATABASE){
-                    try{
+                if (PracticeServer.DATABASE) {
+                    try {
                         ResultSet rs = SQLMain.getPlayerData("PlayerData", "HorseTier", p);
                         int tier;
-                        if(rs.next()){
+                        if (rs.next()) {
                             tier = rs.getInt("HorseTier");
-                        }else{
+                        } else {
                             tier = 0;
                         }
                         if (!event.getPlayer().getInventory().contains(Material.SADDLE)) {
                             event.getPlayer().getInventory().addItem(mount(tier, false));
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                     }
-                }else {
+                } else {
                     if (nonStaticConfig.get().getInt(event.getPlayer().getUniqueId() + ".Info.Horse Tier") >= 1) {
                         if (!event.getPlayer().getInventory().contains(Material.SADDLE)) {
                             int tier = nonStaticConfig.get().getInt(event.getPlayer().getUniqueId() + ".Info.Horse Tier");
@@ -335,7 +318,7 @@ public class Horses
                 }
             } else if (p.isInsideVehicle() && p.getVehicle().getType() == EntityType.HORSE) {
                 p.getVehicle().remove();
-                p.teleport(p.getVehicle().getLocation().add(0.0, 1.0, 0.0));
+                p.teleport(p.getVehicle().getLocation().clone().add(0.0, 1.0, 0.0));
             }
         }
         if (e.getEntity() instanceof Horse) {
@@ -365,7 +348,7 @@ public class Horses
                 }
                 h.remove();
                 if (p != null) {
-                    p.teleport(h.getLocation().add(0.0, 2.0, 0.0));
+                    p.teleport(h.getLocation().clone().add(0.0, 2.0, 0.0));
                 }
             }
             e.setDamage(0.0);
@@ -388,7 +371,7 @@ public class Horses
             }
             currentLoc.remove(p.getVehicle().getUniqueId());
             p.teleport(location.add(0.0, 1.0, 0.0));
-            if(p.getVehicle() != null) p.getVehicle().remove();
+            if (p.getVehicle() != null) p.getVehicle().remove();
         }
     }
 
@@ -404,7 +387,6 @@ public class Horses
             }
             currentLoc.remove(e.getVehicle().getUniqueId());
             e.getVehicle().remove();
-            e.getExited().teleport(location);
 
         }
     }
@@ -429,7 +411,7 @@ public class Horses
         Player p = e.getPlayer();
         if (!(e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK || p.getInventory().getItemInMainHand() == null || Horses.getMountTier(p.getInventory().getItemInMainHand()) <= 0 || p.getVehicle() != null || mounting.containsKey(p.getName()) || Duels.duelers.containsKey(p))) {
             int mountTime = 6;
-            if(TabMenu.getAlignment(p).toLowerCase().contains("chaotic")) mountTime = 8;
+            if (TabMenu.getAlignment(p).toLowerCase().contains("chaotic")) mountTime = 8;
             if (Alignments.isSafeZone(p.getLocation())) {
                 mountingloc.put(p.getName(), p.getLocation());
                 horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
@@ -473,7 +455,7 @@ public class Horses
             mountingloc.remove(p.getName());
         }
         if (p.getVehicle() != null && p.getVehicle().getType() == EntityType.HORSE) {
-            p.teleport(p.getVehicle().getLocation().add(0.0, 1.0, 0.0));
+            p.teleport(p.getVehicle().getLocation().clone().add(0.0, 1.0, 0.0));
             p.getVehicle().remove();
         }
     }
@@ -487,9 +469,7 @@ public class Horses
         }
         Entity vehicle = p.getVehicle();
         if (vehicle != null && vehicle instanceof Horse) {
-            if (currentLoc.containsKey(vehicle.getUniqueId())) {
-                currentLoc.remove(vehicle.getUniqueId());
-            }
+            currentLoc.remove(vehicle.getUniqueId());
         }
         p.eject();
     }
@@ -527,7 +507,7 @@ public class Horses
                 }
                 Money.takeGems(p, price);
                 p.getInventory().setItem(p.getInventory().firstEmpty(), is);
-                if(!PracticeServer.DATABASE) {
+                if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Info.Horse Tier", getMountTier(is));
                     nonStaticConfig.save();
                 }
@@ -541,7 +521,6 @@ public class Horses
                 p.sendMessage(ChatColor.RED + "Purchase - " + ChatColor.BOLD + "CANCELLED");
                 buyingprice.remove(p.getName());
                 buyingitem.remove(p.getName());
-                return;
             }
         }
     }

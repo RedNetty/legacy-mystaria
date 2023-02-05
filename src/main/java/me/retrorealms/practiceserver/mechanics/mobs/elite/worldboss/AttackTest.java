@@ -1,11 +1,11 @@
 package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import net.minecraft.server.v1_9_R2.EnumParticle;
-import net.minecraft.server.v1_9_R2.PacketPlayOutWorldParticles;
+import net.minecraft.server.v1_12_R1.EnumParticle;
+import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -169,23 +169,27 @@ public class AttackTest {
             }.runTaskTimer(PracticeServer.getInstance(), 20L, 10L);
             new BukkitRunnable() {
                 public void run() {
-                    if (iceBlock.isValid()) {
-                        if (currentRadius[0] <= radius) {
-                            currentRadius[0]++;
-                        }
-                        angle[0] += 0.1;
-                        double x = Math.cos(angle[0]) * currentRadius[0];
-                        double z = Math.sin(angle[0]) * currentRadius[0];
-                        Location newIceBlockLocation = entity.getLocation().clone().add(x, 0, z);
-                        iceBlock.teleport(newIceBlockLocation);
-                        for (Player player : Bukkit.getOnlinePlayers()) {
-                            if (iceBlock.getLocation().distance(player.getLocation()) <= 1) {
-                                player.damage(damage);
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3));
-                                player.playEffect(player.getLocation(), Effect.WITHER_SHOOT, 1);
-                                iceBlock.remove();
+                    try {
+                        if (iceBlock.isValid()) {
+                            if (currentRadius[0] <= radius) {
+                                currentRadius[0]++;
+                            }
+                            angle[0] += 0.1;
+                            double x = Math.cos(angle[0]) * currentRadius[0];
+                            double z = Math.sin(angle[0]) * currentRadius[0];
+                            Location newIceBlockLocation = entity.getLocation().clone().add(x, 0, z);
+                            iceBlock.teleport(newIceBlockLocation);
+                            for (Player player : Bukkit.getOnlinePlayers()) {
+                                if (iceBlock.getLocation().distance(player.getLocation()) <= 1) {
+                                    player.damage(damage);
+                                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3));
+                                    player.playEffect(player.getLocation(), Effect.WITHER_SHOOT, 1);
+                                    iceBlock.remove();
+                                }
                             }
                         }
+                    } catch (Exception e) {
+
                     }
                 }
             }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);

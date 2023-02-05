@@ -26,14 +26,11 @@ public class UtilParticles {
         Location loc = location.clone().subtract(v);
         int step = 0;
         for (int i = 0; i < particles; i++) {
-            if (step >= amount)
-                step = 0;
+            if (step >= amount) step = 0;
             step++;
             loc.add(v);
-            if (effect == Particles.REDSTONE)
-                effect.display(new Particles.OrdinaryColor(r, g, b), loc, 128);
-            else
-                effect.display(0, 0, 0, 0, 1, loc, 128);
+            if (effect == Particles.REDSTONE) effect.display(new Particles.OrdinaryColor(r, g, b), loc, 128);
+            else effect.display(0, 0, 0, 0, 1, loc, 128);
         }
     }
 
@@ -42,27 +39,29 @@ public class UtilParticles {
         BukkitRunnable runnable = new BukkitRunnable() {
             double radius = 0;
             double step;
-            double y = loc.getY();
-            Location location = loc.clone().add(0, 3, 0);
+            final double y = loc.getY();
+            final Location location = loc.clone().add(0, 3, 0);
 
             @Override
             public void run() {
-                double inc = (2 * Math.PI) / 50;
-                double angle = step * inc + i;
-                Vector v = new Vector();
-                v.setX(Math.cos(angle) * radius);
-                v.setZ(Math.sin(angle) * radius);
-                if (effect == Particles.REDSTONE)
-                    display(0, 0, 255, location);
-                else
-                    display(effect, location);
-                location.subtract(v);
-                location.subtract(0, 0.1d, 0);
-                if (location.getY() <= y) {
-                    cancel();
+                try {
+                    double inc = (2 * Math.PI) / 50;
+                    double angle = step * inc + i;
+                    Vector v = new Vector();
+                    v.setX(Math.cos(angle) * radius);
+                    v.setZ(Math.sin(angle) * radius);
+                    if (effect == Particles.REDSTONE) display(0, 0, 255, location);
+                    else display(effect, location);
+                    location.subtract(v);
+                    location.subtract(0, 0.1d, 0);
+                    if (location.getY() <= y) {
+                        cancel();
+                    }
+                    step += 4;
+                    radius += 1 / 50f;
+                } catch (Exception e) {
+
                 }
-                step += 4;
-                radius += 1 / 50f;
             }
         };
         runnable.runTaskTimer(PracticeServer.plugin, 0, 1);

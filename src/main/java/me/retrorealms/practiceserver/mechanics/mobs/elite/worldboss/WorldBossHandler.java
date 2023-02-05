@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -42,7 +43,7 @@ public class WorldBossHandler implements Listener {
     }
 
     public static void resetKills() {
-        WorldBossHandler.totalT5Kills = 0;
+        totalT5Kills = 0;
     }
 
     public static void spawnBoss() {
@@ -58,11 +59,11 @@ public class WorldBossHandler implements Listener {
             case TRIPOLI:
                 bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in 'The Tripoli Plains' *";
                 break;
-            case AVALON_ENTRANCE:
-                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned at 'Avalon Entrance' *";
+            case DRAGONS_DEN:
+                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in front of 'Dragon's Den' *";
                 break;
-            case AVALON_BRIDGE:
-                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned on 'The Avalon Bridges' *";
+            case THE_BENEATH:
+                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in 'The Beneath' *";
                 break;
         }
         String finalBossSpawnMessage = bossSpawnMessage;
@@ -86,7 +87,7 @@ public class WorldBossHandler implements Listener {
         BossGearGenerator.onLoad();
         new BukkitRunnable() {
             public void run() {
-                if (totalT5Kills > 300 && activeBoss == null) {
+                if (totalT5Kills > 450 && activeBoss == null) {
                     spawnBoss();
                     totalT5Kills = 0;
                 }
@@ -99,7 +100,7 @@ public class WorldBossHandler implements Listener {
                     Location location = activeBoss.getLivingEntity().getLocation();
                     World world = location.getWorld();
 
-                    world.getNearbyEntities(location, 40, 40, 40).forEach(entity -> {
+                    world.getNearbyEntities(location, 15, 15, 15).forEach(entity -> {
                         if ((entity instanceof Player)) {
 
                             Player player = (Player) entity;
@@ -119,11 +120,23 @@ public class WorldBossHandler implements Listener {
 
     }
 
+
+    @EventHandler
+    public void onBossKilll(EntityDeathEvent event) {
+        if (event.getEntity() instanceof LivingEntity) {
+            if (MobHandler.isWorldBoss(event.getEntity()) && getActiveBoss() != null && getTotalT5Kills() > 300) {
+                    activeBoss.rewardLoot();
+                    activeBoss.getLivingEntity().remove();
+                    resetKills();
+
+                }
+            }
+    }
     @EventHandler
     public void onBossKill(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player && event.getEntity() instanceof LivingEntity) {
             if (MobHandler.isWorldBoss(event.getEntity()) && getActiveBoss() != null) {
-                if (event.getDamage() > ((LivingEntity) event.getEntity()).getHealth()) {
+                if (event.getDamage() > ((LivingEntity) event.getEntity()).getHealth() && event.getEntity() != null) {
                     activeBoss.rewardLoot();
                     activeBoss.getLivingEntity().remove();
                     resetKills();
@@ -137,8 +150,8 @@ public class WorldBossHandler implements Listener {
             try {
                 Player p;
                 if (e.getDamager() instanceof Player && e.getEntity() instanceof LivingEntity) {
-                    if (e.getDamage() > 0.0) {
-                        if (MobHandler.isWorldBoss(e.getEntity())) {
+                    if (e.getDamage() > 30) {
+                        if (MobHandler.isWorldBoss(e.getEntity()) && getActiveBoss() != null) {
                             p = (Player) e.getDamager();
                             activeBoss.addDamage(p, (int) e.getDamage());
                         }

@@ -13,7 +13,6 @@ import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.enchants.Orbs;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.utils.Util;
-import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -45,9 +44,9 @@ public class CreateDrop {
         String rarity_string = getRarity(rarity);
 
         //Create Variables
-        double min_min = min_damages.get(tier) * ((rarity + .7) / 2.15);
+        double min_min = min_damages.get(tier) * ((rarity + .7) / 2.35);
         double min_max = min_min / 4D;
-        double max_min = max_damages.get(tier) * ((rarity + .7) / 2.15);
+        double max_min = max_damages.get(tier) * ((rarity + .7) / 2.3);
         double max_max = max_min / 4D;
         if(min_max <= 0 || min_min <= 0) {
             min_max = 1;
@@ -76,6 +75,8 @@ public class CreateDrop {
             min = max;
             max = newMax;
         }
+        min *= PracticeServer.MIN_DAMAGE_MULTIPLIER;
+        max *= PracticeServer.MAX_DAMAGE_MULTIPLIER;
         double base_hp = 0;
         if(item == 5 || item == 8) {
             base_hp = (armour_base.get(tier) * (rarity / (1+(rarity / 10D)))) / 1.5D;
@@ -89,7 +90,7 @@ public class CreateDrop {
             max = (int) maxelm;
         }
         int hp = (r.nextInt((int)base_hp /4)  + (int)base_hp);
-        if(item == 6 || item == 7) hp *= 1.5;
+        if(item == 6 || item == 7) hp *= PracticeServer.HP_MULTIPLIER;
 
         double dpsmax = tier*(1D+(tier/1.7D));
         double dpsmin = dpsmax / 1.5D;
@@ -113,7 +114,7 @@ public class CreateDrop {
         int randomDps = r.nextInt(4) + 1;
 
         //Create Item
-        ItemStack newItem = new ItemStack(Material.getMaterial(mat_string + "_" + item_string));
+        ItemStack newItem = new ItemStack(Material.getMaterial(mat_string + "_" + item_string)) == null ? Items.orb(false).clone() : new ItemStack(Material.getMaterial(mat_string + "_"+item_string));
         ItemMeta newItemMeta = newItem.getItemMeta();
 
         if(newItem.getType().toString().contains("LEATHER") && tier == 6) {
@@ -214,7 +215,6 @@ public class CreateDrop {
 
     //Set Items Rarity
     public static String getRarity(int rarity){
-        System.out.println(rarity);
         switch (rarity) {
             case 1: return ChatColor.GRAY + "Common";
             case 2: return ChatColor.GREEN + "Uncommon";

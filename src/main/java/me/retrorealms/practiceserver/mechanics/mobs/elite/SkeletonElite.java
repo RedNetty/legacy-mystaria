@@ -97,7 +97,7 @@ public class SkeletonElite implements Listener {
                         float x = r.nextFloat() - 0.2F;
                         float z = r.nextFloat() - 0.2F;
 
-                        Particles.SPELL_WITCH.display(0.3f, 0.3f, 0.3f, 0.02f, 60, livingEntity.getLocation().add(x, y, z), 20.0);
+                        Particles.SPELL_WITCH.display(0.3f, 0.3f, 0.3f, 0.02f, 60, livingEntity.getLocation().clone().add(x, y, z), 20.0);
                     }
                     return;
                 }
@@ -127,7 +127,7 @@ public class SkeletonElite implements Listener {
                     float x = r.nextFloat() - 0.2F;
                     float z = r.nextFloat() - 0.2F;
 
-                    Particles.FLAME.display(0.3f, 0.3f, 0.3f, 0.02f, 60, livingEntity.getLocation().add(x, y, z), 20.0);
+                    Particles.FLAME.display(0.3f, 0.3f, 0.3f, 0.02f, 60, livingEntity.getLocation().clone().add(x, y, z), 20.0);
                 }
 
                 if (currentHP <= maxHP / 2) {

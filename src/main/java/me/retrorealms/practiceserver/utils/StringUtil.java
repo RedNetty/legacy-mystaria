@@ -1,5 +1,6 @@
 package me.retrorealms.practiceserver.utils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -18,6 +19,10 @@ public class StringUtil {
 
         String allArgs = sb.toString().trim();
         return allArgs;
+    }
+
+    public static void broadcastCentered(String message) {
+        Bukkit.getServer().getOnlinePlayers().forEach(player -> sendCenteredMessage(player, message));
     }
 
     public static void sendCenteredMessage(Player player, String message) {

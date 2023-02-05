@@ -81,16 +81,16 @@ public class DropPriority implements Listener {
 
     @EventHandler
     void onPickup(PlayerPickupItemEvent e){
-        Player p = e.getPlayer();
-        Item i = e.getItem();
-        if(droppedTime.containsKey(i)){
-            if(playerRegistry.get(i) == p) {
-                droppedTime.remove(i);
-                playerRegistry.remove(i);
-            }else{
-                e.setCancelled(true);
-            }
-        }
+//        Player p = e.getPlayer();
+//        Item i = e.getItem();
+//        if(droppedTime.containsKey(i)){
+//            if(playerRegistry.get(i) == p) {
+//                droppedTime.remove(i);
+//                playerRegistry.remove(i);
+//            }else{
+//                e.setCancelled(true);
+//            }
+//        }
     }
 
     @EventHandler
@@ -114,10 +114,10 @@ public class DropPriority implements Listener {
 
     @EventHandler
     void onDrop(PlayerDropItemEvent e){
-        if(Toggles.getToggleStatus(e.getPlayer(), "Drop Protection")){
-            droppedTime.put(e.getItemDrop(), rankTime(e.getPlayer()));
-            playerRegistry.put(e.getItemDrop(), e.getPlayer());
-        }
+//        if(Toggles.getToggleStatus(e.getPlayer(), "Drop Protection")){
+//            droppedTime.put(e.getItemDrop(), rankTime(e.getPlayer()));
+//            playerRegistry.put(e.getItemDrop(), e.getPlayer());
+//        }
     }
 
     static int rankTime(Player p){

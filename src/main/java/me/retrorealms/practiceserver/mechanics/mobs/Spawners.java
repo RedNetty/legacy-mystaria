@@ -20,7 +20,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -304,8 +303,7 @@ public class Spawners implements Listener {
         if (type.equalsIgnoreCase("witherskeleton") || type.toLowerCase().contains("kilatan")
                 || type.equalsIgnoreCase("jayden") || type.equalsIgnoreCase("frostKing")
                 || type.equalsIgnoreCase("frozenElite") || type.equalsIgnoreCase("frozenBoss")) {
-            final Skeleton skeleton = (Skeleton) loc.getWorld().spawnEntity(loc, EntityType.SKELETON);
-            skeleton.setSkeletonType(Skeleton.SkeletonType.WITHER);
+            final WitherSkeleton skeleton = (WitherSkeleton) loc.getWorld().spawnEntity(loc, EntityType.WITHER_SKELETON);
             new CreatureSpawnEvent(skeleton, CreatureSpawnEvent.SpawnReason.CUSTOM);
             return skeleton;
         }
@@ -376,7 +374,6 @@ public class Spawners implements Listener {
     }
 
     public static LivingEntity spawnMob(final Location loc, final String type, final int tier, final boolean elite) {
-        System.out.println(tier);
         final int randX = Util.random.nextInt(7) - 3;
         final int randZ = Util.random.nextInt(7) - 3;
         Location sloc = new Location(loc.getWorld(), loc.getX() + randX + 0.5, loc.getY() + 2.0,
@@ -462,7 +459,7 @@ public class Spawners implements Listener {
         if (type.equals("bossSkeletonDungeon")) {
             name = ChatColor.DARK_RED + "The Restless Skeleton Deathlord";
         }
-        if(type.equalsIgnoreCase("frostwing")) {
+        if (type.equalsIgnoreCase("frostwing")) {
             name = ChatColor.YELLOW + "" + ChatColor.BOLD + "Frost-wing The Frozen Titan";
         }
 
@@ -805,7 +802,7 @@ public class Spawners implements Listener {
         s.getEquipment().clear();
         s.getEquipment().setItemInMainHand(hand);
 
-        if(type.equalsIgnoreCase("frostwing")) {
+        if (type.equalsIgnoreCase("frostwing")) {
             s.getEquipment().setHelmet(SkullTextures.FROST.getFrostSkull());
         }
         if (type.equals("bossSkeletonDungeon")) {
@@ -848,7 +845,7 @@ public class Spawners implements Listener {
             if (type.equalsIgnoreCase("bossSkeletonDungeon")) {
                 hp = 115000;
             }
-            if(type.equalsIgnoreCase("frostwing")) {
+            if (type.equalsIgnoreCase("frostwing")) {
                 hp = ThreadLocalRandom.current().nextInt(210000, 234444);
             }
             if (type.equalsIgnoreCase("frozenElite")) {
@@ -935,46 +932,44 @@ public class Spawners implements Listener {
             public void run() {
                 // if (DeployCommand.patchlockdown) return;
                 for (final Entity e : Bukkit.getWorlds().get(0).getEntities()) {
-                    if (e instanceof LivingEntity) {
-                        final LivingEntity s = (LivingEntity) e;
-                        if (!Spawners.mobs.containsKey(s)) {
-                            continue;
-                        }
-                        if (s.getEquipment().getHelmet() != null && s.getEquipment().getHelmet().getType() != Material.AIR) {
-                            s.getEquipment().getHelmet().setDurability((short) 0);
-                        }
-                        final Location loc = Spawners.mobs.get(s);
-                        final Location newloc = s.getLocation();
-                        if (loc.distance(newloc) <= (Mobs.isGolemBoss(s) || MobHandler.isWorldBoss(s) ? 45 : 30)) {
-                            continue;
-                        }
-                        final Random r = new Random();
-                        final int randX = Util.random.nextInt(7) - 3;
-                        final int randZ = Util.random.nextInt(7) - 3;
-                        Location sloc = new Location(loc.getWorld(), loc.getX() + randX + 0.5, loc.getY() + 2.0,
-                                loc.getZ() + randZ + 0.5);
-                        if (sloc.getWorld().getBlockAt(sloc).getType() != Material.AIR
-                                || sloc.getWorld().getBlockAt(sloc.add(0.0, 1.0, 0.0)).getType() != Material.AIR) {
-                            sloc = loc.clone().add(0.0, 1.0, 0.0);
-                        } else {
-                            sloc.subtract(0.0, 1.0, 0.0);
-                        }
-                        s.setFallDistance(0.0f);
-                        double range = 20.0;
-                        if (Mobs.isGolemBoss(e))
-                            range = 100;
-                        if(Mobs.crit.containsKey(s) && Mobs.isElite(s)) continue;
-                        Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, s.getLocation().add(0.0, 0.15, 0.0), 20);
-                        s.teleport(loc);
-                        if(Mobs.crit.containsKey(s)) Mobs.crit.remove(s);
+                    try {
+                        if (e instanceof LivingEntity) {
+                            final LivingEntity s = (LivingEntity) e;
+                            if (!Spawners.mobs.containsKey(s)) {
+                                continue;
+                            }
+                            if (s.getEquipment().getHelmet() != null && s.getEquipment().getHelmet().getType() != Material.AIR) {
+                                s.getEquipment().getHelmet().setDurability((short) 0);
+                            }
+                            final Location loc = Spawners.mobs.get(s);
+                            final Location newloc = s.getLocation();
+                            if (loc.distance(newloc) <= (Mobs.isGolemBoss(s) || MobHandler.isWorldBoss(s) ? 45 : 30)) {
+                                continue;
+                            }
+                            s.setFallDistance(0.0f);
+                            if (Mobs.crit.containsKey(s) && Mobs.isElite(s)) continue;
+                            int distance = (int)loc.distance(newloc);
+                            int MAX_DISTANCE = 30;
+                            if(isElite(s)) MAX_DISTANCE = 35;
+                            if(MobHandler.isCustomNamedElite(s) || MobHandler.isWorldBoss(s)) MAX_DISTANCE = 45;
 
-                        if (!s.hasMetadata("name")) {
-                            continue;
+                            if(distance > MAX_DISTANCE) {
+                                Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, s.getLocation().clone().add(0.0, 0.15, 0.0), 20);
+                                s.teleport(loc);
+                            }
+                            if (Mobs.crit.containsKey(s)) Mobs.crit.remove(s);
+
+                            if (!s.hasMetadata("name")) {
+                                continue;
+                            }
+                            s.setCustomName(s.getMetadata("name").get(0).asString());
+                            s.setCustomNameVisible(true);
                         }
-                        s.setCustomName(s.getMetadata("name").get(0).asString());
-                        s.setCustomNameVisible(true);
+                    } catch (Exception exc) {
+
                     }
                 }
+
                 Spawners.mobs.keySet().stream().filter(l -> l == null || l.isDead()).forEach(l -> {
                     Spawners.mobs.remove(l);
                 });
@@ -1024,7 +1019,7 @@ public class Spawners implements Listener {
                 for (final Entity e : Bukkit.getWorlds().get(0).getEntities()) {
                     if (e instanceof LivingEntity && !(e instanceof Player)
                             && !Spawners.isPlayerNearby(e.getLocation()) && !Mobs.isElite((LivingEntity) e)) {
-                        if(!MobHandler.isWorldBoss(e)) e.remove();
+                        if (!MobHandler.isWorldBoss(e)) e.remove();
                         Spawners.mobs.remove(e);
                     }
                 }
@@ -1034,7 +1029,7 @@ public class Spawners implements Listener {
             public void run() {
                 for (final Entity e : Bukkit.getWorlds().get(0).getEntities()) {
                     if (e instanceof LivingEntity && !(e instanceof Player) && !Mobs.isElite((LivingEntity) e)) {
-                        if(!MobHandler.isWorldBoss(e)) e.remove();
+                        if (!MobHandler.isWorldBoss(e)) e.remove();
                     }
                 }
                 Spawners.mobs.clear();
@@ -1088,7 +1083,7 @@ public class Spawners implements Listener {
                     e2.getLocation().getWorld().getBlockAt(e2.getLocation().subtract(0.0, 1.0, 0.0))
                             .setType(Material.CHEST);
                 }
-                if(!MobHandler.isWorldBoss(e2)) e2.remove();
+                if (!MobHandler.isWorldBoss(e2)) e2.remove();
             }
         }
     }
@@ -1214,7 +1209,7 @@ public class Spawners implements Listener {
                 if (Spawners.mobs.containsKey(ent)) {
                     Spawners.mobs.remove(ent);
                 }
-                if(!MobHandler.isWorldBoss(ent)) ent.remove();
+                if (!MobHandler.isWorldBoss(ent)) ent.remove();
             }
         }
     }
@@ -1232,7 +1227,7 @@ public class Spawners implements Listener {
                     ent.getLocation().getWorld().getBlockAt(ent.getLocation().subtract(0.0, 1.0, 0.0))
                             .setType(Material.CHEST);
                 }
-                if(!MobHandler.isWorldBoss(ent)) ent.remove();
+                if (!MobHandler.isWorldBoss(ent)) ent.remove();
             }
         }
     }
@@ -1242,7 +1237,7 @@ public class Spawners implements Listener {
         if (e.getEntity() instanceof LivingEntity) {
             final LivingEntity s = (LivingEntity) e.getEntity();
             if (e.getDamage() >= s.getHealth() && Spawners.mobs.containsKey(s)) {
-                long time = 40L;
+                long time = WorldBossHandler.getActiveBoss() != null ? 20L : 40L;
                 time *= getMobTier(s);
                 time *= isElite(s) ? 1200L : 1000L;
                 time += System.currentTimeMillis();

@@ -22,7 +22,7 @@ public class ChatTagGUI extends Menu {
 
 
     public ChatTagGUI(Player player) {
-        super(player, "&5&lAUTISM REALMS &7- CHAT TAGS", 36);
+        super(player, "&5&lMYSTARIA &7- CHAT TAGS", 36);
 
 
         ChatTag.stream().forEach(chatTag -> {
