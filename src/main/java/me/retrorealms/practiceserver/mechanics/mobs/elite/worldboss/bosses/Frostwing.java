@@ -55,36 +55,36 @@ public class Frostwing extends WorldBoss implements Listener {
 
         new BukkitRunnable() {
             public void run() {
-                try{
-                if (livingEntity.isDead()) {
-                    minionList.forEach(livingEntity -> {
-                        if (!livingEntity.isDead()) {
-                            if(Spawners.mobs.containsKey(livingEntity)) Spawners.mobs.remove(livingEntity);
-                            livingEntity.remove();
-                        }
-                    });
-                    this.cancel();
-                }
-                List<Player> nearbyPlayers = livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).stream().filter(player -> player instanceof Player).map(player -> (Player) player).collect(Collectors.toList());
-                if (nearbyPlayers.size() > 0 && timeSinceLastATK < attackFreq) timeSinceLastATK++;
-                if (timeSinceLastATK >= attackFreq) {
-                    livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
-                        if (entity instanceof Player && timeSinceLastATK >= attackFreq) {
-                            if (!healing && livingEntity.isOnGround()) doRandomAttack();
-                        }
-                    });
-                }
+                try {
+                    if (livingEntity.isDead()) {
+                        minionList.forEach(livingEntity -> {
+                            if (!livingEntity.isDead()) {
+                                if (Spawners.mobs.containsKey(livingEntity)) Spawners.mobs.remove(livingEntity);
+                                livingEntity.remove();
+                            }
+                        });
+                        this.cancel();
+                    }
+                    List<Player> nearbyPlayers = livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).stream().filter(player -> player instanceof Player).map(player -> (Player) player).collect(Collectors.toList());
+                    if (nearbyPlayers.size() > 0 && timeSinceLastATK < attackFreq) timeSinceLastATK++;
+                    if (timeSinceLastATK >= attackFreq) {
+                        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+                            if (entity instanceof Player && timeSinceLastATK >= attackFreq) {
+                                if (!healing && livingEntity.isOnGround()) doRandomAttack();
+                            }
+                        });
+                    }
 
 
-                bossMechanic((int) (livingEntity.getHealth() / livingEntity.getMaxHealth() * 100));
-                if ((livingEntity.getHealth() / livingEntity.getMaxHealth() * 100) < 23) {
-                    if (!bezerk) activateBezerk();
-                }
-                if (bezerk) {
-                    livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getEyeLocation(), 3, 0.5, 0.8, 0.5, 0.1);
+                    bossMechanic((int) (livingEntity.getHealth() / livingEntity.getMaxHealth() * 100));
+                    if ((livingEntity.getHealth() / livingEntity.getMaxHealth() * 100) < 23) {
+                        if (!bezerk) activateBezerk();
+                    }
+                    if (bezerk) {
+                        livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getEyeLocation(), 3, 0.5, 0.8, 0.5, 0.1);
 
-                }
-                }catch (Exception e) {
+                    }
+                } catch (Exception e) {
 
                 }
             }
@@ -125,23 +125,23 @@ public class Frostwing extends WorldBoss implements Listener {
                 int i = 0;
 
                 public void run() {
-                    try{
-                    if (i < 5) {
-                        i++;
-                        summonMinionsAttack(livingEntity.getLocation(), 1);
-                        int healAmount = ThreadLocalRandom.current().nextInt(10000, 13600);
-                        livingEntity.setHealth(livingEntity.getHealth() + healAmount);
-                        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
-                            if (entity instanceof Player) {
-                                StringUtil.sendCenteredMessage((Player) entity, ChatColor.translateAlternateColorCodes('&', livingEntity.getName() + " &7 - &aHealed: +" + healAmount + "hp"));
-                            }
-                        });
-                    }
-                    if (i >= 5) {
-                        healing = false;
-                        this.cancel();
-                    }
-                    }catch (Exception e) {
+                    try {
+                        if (i < 5) {
+                            i++;
+                            summonMinionsAttack(livingEntity.getLocation(), 1);
+                            int healAmount = ThreadLocalRandom.current().nextInt(10000, 13600);
+                            livingEntity.setHealth(livingEntity.getHealth() + healAmount);
+                            livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+                                if (entity instanceof Player) {
+                                    StringUtil.sendCenteredMessage((Player) entity, ChatColor.translateAlternateColorCodes('&', livingEntity.getName() + " &7 - &aHealed: +" + healAmount + "hp"));
+                                }
+                            });
+                        }
+                        if (i >= 5) {
+                            healing = false;
+                            this.cancel();
+                        }
+                    } catch (Exception e) {
 
                     }
                 }
@@ -157,13 +157,13 @@ public class Frostwing extends WorldBoss implements Listener {
         List<Location> particleLocations = new ArrayList<>();
         new BukkitRunnable() {
             public void run() {
-                try{
-                if (healing) {
-                    livingEntity.teleport(bossLocation);
-                } else {
-                    this.cancel();
-                }
-                }catch (Exception e) {
+                try {
+                    if (healing) {
+                        livingEntity.teleport(bossLocation);
+                    } else {
+                        this.cancel();
+                    }
+                } catch (Exception e) {
 
                 }
             }
@@ -173,29 +173,29 @@ public class Frostwing extends WorldBoss implements Listener {
             int ticks = 0;
 
             public void run() {
-                try{
-                if (ticks >= 10 || !healing) {
-                    this.cancel();
-                    return;
-                }
-                for (int i = 0; i < 5; i++) {
-                    double x = bossLocation.getX() + (random.nextDouble() * 2 - 1);
-                    double y = 8;
-                    double z = bossLocation.getZ() + (random.nextDouble() * 2 - 1);
-                    Location particleLocation = new Location(world, x, y, z);
-                    particleLocations.add(particleLocation);
-                    world.spawnParticle(Particle.VILLAGER_HAPPY, particleLocation, 1);
-                }
-                for (Iterator<Location> iterator = particleLocations.iterator(); iterator.hasNext(); ) {
-                    Location location = iterator.next();
-                    location.add(0, -0.5, 0);
-                    world.spawnParticle(Particle.VILLAGER_HAPPY, location, 1);
-                    if (location.getBlockY() <= bossLocation.getBlockY()) {
-                        iterator.remove();
+                try {
+                    if (ticks >= 10 || !healing) {
+                        this.cancel();
+                        return;
                     }
-                }
-                ticks++;
-                }catch (Exception e) {
+                    for (int i = 0; i < 5; i++) {
+                        double x = bossLocation.getX() + (random.nextDouble() * 2 - 1);
+                        double y = 8;
+                        double z = bossLocation.getZ() + (random.nextDouble() * 2 - 1);
+                        Location particleLocation = new Location(world, x, y, z);
+                        particleLocations.add(particleLocation);
+                        world.spawnParticle(Particle.VILLAGER_HAPPY, particleLocation, 1);
+                    }
+                    for (Iterator<Location> iterator = particleLocations.iterator(); iterator.hasNext(); ) {
+                        Location location = iterator.next();
+                        location.add(0, -0.5, 0);
+                        world.spawnParticle(Particle.VILLAGER_HAPPY, location, 1);
+                        if (location.getBlockY() <= bossLocation.getBlockY()) {
+                            iterator.remove();
+                        }
+                    }
+                    ticks++;
+                } catch (Exception e) {
 
                 }
             }
@@ -248,7 +248,9 @@ public class Frostwing extends WorldBoss implements Listener {
         getLoot(winner, 1);
         getLoot(second, 2);
         getLoot(third, 3);
-        players.stream().skip(toSkip).forEach(p -> { if(p.getValue() > 10000) getLoot(p.getKey(), 4); });
+        players.stream().skip(toSkip).forEach(p -> {
+            if (p.getValue() > 10000) getLoot(p.getKey(), 4);
+        });
     }
 
     public void getLoot(Player player, int place) {
@@ -381,19 +383,19 @@ public class Frostwing extends WorldBoss implements Listener {
             new BukkitRunnable() {
 
                 public void run() {
-                    try{
-                    if (ticks[0] >= duration) {
-                        this.cancel();
-                        return;
-                    }
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        if (player.getLocation().distance(spotLocation) <= spotSize) {
-                            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 20, 1));
-                            player.damage(damage);
+                    try {
+                        if (ticks[0] >= duration) {
+                            this.cancel();
+                            return;
                         }
-                    }
-                    ticks[0]++;
-                    }catch (Exception e) {
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getLocation().distance(spotLocation) <= spotSize) {
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 20, 1));
+                                player.damage(damage);
+                            }
+                        }
+                        ticks[0]++;
+                    } catch (Exception e) {
 
                     }
                 }
@@ -402,27 +404,27 @@ public class Frostwing extends WorldBoss implements Listener {
         new BukkitRunnable() {
 
             public void run() {
-                try{
-                if (ticks[0] >= duration) {
-                    this.cancel();
-                    return;
-                }
-                for (int i = 0; i < numberOfSpots; i++) {
-                    double angle = 2 * Math.PI * i / numberOfSpots;
-                    double x = Math.cos(angle) * radius;
-                    double z = Math.sin(angle) * radius;
-                    Location spotLocation = bossLoc.clone().add(x, 0, z);
-                    spotLocation.setY(world.getHighestBlockYAt(spotLocation));
-                    for (int dx = -spotSize; dx <= spotSize; dx++) {
-                        for (int dz = -spotSize; dz <= spotSize; dz++) {
-                            if (ticks[0] >= duration) return;
-                            Location particleLocation = spotLocation.clone().add(dx, 0, dz);
-                            world.playSound(particleLocation, Sound.BLOCK_SNOW_BREAK, 1, 1);
-                            world.spawnParticle(Particle.SNOW_SHOVEL, particleLocation, 3, 0.5, 0.8, 0.5, 0.1);
+                try {
+                    if (ticks[0] >= duration) {
+                        this.cancel();
+                        return;
+                    }
+                    for (int i = 0; i < numberOfSpots; i++) {
+                        double angle = 2 * Math.PI * i / numberOfSpots;
+                        double x = Math.cos(angle) * radius;
+                        double z = Math.sin(angle) * radius;
+                        Location spotLocation = bossLoc.clone().add(x, 0, z);
+                        spotLocation.setY(world.getHighestBlockYAt(spotLocation));
+                        for (int dx = -spotSize; dx <= spotSize; dx++) {
+                            for (int dz = -spotSize; dz <= spotSize; dz++) {
+                                if (ticks[0] >= duration) return;
+                                Location particleLocation = spotLocation.clone().add(dx, 0, dz);
+                                world.playSound(particleLocation, Sound.BLOCK_SNOW_BREAK, 1, 1);
+                                world.spawnParticle(Particle.SNOW_SHOVEL, particleLocation, 3, 0.5, 0.8, 0.5, 0.1);
+                            }
                         }
                     }
-                }
-                }catch (Exception e) {
+                } catch (Exception e) {
 
                 }
             }
@@ -436,7 +438,9 @@ public class Frostwing extends WorldBoss implements Listener {
             double angle = 2 * Math.PI * i / numberOfMinions;
             double x = Math.cos(angle) * 3;
             double z = Math.sin(angle) * 3;
-            boolean isElite = ThreadLocalRandom.current().nextBoolean();
+            int elite = ThreadLocalRandom.current().nextInt(1, 4);
+
+            boolean isElite = elite == 1 ? true : false;
             Location minionLocation = bossLoc.clone().add(x, 1, z);
             LivingEntity livingEntity = Spawners.spawnMob(minionLocation, "skeleton", 5, isElite);
             minionList.add(livingEntity);
@@ -450,76 +454,76 @@ public class Frostwing extends WorldBoss implements Listener {
             int tick = 0;
 
             public void run() {
-                try{
-                if (tick >= 2) {
-                    Location location = entity.getLocation();
-                    World world = entity.getLocation().getWorld();
-                    new BukkitRunnable() {
-                        public void run() {
-                            try{
+                try {
+                    if (tick >= 2) {
+                        Location location = entity.getLocation();
+                        World world = entity.getLocation().getWorld();
+                        new BukkitRunnable() {
+                            public void run() {
+                                try {
 
-                            for (int i = 0; i < numberOfIceBlocks; i++) {
-                                final int[] currentRadius = {3};
-                                final int[] currentDuration = {0};
-                                final double[] angle = {2 * Math.PI * i / numberOfIceBlocks};
-                                double x = Math.cos(angle[0]) * currentRadius[0];
-                                double z = Math.sin(angle[0]) * currentRadius[0];
-                                Location iceBlockLocation = entity.getLocation().clone().add(x, 0, z);
-                                ArmorStand iceBlock = (ArmorStand) world.spawnEntity(iceBlockLocation, EntityType.ARMOR_STAND);
-                                iceBlock.setHelmet(new ItemStack(Material.ICE));
-                                iceBlock.setVisible(false);
-                                iceBlock.setCustomName("iceblock");
-                                iceBlock.setGravity(false);
-                                new BukkitRunnable() {
-                                    public void run() {
-                                        if (currentRadius[0] <= radius) {
-                                            currentRadius[0]++;
-                                        }
-                                        if (currentDuration[0] == duration) {
-                                            this.cancel();
-                                            iceBlock.remove();
-                                        } else {
-                                            currentDuration[0]++;
-                                        }
-
-                                    }
-                                }.runTaskTimer(PracticeServer.getInstance(), 20L, 5L);
-                                new BukkitRunnable() {
-                                    public void run() {
-                                        try{
-                                        if (currentDuration[0] == duration) this.cancel();
-                                        entity.teleport(location);
-                                        if (iceBlock.isValid()) {
-                                            angle[0] += 0.1;
-                                            double x = Math.cos(angle[0]) * currentRadius[0];
-                                            double z = Math.sin(angle[0]) * currentRadius[0];
-                                            Location newIceBlockLocation = entity.getLocation().clone().add(x, 0, z);
-                                            iceBlock.teleport(newIceBlockLocation);
-                                            for (Player player : Bukkit.getOnlinePlayers()) {
-                                                if (iceBlock.getLocation().distance(player.getLocation()) <= 1) {
-                                                    player.damage(damage);
-                                                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3));
-                                                    player.playEffect(player.getLocation(), Effect.WITHER_SHOOT, 1);
+                                    for (int i = 0; i < numberOfIceBlocks; i++) {
+                                        final int[] currentRadius = {3};
+                                        final int[] currentDuration = {0};
+                                        final double[] angle = {2 * Math.PI * i / numberOfIceBlocks};
+                                        double x = Math.cos(angle[0]) * currentRadius[0];
+                                        double z = Math.sin(angle[0]) * currentRadius[0];
+                                        Location iceBlockLocation = entity.getLocation().clone().add(x, 0, z);
+                                        ArmorStand iceBlock = (ArmorStand) world.spawnEntity(iceBlockLocation, EntityType.ARMOR_STAND);
+                                        iceBlock.setHelmet(new ItemStack(Material.ICE));
+                                        iceBlock.setVisible(false);
+                                        iceBlock.setCustomName("iceblock");
+                                        iceBlock.setGravity(false);
+                                        new BukkitRunnable() {
+                                            public void run() {
+                                                if (currentRadius[0] <= radius) {
+                                                    currentRadius[0]++;
+                                                }
+                                                if (currentDuration[0] == duration) {
+                                                    this.cancel();
                                                     iceBlock.remove();
+                                                } else {
+                                                    currentDuration[0]++;
+                                                }
+
+                                            }
+                                        }.runTaskTimer(PracticeServer.getInstance(), 20L, 5L);
+                                        new BukkitRunnable() {
+                                            public void run() {
+                                                try {
+                                                    if (currentDuration[0] == duration) this.cancel();
+                                                    entity.teleport(location);
+                                                    if (iceBlock.isValid()) {
+                                                        angle[0] += 0.1;
+                                                        double x = Math.cos(angle[0]) * currentRadius[0];
+                                                        double z = Math.sin(angle[0]) * currentRadius[0];
+                                                        Location newIceBlockLocation = entity.getLocation().clone().add(x, 0, z);
+                                                        iceBlock.teleport(newIceBlockLocation);
+                                                        for (Player player : Bukkit.getOnlinePlayers()) {
+                                                            if (iceBlock.getLocation().distance(player.getLocation()) <= 1) {
+                                                                player.damage(damage);
+                                                                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 3));
+                                                                player.playEffect(player.getLocation(), Effect.WITHER_SHOOT, 1);
+                                                                iceBlock.remove();
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (Exception e) {
+
                                                 }
                                             }
-                                        }
-                                        }catch (Exception e) {
-
-                                        }
+                                        }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
                                     }
-                                }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
-                            }
-                            }catch (Exception e) {
+                                } catch (Exception e) {
 
+                                }
                             }
-                        }
-                    }.runTaskLater(PracticeServer.getInstance(), 5L);
-                    this.cancel();
-                }
-                tick++;
-                entity.getWorld().playEffect(entity.getLocation().clone().add(0, 2, 0), Effect.STEP_SOUND, Material.FROSTED_ICE);
-                }catch (Exception e) {
+                        }.runTaskLater(PracticeServer.getInstance(), 5L);
+                        this.cancel();
+                    }
+                    tick++;
+                    entity.getWorld().playEffect(entity.getLocation().clone().add(0, 2, 0), Effect.STEP_SOUND, Material.FROSTED_ICE);
+                } catch (Exception e) {
 
                 }
             }
