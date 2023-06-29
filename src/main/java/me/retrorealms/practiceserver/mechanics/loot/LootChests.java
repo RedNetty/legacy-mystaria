@@ -24,6 +24,9 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class LootChests implements Listener {
 
@@ -51,24 +54,32 @@ public class LootChests implements Listener {
             }
         };
         runnable.runTaskTimer(PracticeServer.plugin, 0, 5);
-        new BukkitRunnable() {
+        Bukkit.getScheduler().runTaskTimer(PracticeServer.plugin, () -> {
+            Set<Location> chestUpdates = new HashSet<>();
 
-            public void run() {
-                for (Location loc : LootChests.loot.keySet()) {
-                    if (LootChests.respawn.containsKey(loc)) {
-                        if (LootChests.respawn.get(loc) >= 1) {
-                            LootChests.respawn.put(loc, LootChests.respawn.get(loc) - 1);
-                            continue;
-                        }
-                        LootChests.respawn.remove(loc);
-                        continue;
-                    }
-                    if (!loc.getWorld().getChunkAt(loc).isLoaded() || loc.getWorld().getBlockAt(loc).getType().equals(Material.GLOWSTONE))
-                        continue;
-                    loc.getWorld().getBlockAt(loc).setType(Material.CHEST);
+            for (Map.Entry<Location, Integer> entry : LootChests.respawn.entrySet()) {
+                Location loc = entry.getKey();
+                int respawnCount = entry.getValue();
+
+                if (respawnCount >= 1) {
+                    LootChests.respawn.put(loc, respawnCount - 1);
+                    continue;
                 }
+
+                LootChests.respawn.remove(loc);
+
+                if (!loc.getWorld().getChunkAt(loc).isLoaded() || loc.getWorld().getBlockAt(loc).getType().equals(Material.GLOWSTONE)) {
+                    continue;
+                }
+
+                chestUpdates.add(loc);
             }
-        }.runTaskTimer(PracticeServer.plugin, 20, 20);
+
+            // Update chests in a batch
+            for (Location loc : chestUpdates) {
+                loc.getWorld().getBlockAt(loc).setType(Material.CHEST);
+            }
+        }, 20, 20);
         File file = new File(PracticeServer.plugin.getDataFolder(), "loot.yml");
 
         YamlConfiguration config = new YamlConfiguration();
@@ -124,6 +135,7 @@ public class LootChests implements Listener {
         }
         return false;
     }
+
 
     @EventHandler
     public void onChestClick(PlayerInteractEvent e) {

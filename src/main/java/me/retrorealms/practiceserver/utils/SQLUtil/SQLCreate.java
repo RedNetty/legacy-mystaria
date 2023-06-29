@@ -4,7 +4,7 @@ import java.sql.Connection;
 
 public class SQLCreate {
     public static String CreatePlayerStats = "CREATE TABLE IF NOT EXISTS  PlayerData (  " +
-            "UUID  CHAR(36)," +
+            "UUID  VARCHAR(36)," +
             "Username  VARCHAR(17)," +
             "XCoord INT," +
             "YCoord INT," +
@@ -42,9 +42,9 @@ public class SQLCreate {
             "PRIMARY KEY ( GuildName ) );";
 
     public static String CreatePersistentStats = "CREATE TABLE IF NOT EXISTS  PersistentData (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
-            "Rank CHAR(10)," +
+            "PlayerRank VARCHAR(10)," +
             "Buddies VARCHAR(1000)," +
             "PVPToggle  BOOLEAN," +
             "ChaoToggle  BOOLEAN," +
@@ -76,31 +76,31 @@ public class SQLCreate {
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks = "CREATE TABLE IF NOT EXISTS  Banks (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
             "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks2 = "CREATE TABLE IF NOT EXISTS  Banks2 (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
             "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks3 = "CREATE TABLE IF NOT EXISTS  Banks3 (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
             "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks4 = "CREATE TABLE IF NOT EXISTS  Banks4 (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
             "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";
 
     public static String CreateBanks5 = "CREATE TABLE IF NOT EXISTS  Banks5 (  " +
-            "UUID CHAR(36)," +
+            "UUID VARCHAR(36)," +
             "Username VARCHAR(17)," +
             "Inventory MEDIUMTEXT," +
             "PRIMARY KEY ( UUID ) );";

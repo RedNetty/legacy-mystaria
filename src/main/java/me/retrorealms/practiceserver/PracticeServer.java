@@ -125,7 +125,7 @@ import me.retrorealms.practiceserver.utils.ArmorListener;
  *         <p>
  *         - Subby (Availor) April 30th 2017 - ????
  *         - Khalid (Lightlord323) 25th July 2017 - ????
- *         - Egimfun (Red) 7th November 2017 - ????
+ *         - Egimfun (Disregard) 7th November 2017 - ????
  *         - Invested (Screm111) August 2018 - ????
  *         - Kav_ (Kaveen) August 2018 - ????
  *         - CUXNT October 2018 - ????

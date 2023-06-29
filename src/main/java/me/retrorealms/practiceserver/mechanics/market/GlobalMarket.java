@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  */
 public class GlobalMarket extends Manager {
 
-    private transient List<ListedItem> items = Lists.newArrayList();
+    private transient List<ListedItem> items = new LinkedList<>();
 
     @SerializedName("market.Items")
     private final List<String> serializedItems = Lists.newArrayList();

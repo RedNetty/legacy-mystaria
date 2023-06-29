@@ -460,7 +460,7 @@ public class Spawners implements Listener {
             name = ChatColor.DARK_RED + "The Restless Skeleton Deathlord";
         }
         if (type.equalsIgnoreCase("frostwing")) {
-            name = ChatColor.YELLOW + "" + ChatColor.BOLD + "Frost-wing The Frozen Titan";
+            name = ChatColor.YELLOW + "" + ChatColor.BOLD + "Homophobic Ice-Cream Man";
         }
 
         if (type.equals("weakSkeletonEntity") || type.equals("weakSkeletonEntity_UV")) {

@@ -151,7 +151,7 @@ public class GuildPlayer {
     }
 
     public String getGuildName() {
-        if (guildName.equalsIgnoreCase("")) {
+        if (guildName == null || guildName.equalsIgnoreCase("")) {
             return null;
         }
         return guildName;

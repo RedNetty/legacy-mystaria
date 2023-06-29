@@ -456,7 +456,7 @@ public class Listeners implements Listener {
 			LivingEntity s = (LivingEntity) e.getEntity();
 			double max = s.getMaxHealth();
 			double hp = s.getHealth() - e.getDamage();
-			s.setCustomName(Mobs.generateOverheadBar(s, hp, max, Mobs.getMobTier(s), Mobs.isElite(s)));
+			s.setCustomName(Mobs.generateOverheadBar(s, hp, max, Mobs.getMobTier(s)));
 			s.setCustomNameVisible(true);
 			named.put(s.getUniqueId(), System.currentTimeMillis());
 		}
