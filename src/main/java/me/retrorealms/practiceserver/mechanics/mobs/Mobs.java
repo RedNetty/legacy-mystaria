@@ -21,10 +21,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,22 +90,37 @@ public class Mobs implements Listener {
     }
 
     public static boolean isElite(LivingEntity e) {
-        if(e.getEquipment().getChestplate().hasItemMeta() && e.getEquipment().getItemInMainHand().hasItemMeta()) {
+        if (e.getEquipment().getChestplate().hasItemMeta() && e.getEquipment().getItemInMainHand().hasItemMeta()) {
             return e.getEquipment().getChestplate().getItemMeta().hasEnchants() || e.getEquipment().getItemInMainHand().getItemMeta().hasEnchants();
         }
         return false;
     }
 
     public static int getBarLength(int tier) {
-        return switch (tier) {
-            case 2 -> 30;
-            case 3 -> 35;
-            case 4 -> 40;
-            case 5 -> 50;
-            case 6 -> 60;
-            default -> 25;
-        };
+        int barLength;
+        switch (tier) {
+            case 2:
+                barLength = 30;
+                break;
+            case 3:
+                barLength = 35;
+                break;
+            case 4:
+                barLength = 40;
+                break;
+            case 5:
+                barLength = 50;
+                break;
+            case 6:
+                barLength = 60;
+                break;
+            default:
+                barLength = 25;
+                break;
+        }
+        return barLength;
     }
+
 
     public static String generateOverheadBar(LivingEntity ent, double health, double maxHealth, int tier) {
         boolean boss = isElite(ent);

@@ -1,0 +1,24 @@
+2023/01/14 22:04:32 [INFO] Downloading mysql:mysql-connector-java:5.1.46...
+2023/01/14 22:04:32 [INFO] Downloading org.apache.logging.log4j:log4j-slf4j-impl:2.8.1...
+2023/01/14 22:04:32 [INFO] Downloading org.xerial:sqlite-jdbc:3.21.0.1...
+2023/01/14 22:04:32 [INFO] Downloading org.apache.logging.log4j:log4j-core:2.8.1...
+2023/01/14 22:04:32 [INFO] Downloading org.apache.commons:commons-lang3:3.5...
+2023/01/14 22:04:32 [INFO] Downloading org.apache.logging.log4j:log4j-iostreams:2.8.1...
+2023/01/14 22:04:33 [INFO] Downloaded org.apache.logging.log4j:log4j-slf4j-impl:2.8.1.
+2023/01/14 22:04:33 [INFO] Downloaded org.apache.logging.log4j:log4j-iostreams:2.8.1.
+2023/01/14 22:04:34 [INFO] Downloaded org.apache.logging.log4j:log4j-core:2.8.1.
+2023/01/14 22:04:34 [INFO] Downloaded org.apache.commons:commons-lang3:3.5.
+2023/01/14 22:04:35 [INFO] Downloaded mysql:mysql-connector-java:5.1.46.
+2023/01/14 22:05:03 [INFO] Downloaded org.xerial:sqlite-jdbc:3.21.0.1.
+2023/01/14 22:05:03 [INFO] Scanning plugins...
+2023/01/14 22:05:03 [SEVERE] Error during server startup.
+java.lang.UnsupportedOperationException
+	at org.objectweb.asm.ClassVisitor.visitNestHostExperimental(ClassVisitor.java:158)
+	at org.objectweb.asm.ClassReader.accept(ClassReader.java:541)
+	at org.objectweb.asm.ClassReader.accept(ClassReader.java:391)
+	at net.glowstone.GlowPluginTypeDetector.scanFile(GlowPluginTypeDetector.java:96)
+	at net.glowstone.GlowPluginTypeDetector.scan(GlowPluginTypeDetector.java:45)
+	at net.glowstone.GlowServer.loadPlugins(GlowServer.java:1249)
+	at net.glowstone.GlowServer.start(GlowServer.java:780)
+	at net.glowstone.GlowServer.run(GlowServer.java:635)
+	at net.glowstone.GlowServer.main(GlowServer.java:499)

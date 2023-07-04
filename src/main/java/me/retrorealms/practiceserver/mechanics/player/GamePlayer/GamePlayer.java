@@ -8,6 +8,7 @@ import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,7 +22,7 @@ public class GamePlayer implements Listener {
 
     public void onEnable() {
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         StaticConfig.setup();
         nonStaticConfig.setup();
     }
@@ -37,7 +38,7 @@ public class GamePlayer implements Listener {
 
     @EventHandler
     public void onJoinCheck(PlayerJoinEvent e) {
-        if(PracticeServer.DATABASE) return;
+        if (PracticeServer.DATABASE) return;
         if (!StaticPlayerExist(e.getPlayer())) {
             Player p = e.getPlayer();
             ModerationMechanics.rankHashMap.put(p.getUniqueId(), RankEnum.DEFAULT);

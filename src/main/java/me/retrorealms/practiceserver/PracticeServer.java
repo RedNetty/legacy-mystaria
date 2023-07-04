@@ -1,30 +1,5 @@
 package me.retrorealms.practiceserver;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.logging.Logger;
-
-import me.retrorealms.practiceserver.commands.items.*;
-import me.retrorealms.practiceserver.commands.misc.*;
-import me.retrorealms.practiceserver.commands.moderation.*;
-import me.retrorealms.practiceserver.commands.toggles.*;
-import me.retrorealms.practiceserver.mechanics.altars.Altar;
-import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
-import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
-import me.retrorealms.practiceserver.mechanics.loot.LootChests;
-import me.retrorealms.practiceserver.mechanics.mobs.elite.GolemElite;
-import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
-import me.retrorealms.practiceserver.mechanics.player.*;
-import me.retrorealms.practiceserver.mechanics.pvp.Deadman;
-import me.retrorealms.practiceserver.mechanics.vendors.*;
-import me.retrorealms.practiceserver.utils.CustomFilter;
-import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-
 import me.retrorealms.practiceserver.apis.API;
 import me.retrorealms.practiceserver.apis.files.MarketData;
 import me.retrorealms.practiceserver.apis.files.PlayerData;
@@ -37,18 +12,17 @@ import me.retrorealms.practiceserver.commands.chat.GlobalCommand;
 import me.retrorealms.practiceserver.commands.chat.MessageCommand;
 import me.retrorealms.practiceserver.commands.chat.ReplyCommand;
 import me.retrorealms.practiceserver.commands.duels.DuelAcceptCommand;
-import me.retrorealms.practiceserver.commands.duels.DuelCommand;
 import me.retrorealms.practiceserver.commands.duels.DuelQuitCommand;
 import me.retrorealms.practiceserver.commands.duels.PartyDuelAcceptCommand;
 import me.retrorealms.practiceserver.commands.duels.PartyDuelCommand;
 import me.retrorealms.practiceserver.commands.guilds.GuildWipeAllCommand;
-import me.retrorealms.practiceserver.commands.party.PAcceptCommand;
-import me.retrorealms.practiceserver.commands.party.PDeclineCommand;
-import me.retrorealms.practiceserver.commands.party.PInviteCommand;
-import me.retrorealms.practiceserver.commands.party.PKickCommand;
-import me.retrorealms.practiceserver.commands.party.PQuitCommand;
-import me.retrorealms.practiceserver.commands.party.PartyCommand;
+import me.retrorealms.practiceserver.commands.items.*;
+import me.retrorealms.practiceserver.commands.misc.*;
+import me.retrorealms.practiceserver.commands.moderation.*;
+import me.retrorealms.practiceserver.commands.party.*;
+import me.retrorealms.practiceserver.commands.toggles.*;
 import me.retrorealms.practiceserver.manager.ManagerHandler;
+import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.chat.gui.ChatTagGUIHandler;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
@@ -58,27 +32,33 @@ import me.retrorealms.practiceserver.mechanics.donations.Nametags.Nametag;
 import me.retrorealms.practiceserver.mechanics.donations.StatTrak.PickTrak;
 import me.retrorealms.practiceserver.mechanics.donations.StatTrak.WepTrak;
 import me.retrorealms.practiceserver.mechanics.drops.DropPriority;
+import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
 import me.retrorealms.practiceserver.mechanics.drops.buff.BuffHandler;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
 import me.retrorealms.practiceserver.mechanics.enchants.Orbs;
 import me.retrorealms.practiceserver.mechanics.guilds.GuildMechanics;
+import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
 import me.retrorealms.practiceserver.mechanics.item.Durability;
 import me.retrorealms.practiceserver.mechanics.item.Repairing;
 import me.retrorealms.practiceserver.mechanics.item.Untradeable;
 import me.retrorealms.practiceserver.mechanics.item.betavendor.Vendor;
 import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGUIHandler;
+import me.retrorealms.practiceserver.mechanics.loot.LootChests;
 import me.retrorealms.practiceserver.mechanics.market.MarketHandler;
 import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
 import me.retrorealms.practiceserver.mechanics.mobs.Spawners;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.GolemElite;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.SkeletonElite;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Banks;
-import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
+import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.party.Parties;
 import me.retrorealms.practiceserver.mechanics.patch.PatchIO;
 import me.retrorealms.practiceserver.mechanics.patch.PatchListener;
+import me.retrorealms.practiceserver.mechanics.player.*;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.GamePlayer;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Elytras;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
@@ -87,16 +67,29 @@ import me.retrorealms.practiceserver.mechanics.profession.Fishing;
 import me.retrorealms.practiceserver.mechanics.profession.Mining;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
+import me.retrorealms.practiceserver.mechanics.pvp.Deadman;
 import me.retrorealms.practiceserver.mechanics.pvp.ForceField;
 import me.retrorealms.practiceserver.mechanics.pvp.Respawn;
 import me.retrorealms.practiceserver.mechanics.shard.Shard;
 import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.useless.command.CommandStart;
+import me.retrorealms.practiceserver.mechanics.vendors.*;
 import me.retrorealms.practiceserver.mechanics.world.Antibuild;
 import me.retrorealms.practiceserver.mechanics.world.Logout;
 import me.retrorealms.practiceserver.mechanics.world.region.RegionHandler;
 import me.retrorealms.practiceserver.utils.ArmorListener;
+import me.retrorealms.practiceserver.utils.CustomFilter;
+import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.logging.Logger;
 
 /**
  *
@@ -337,8 +330,9 @@ public class PracticeServer extends JavaPlugin {
 		GuildPlayers.getInstance();
 		managerHandler.onEnable();
 		gap.onEnable();
-		if(PracticeServer.DATABASE)
-        sqlmain.onEnable();
+		if (PracticeServer.DATABASE)
+			sqlmain.onEnable();
+
 		moderationMechanics.onEnable();
 		alignments.onEnable();
 		antibuild.onEnable();
@@ -412,18 +406,16 @@ public class PracticeServer extends JavaPlugin {
 		API.getRainbowSheepTask().init();
 		new Elytras(this);
 		new ArmorListener(this);
-
 	}
 
 	public void onDisable() {
+		logout.onDisable(false);
 		instance = null;
-		if(PracticeServer.DATABASE)
-		sqlmain.onDisable();
+
 		duels.onDisable();
 		managerHandler.onDisable();
 		trading.onDisable();
 		em.onDisable();
-		logout.onDisable(false);
 		moderationMechanics.onDisable();
 		buddies.onDisable();
 		alignments.onDisable();
@@ -458,6 +450,8 @@ public class PracticeServer extends JavaPlugin {
 		toggles.onDisable();
 		untradeable.onDisable();
 		guildMechanics.onDisable();
+		if(PracticeServer.DATABASE)
+			sqlmain.onDisable();
 	}
 
 	public void registerCommands() {

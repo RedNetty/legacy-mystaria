@@ -27,6 +27,7 @@ package me.retrorealms.practiceserver.mechanics.world;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.player.Listeners;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
+import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import me.retrorealms.practiceserver.utils.ServerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -34,11 +35,13 @@ import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -84,21 +87,18 @@ public class Logout implements Listener {
     }
 
     public void onDisable(boolean patch) {
-        if (patch) {
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out for the content patch." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
-            });
-            PracticeServer.log.info("[Logout] has been disabled.");
-        }
-
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
-        });
-        PracticeServer.log.info("[Logout] has been disabled.");
-        return;
     }
 
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDisable(PluginDisableEvent event) {
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            SQLMain.updatePersistentStats(player);
+            SQLMain.updatePlayerStats(player);
+            player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+        });
+        PracticeServer.log.info("[Logout] has been disabled.");
+    }
     @EventHandler
     public void onCancelDamager(EntityDamageByEntityEvent e) {
         Player p;

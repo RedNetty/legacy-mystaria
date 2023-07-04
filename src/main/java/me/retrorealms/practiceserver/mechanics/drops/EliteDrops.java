@@ -633,7 +633,7 @@ public class EliteDrops {
         int hps = 0;
         int nrg = 0;
 
-        //Tier 1
+        // Tier 1 - Mitsuki
         if (mobname.equalsIgnoreCase("mitsuki")) {
             nrghp = 2;
             armdps = 1;
@@ -645,61 +645,74 @@ public class EliteDrops {
             lifeamt = random.nextInt(5) + 30;
             mindmg = random.nextInt(16, 18);
             maxdmg = random.nextInt(19, 22);
+
+            // Sword of Bloodthirst
             if (item <= 4) {
-                name = "Mitsukis Sword of Bloodthirst";
+                name = "Mitsuki's Bloodthirst Blade";
                 is.setType(Material.WOOD_SWORD);
-                llore = llore + "The Master of Ruins blood-stained ridged Sword.";
+                llore = llore + "The Master of Ruins' blood-stained ridged Sword.";
             }
+
+            // Leather Coif
             if (item == 5) {
                 nrg = random.nextInt(1) + 3;
                 blockamt = random.nextInt(2) + 3;
                 dpsamt = 1;
                 vitamt = 15;
                 hp = random.nextInt(95, 123);
-                name = "Mitsukis Leather Coif";
+                name = "Mitsuki's Torn Leather Coif";
                 is.setType(Material.LEATHER_HELMET);
                 llore = llore + "A ripped remains of a Leather Coif far from industry standards.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Dirty Leather Rags
             if (item == 6) {
                 nrg = random.nextInt(1) + 5;
                 blockamt = random.nextInt(2) + 3;
                 vitamt = 30;
                 dpsamt = random.nextInt(2) + 2;
                 hp = random.nextInt(200, 240);
-                name = "Mitsukis Dirty Leather Rags";
+                name = "Mitsuki's Filthy Leather Rags";
                 is.setType(Material.LEATHER_CHESTPLATE);
-                llore = llore + "Blood stained rags that reek of Zombie flesh";
+                llore = llore + "Blood-stained rags that reek of Zombie flesh.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Ripped Leather Pants
             if (item == 7) {
                 nrg = random.nextInt(1) + 5;
                 blockamt = random.nextInt(2) + 3;
                 vitamt = 30;
                 dpsamt = random.nextInt(2) + 2;
                 hp = random.nextInt(200, 240);
-                name = "Mitsukis Ripped Leather Pants";
+                name = "Mitsuki's Ripped Leather Pants";
                 is.setType(Material.LEATHER_LEGGINGS);
                 llore = llore + "Can be referred to as 'shorts' due to intensive ripping.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Leather Sandals
             if (item == 8) {
                 nrg = random.nextInt(1) + 3;
                 blockamt = random.nextInt(2) + 3;
                 dpsamt = 1;
                 vitamt = 15;
                 hp = random.nextInt(95, 123);
-                name = "Mitsukis Leather Sandals";
+                name = "Mitsuki's Bloodstained Leather Sandals";
                 is.setType(Material.LEATHER_BOOTS);
-                llore = llore + "Blood stained sandals. Not very comfortable.";
+                llore = llore + "Blood-stained sandals. Not very comfortable.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
             tier = 1;
         }
+
+// Tier 1 - Thura
         if (mobname.equalsIgnoreCase("thura")) {
             nrghp = 2;
             armdps = 1;
@@ -711,62 +724,74 @@ public class EliteDrops {
             critamt = random.nextInt(2) + 6;
             mindmg = random.nextInt(15, 18);
             maxdmg = random.nextInt(20, 25);
+
+            // Sword of Bloodthirst
             if (item <= 4) {
-                name = "Mitsukis Sword of Bloodthirst";
+                name = "Thura's Vicious Axe";
                 is.setType(Material.WOOD_AXE);
-                llore = llore + "The Master of Ruins blood-stained ridged Sword.";
+                llore = llore + "The Master of Ruins' blood-stained vicious axe.";
             }
+
+            // Leather Coif
             if (item == 5) {
                 nrg = random.nextInt(1) + 3;
                 dodgeamt = random.nextInt(2) + 3;
                 dpsamt = 1;
                 stramt = 15;
                 hp = random.nextInt(95, 123);
-                name = "Mitsukis Leather Coif";
+                name = "Thura's Torn Leather Coif";
                 is.setType(Material.LEATHER_HELMET);
                 llore = llore + "A ripped remains of a Leather Coif far from industry standards.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Dirty Leather Rags
             if (item == 6) {
                 nrg = random.nextInt(1) + 5;
                 dodgeamt = random.nextInt(2) + 3;
                 stramt = 30;
                 dpsamt = random.nextInt(2) + 2;
                 hp = random.nextInt(200, 240);
-                name = "Mitsukis Dirty Leather Rags";
+                name = "Thura's Grimy Leather Rags";
                 is.setType(Material.LEATHER_CHESTPLATE);
-                llore = llore + "Blood stained rags that reek of Zombie flesh";
+                llore = llore + "Blood-stained rags that reek of Zombie flesh.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Ripped Leather Pants
             if (item == 7) {
                 nrg = random.nextInt(1) + 5;
                 dodgeamt = random.nextInt(2) + 3;
                 stramt = 30;
                 dpsamt = random.nextInt(2) + 2;
                 hp = random.nextInt(200, 240);
-                name = "Mitsukis Ripped Leather Pants";
+                name = "Thura's Tattered Leather Pants";
                 is.setType(Material.LEATHER_LEGGINGS);
                 llore = llore + "Can be referred to as 'shorts' due to intensive ripping.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
+            // Leather Sandals
             if (item == 8) {
                 nrg = random.nextInt(1) + 3;
                 dodgeamt = random.nextInt(2) + 3;
                 dpsamt = 1;
                 stramt = 15;
                 hp = random.nextInt(95, 123);
-                name = "Mitsukis Leather Sandals";
+                name = "Thura's Bloodied Leather Sandals";
                 is.setType(Material.LEATHER_BOOTS);
-                llore = llore + "Blood stained sandals. Not very comfortable.";
+                llore = llore + "Blood-stained sandals. Not very comfortable.";
                 rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
                 rarityId = 2;
             }
+
             tier = 1;
         }
-        //Tier2
+
+        // Tier 2 - Copjak
         if (mobname.equalsIgnoreCase("copjak")) {
             nrghp = 2;
             armdps = 1;
@@ -777,54 +802,62 @@ public class EliteDrops {
             critamt = random.nextInt(3) + 8;
             mindmg = random.nextInt(35, 40);
             maxdmg = random.nextInt(43, 48);
+
+            // Cop'Jaks Deadly Sword
             if (item <= 4) {
-                name = "Cop'Jaks Deadly Sword";
+                name = "Cop'Jak's Wicked Blade";
                 is.setType(Material.STONE_SWORD);
-                llore = llore + "A long wicked sword of Trollish design.";
-                rarityId = 2;
+                llore = llore + "A long wicked sword of Trollish design, crafted by Cop'Jak.";
             }
+
+            // Cop'Jaks Shaman Headgear
             if (item == 5) {
                 vitamt = 25;
                 nrg = random.nextInt(1) + 4;
                 hp = random.nextInt(215, 235);
                 dpsamt = random.nextInt(2) + 3;
-                name = "Cop'Jaks Shaman Headgear";
+                name = "Cop'Jak's Shamanistic Headgear";
                 is.setType(Material.CHAINMAIL_HELMET);
-                llore = llore + "A standard Shamans headgear consisting of a bears head.";
-                rarityId = 2;
+                llore = llore + "A standard Shaman's headgear consisting of a bear's head, worn by Cop'Jak.";
             }
+
+            // Cop'Jaks greased Chainmail Chestpiece
             if (item == 6) {
                 vitamt = 45;
                 nrg = random.nextInt(1) + 5;
                 hp = random.nextInt(390, 470);
                 dpsamt = random.nextInt(2) + 6;
-                name = "Cop'Jaks greased Chainmail Chestpiece";
+                name = "Cop'Jak's Greased Chainmail Chestpiece";
                 is.setType(Material.CHAINMAIL_CHESTPLATE);
-                llore = llore + "A bad fit made for the broad chests of Trolls.";
-                rarityId = 2;
+                llore = llore + "A bad fit made for the broad chests of Trolls, worn by Cop'Jak.";
             }
+
+            // Cop'Jaks Chainlinked Pants
             if (item == 7) {
                 vitamt = 45;
                 nrg = random.nextInt(1) + 5;
                 hp = random.nextInt(390, 470);
                 dpsamt = random.nextInt(2) + 6;
-                name = "Cop'Jaks Chainlinked Pants";
+                name = "Cop'Jak's Chainlinked Pants";
                 is.setType(Material.CHAINMAIL_LEGGINGS);
-                llore = llore + "Large greased and ready for action.";
-                rarityId = 2;
+                llore = llore + "Large greased and ready for action, worn by Cop'Jak.";
             }
+
+            // Cop'Jaks Chainmail Boots
             if (item == 8) {
                 vitamt = 25;
                 nrg = random.nextInt(1) + 4;
                 hp = random.nextInt(215, 235);
                 dpsamt = random.nextInt(2) + 3;
-                name = "Cop'Jaks Chainmail Boots";
+                name = "Cop'Jak's Spiked Chainmail Boots";
                 is.setType(Material.CHAINMAIL_BOOTS);
-                llore = llore + "Spiked Chainmail boots.";
-                rarityId = 2;
+                llore = llore + "Spiked Chainmail boots, worn by Cop'Jak.";
             }
+
             tier = 2;
         }
+
+// Tier 2 - Risk_Elite
         if (mobname.equalsIgnoreCase("risk_Elite")) {
             nrghp = 2;
             armdps = 1;
@@ -833,63 +866,70 @@ public class EliteDrops {
             life = true;
             elemamt = 15;
             pure = true;
-            lifeamt = ThreadLocalRandom.current().nextInt(3,5);
+            lifeamt = ThreadLocalRandom.current().nextInt(3, 5);
             pureamt = ThreadLocalRandom.current().nextInt(12, 18);
             intel = true;
             mindmg = random.nextInt(35, 40);
             maxdmg = random.nextInt(43, 48);
+
+            // Riskan's Deadly Battle Axe
             if (item <= 4) {
-                name = "Riskan's Deadly Battle Axe";
+                name = "Riskan's Fury Battle Axe";
                 is.setType(Material.STONE_AXE);
-                llore = llore + "Riskan’s battle axe of fury.";
-                rarityId = 2;
+                llore = llore + "Riskan's battle axe of fury, capable of unleashing devastating strikes.";
             }
+
+            // Riskan's Chainlinked Headgear
             if (item == 5) {
                 stramt = 50;
                 intamt = 30;
                 nrg = random.nextInt(1) + 4;
                 hp = random.nextInt(215, 235);
                 dpsamt = random.nextInt(2) + 3;
-                name = "Riskan's Chainlinked Headgear";
+                name = "Riskan's Glorious Chainlinked Headgear";
                 is.setType(Material.CHAINMAIL_HELMET);
-                llore = llore + "the lustrous glory helmchen.";
-                rarityId = 2;
+                llore = llore + "A lustrous helmchen that embodies the glory of Riskan.";
             }
+
+            // Riskan's Lapus Encrusted Chest Piece
             if (item == 6) {
                 stramt = 45;
                 intamt = 40;
                 nrg = random.nextInt(2) + 5;
                 hp = random.nextInt(390, 470);
                 dpsamt = random.nextInt(2) + 6;
-                name = "Riskan's Lapus Encrusted Chest Piece";
+                name = "Riskan's Glimmering Lapus Chest Piece";
                 is.setType(Material.CHAINMAIL_CHESTPLATE);
-                llore = llore + "The glimmering breastplate of the lapis lord.";
-                rarityId = 2;
+                llore = llore + "The breastplate of the lapis lord, adorned with precious lapus gems.";
             }
+
+            // Riskan's Belted Trousers
             if (item == 7) {
                 stramt = 45;
                 intamt = 40;
                 nrg = random.nextInt(2) + 5;
                 hp = random.nextInt(390, 470);
                 dpsamt = random.nextInt(2) + 6;
-                name = "Riskan's Belted Trousers";
+                name = "Riskan's Tightly Fastened Belted Trousers";
                 is.setType(Material.CHAINMAIL_LEGGINGS);
-                llore = llore + "the tightly fastened leggings of Riskan himself.";
-                rarityId = 2;
+                llore = llore + "The tightly fastened leggings of Riskan himself, providing unmatched agility.";
             }
+
+            // Riskan's Bejeweled Boots
             if (item == 8) {
                 stramt = 50;
                 intamt = 30;
                 nrg = random.nextInt(1) + 4;
                 hp = random.nextInt(215, 235);
                 dpsamt = random.nextInt(2) + 3;
-                name = "Riskan's Bejeweled Boots";
+                name = "Riskan's Crowned Bejeweled Boots";
                 is.setType(Material.CHAINMAIL_BOOTS);
-                llore = llore + "Riskan’s crowned boots of fire.";
-                rarityId = 2;
+                llore = llore + "Riskan's boots of fire, adorned with precious jewels and crowned with power.";
             }
+
             tier = 2;
         }
+
         //Tier 3
         if (mobname.equalsIgnoreCase("impa")) {
             nrghp = 2;

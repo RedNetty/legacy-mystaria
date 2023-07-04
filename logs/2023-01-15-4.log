@@ -1,0 +1,1665 @@
+[11:09:46] [Server thread/INFO]: Starting minecraft server version 1.9.4
+[11:09:46] [Server thread/INFO]: Loading properties
+[11:09:46] [Server thread/INFO]: Default game type: SURVIVAL
+[11:09:46] [Server thread/INFO]: This server is running CraftBukkit version git-Spigot-c6871e2-e1d3516 (MC: 1.9.4) (Implementing API version 1.9.4-R0.1-SNAPSHOT)
+[11:09:46] [Server thread/INFO]: Your platform does not provide complete low-level API for accessing direct buffers reliably. Unless explicitly requested, heap buffer will always be preferred to avoid potential system unstability.
+[11:09:46] [Server thread/INFO]: Debug logging is disabled
+[11:09:46] [Server thread/INFO]: Server Ping Player Sample Count: 12
+
+[11:09:46] [Server thread/INFO]: Using 4 threads for Netty based IO
+[11:09:46] [Server thread/INFO]: Generating keypair
+[11:09:46] [Server thread/INFO]: Starting Minecraft server on *:25565
+[11:09:46] [Server thread/INFO]: Using default channel type
+[11:09:46] [Server thread/ERROR]: Ambiguous plugin name `WorldEdit' for files `plugins\worldedit-bukkit-6.1.9.jar' and `plugins\worldedit-bukkit-6.1.5.jar' in `plugins'
+[11:09:46] [Server thread/INFO]: Set PluginClassLoader as parallel capable
+[11:09:46] [Server thread/ERROR]: Could not load 'plugins\FastAsyncVoxelSniper-favs-21.03.26-5ff3a9b-1286-22.3.9.jar' in folder 'plugins'
+org.bukkit.plugin.InvalidPluginException: java.lang.NoClassDefFoundError: com/boydti/fawe/object/FaweCommand
+	at org.bukkit.plugin.java.JavaPluginLoader.loadPlugin(JavaPluginLoader.java:135) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.loadPlugin(SimplePluginManager.java:329) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.loadPlugins(SimplePluginManager.java:251) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.loadPlugins(CraftServer.java:297) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.init(DedicatedServer.java:200) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:532) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NoClassDefFoundError: com/boydti/fawe/object/FaweCommand
+	at java.lang.Class.forName0(Native Method) ~[?:?]
+	at java.lang.Class.forName(Class.java:495) ~[?:?]
+	at java.lang.Class.forName(Class.java:474) ~[?:?]
+	at org.bukkit.plugin.java.PluginClassLoader.<init>(PluginClassLoader.java:64) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.JavaPluginLoader.loadPlugin(JavaPluginLoader.java:131) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 6 more
+Caused by: java.lang.ClassNotFoundException: com.boydti.fawe.object.FaweCommand
+	at java.net.URLClassLoader.findClass(URLClassLoader.java:445) ~[?:?]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:101) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:86) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:588) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:521) ~[?:?]
+	at java.lang.Class.forName0(Native Method) ~[?:?]
+	at java.lang.Class.forName(Class.java:495) ~[?:?]
+	at java.lang.Class.forName(Class.java:474) ~[?:?]
+	at org.bukkit.plugin.java.PluginClassLoader.<init>(PluginClassLoader.java:64) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.JavaPluginLoader.loadPlugin(JavaPluginLoader.java:131) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 6 more
+[11:09:46] [Server thread/INFO]: [ReflectionHelper] Version is v1_12_R1 (10902)
+
+[11:09:47] [Server thread/INFO]: [PracticeServer] Loading PracticeServer v1.1.0
+[11:09:47] [Server thread/INFO]: [BossBarAPI] Loading BossBarAPI v2.4.1
+[11:09:47] [Server thread/INFO]: [PacketListenerApi] Loading PacketListenerApi v3.4.0
+[11:09:47] [Server thread/INFO]: [PacketListenerAPI] Using INChannel
+
+[11:09:47] [Server thread/WARN]: java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Field.get(Object)" because "org.inventivetalent.packetlistener.channel.ChannelAbstract.serverConnection" is null
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.packetlistener.channel.ChannelAbstract.addServerChannel(ChannelAbstract.java:93)
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.packetlistener.ChannelInjector.addServerChannel(ChannelInjector.java:83)
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.packetlistener.PacketListenerAPI.load(PacketListenerAPI.java:60)
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.apihelper.APIManager.registerAPI(APIManager.java:102)
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.apihelper.APIManager.registerAPI(APIManager.java:122)
+
+[11:09:47] [Server thread/WARN]: 	at org.inventivetalent.packetlistener.PacketListenerPlugin.onLoad(PacketListenerPlugin.java:43)
+
+[11:09:47] [Server thread/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.loadPlugins(CraftServer.java:302)
+
+[11:09:47] [Server thread/WARN]: 	at net.minecraft.server.v1_12_R1.DedicatedServer.init(DedicatedServer.java:200)
+
+[11:09:47] [Server thread/WARN]: 	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:532)
+
+[11:09:47] [Server thread/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:09:47] [Server thread/INFO]: Injected custom channel handlers.
+[11:09:47] [Server thread/INFO]: [GlowAPI] Loading GlowAPI v1.4.4
+[11:09:47] [Server thread/INFO]: [ViaVersion] Loading ViaVersion v4.5.1
+[11:09:47] [Server thread/INFO]: [ViaVersion] ViaVersion 4.5.1 is now loaded, injecting!
+[11:09:47] [Via-Mappingloader-0/INFO]: [ViaVersion] Loading 1.12 -> 1.13 mappings...
+[11:09:47] [Via-Mappingloader-1/INFO]: [ViaVersion] Loading 1.13 -> 1.13.2 mappings...
+[11:09:47] [Via-Mappingloader-2/INFO]: [ViaVersion] Loading 1.13.2 -> 1.14 mappings...
+[11:09:47] [Via-Mappingloader-3/INFO]: [ViaVersion] Loading 1.14 -> 1.15 mappings...
+[11:09:47] [Via-Mappingloader-4/INFO]: [ViaVersion] Loading 1.15 -> 1.16 mappings...
+[11:09:47] [Via-Mappingloader-5/INFO]: [ViaVersion] Loading 1.16 -> 1.16.2 mappings...
+[11:09:47] [Via-Mappingloader-1/INFO]: [ViaVersion] Loading 1.16.2 -> 1.17 mappings...
+[11:09:47] [Via-Mappingloader-0/INFO]: [ViaVersion] Loading block connection mappings ...
+[11:09:47] [Via-Mappingloader-6/INFO]: [ViaVersion] Loading 1.17 -> 1.18 mappings...
+[11:09:47] [Via-Mappingloader-7/INFO]: [ViaVersion] Loading 1.18 -> 1.19 mappings...
+[11:09:47] [Via-Mappingloader-4/INFO]: [ViaVersion] Loading 1.19 -> 1.19.3 mappings...
+[11:09:47] [Server thread/INFO]: [Vault] Loading Vault v1.5.6-b49
+[11:09:47] [Server thread/INFO]: [Votifier] Loading Votifier v1.9
+[11:09:47] [Server thread/INFO]: [Holograms] Loading Holograms v2.4.0-SNAPSHOT
+[11:09:47] [Server thread/INFO]: [ProtocolLib] Loading ProtocolLib v4.8.0
+[11:09:48] [Server thread/ERROR]:   [ProtocolLib] INTERNAL ERROR: Cannot load ProtocolLib.
+  If this problem hasn't already been reported, please open a ticket
+  at https://github.com/dmulloy2/ProtocolLib/issues with the following data:
+  Stack Trace:
+  java.lang.ExceptionInInitializerError
+  	at com.comphenix.protocol.injector.netty.ProtocolInjector.<init>(ProtocolInjector.java:69)
+  	at com.comphenix.protocol.injector.PacketFilterManager.<init>(PacketFilterManager.java:202)
+  	at com.comphenix.protocol.injector.PacketFilterBuilder.buildInternal(PacketFilterBuilder.java:185)
+  	at com.comphenix.protocol.injector.PacketFilterBuilder.build(PacketFilterBuilder.java:177)
+  	at com.comphenix.protocol.ProtocolLib.onLoad(ProtocolLib.java:203)
+  	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.loadPlugins(CraftServer.java:302)
+  	at net.minecraft.server.v1_12_R1.DedicatedServer.init(DedicatedServer.java:200)
+  	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:532)
+  	at java.base/java.lang.Thread.run(Thread.java:1589)
+  Caused by: java.lang.UnsupportedOperationException: Cannot define class using reflection: Unable to make protected java.lang.Package java.lang.ClassLoader.getPackage(java.lang.String) accessible: module java.base does not "opens java.lang" to unnamed module @469ae0f6
+  	at com.comphenix.net.bytebuddy.dynamic.loading.ClassInjector$UsingReflection$Dispatcher$Initializable$Unavailable.defineClass(ClassInjector.java:471)
+  	at com.comphenix.net.bytebuddy.dynamic.loading.ClassInjector$UsingReflection.injectRaw(ClassInjector.java:283)
+  	at com.comphenix.net.bytebuddy.dynamic.loading.ClassInjector$AbstractBase.inject(ClassInjector.java:117)
+  	at com.comphenix.net.bytebuddy.dynamic.loading.ClassLoadingStrategy$Default$InjectionDispatcher.load(ClassLoadingStrategy.java:243)
+  	at com.comphenix.net.bytebuddy.dynamic.loading.ClassLoadingStrategy$Default.load(ClassLoadingStrategy.java:150)
+  	at com.comphenix.net.bytebuddy.dynamic.TypeResolutionStrategy$Passive.initialize(TypeResolutionStrategy.java:101)
+  	at com.comphenix.net.bytebuddy.dynamic.DynamicType$Default$Unloaded.load(DynamicType.java:6161)
+  	at com.comphenix.protocol.injector.server.TemporaryPlayerFactory.setupProxyPlayerConstructor(TemporaryPlayerFactory.java:187)
+  	at com.comphenix.protocol.injector.server.TemporaryPlayerFactory.<clinit>(TemporaryPlayerFactory.java:51)
+  	... 9 more
+  Dump:
+  Parameters: 
+    [NULL]
+  Sender:
+    com.comphenix.protocol.ProtocolLib@4bd00e7d[
+      statistics=<null>
+      backgroundCompiler=<null>
+      packetTask=-1
+      tickCounter=0
+      unhookTask=com.comphenix.protocol.injector.DelayedSingleTask@209800eb
+      configExpectedMod=-1
+      updater=com.comphenix.protocol.updater.SpigotUpdater@6b704163
+      redirectHandler=<null>
+      commandProtocol=<null>
+      commandPacket=<null>
+      commandFilter=<null>
+      packetLogging=<null>
+      skipDisable=false
+      isEnabled=false
+      loader=org.bukkit.plugin.java.JavaPluginLoader@a5696f
+      server=CraftServer{serverName=CraftBukkit,serverVersion=git-Spigot-c6871e2-e1d3516,minecraftVersion=1.9.4}
+      file=plugins\ProtocolLib.jar
+      description=org.bukkit.plugin.PluginDescriptionFile@27dfee0b
+      dataFolder=plugins\ProtocolLib
+      classLoader=org.bukkit.plugin.java.PluginClassLoader@3d2431ce
+      naggable=true
+      ebean=<null>
+      newConfig=YamlConfiguration[path='', root='YamlConfiguration']
+      configFile=plugins\ProtocolLib\config.yml
+      logger=org.bukkit.plugin.PluginLogger@324813c3
+    ]
+  Version:
+    ProtocolLib v4.8.0
+  Java Version:
+    19.0.1
+  Server:
+    git-Spigot-c6871e2-e1d3516 (MC: 1.9.4)
+
+[11:09:48] [Server thread/INFO]: [NoCheatPlus] Loading NoCheatPlus v3.16.0-RC-sMD5NET-b1134
+[11:09:48] [Server thread/INFO]: [NoCheatPlus] onLoad: Early set up of static API, configuration, logging.
+[11:09:48] [Server thread/INFO]: [NoCheatPlus] Logging system initialized.
+[11:09:48] [Server thread/INFO]: [NoCheatPlus] Detected Minecraft version: 1.9.4
+[11:09:48] [Server thread/INFO]: [Citizens] Loading Citizens v2.0.18-SNAPSHOT (build 1371)
+[11:09:48] [Server thread/INFO]: [WorldEdit] Loading WorldEdit v6.1.9;caf0ad9
+[11:09:48] [Server thread/INFO]: [Essentials] Loading Essentials v2.0.1-b330
+[11:09:48] [Server thread/INFO]: [HolographicDisplays] Loading HolographicDisplays v2.2.5
+[11:09:48] [Server thread/INFO]: [TabAPI] Loading TabAPI v3.6.1
+[11:09:48] [Server thread/INFO]: [WorldGuard] Loading WorldGuard v6.1.3-SNAPSHOT;c904242
+[11:09:48] [Server thread/INFO]: [VanishNoPacket] Loading VanishNoPacket v3.20
+[11:09:48] [Server thread/INFO]: [WGRegionEvents] Loading WGRegionEvents vS_Ryan
+[11:09:48] [Server thread/INFO]: [Vault] Enabling Vault v1.5.6-b49
+[11:09:48] [Server thread/INFO]: [Vault] [Economy] Essentials Economy found: Waiting
+[11:09:48] [Server thread/INFO]: [Vault] [Permission] SuperPermissions loaded as backup permission system.
+[11:09:48] [Server thread/INFO]: [Vault] Enabled Version 1.5.6-b49
+[11:09:48] [Server thread/INFO]: [ProtocolLib] Enabling ProtocolLib v4.8.0
+[11:09:48] [Server thread/ERROR]: ******************************************************
+[11:09:48] [Server thread/ERROR]: *** ProtocolLib does not support plugin reloaders! ***
+[11:09:48] [Server thread/ERROR]: *** Please use the built-in reload command!        ***
+[11:09:48] [Server thread/ERROR]: ******************************************************
+[11:09:48] [Server thread/INFO]: [ProtocolLib] Disabling ProtocolLib v4.8.0
+[11:09:48] [Server thread/INFO]: **** Beginning UUID conversion, this may take A LONG time ****
+[11:09:48] [Server thread/INFO]: Preparing level "jew"
+[11:09:48] [Server thread/INFO]: -------- World Settings For [jew] --------
+[11:09:48] [Server thread/INFO]: Item Despawn Rate: 6000
+[11:09:48] [Server thread/INFO]: Item Merge Radius: 2.5
+[11:09:48] [Server thread/INFO]: View Distance: 10
+[11:09:48] [Server thread/INFO]: Arrow Despawn Rate: 1200
+[11:09:48] [Server thread/INFO]: Zombie Aggressive Towards Villager: true
+[11:09:48] [Server thread/INFO]: Allow Zombie Pigmen to spawn from portal blocks: true
+[11:09:48] [Server thread/INFO]: Experience Merge Radius: 3.0
+[11:09:48] [Server thread/INFO]: Mob Spawn Range: 4
+[11:09:48] [Server thread/INFO]: Nerfing mobs spawned from spawners: false
+[11:09:48] [Server thread/INFO]: Entity Tracking Range: Pl 48 / An 48 / Mo 48 / Mi 32 / Other 64
+[11:09:48] [Server thread/INFO]: Entity Activation Range: An 32 / Mo 32 / Mi 16
+[11:09:48] [Server thread/INFO]: Cactus Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Cane Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Melon Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Mushroom Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Pumpkin Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Sapling Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Wheat Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: NetherWart Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Max TNT Explosions: 100
+[11:09:48] [Server thread/INFO]: Tile Max Tick Time: 50ms Entity max Tick Time: 50ms
+[11:09:48] [Server thread/INFO]: Structure Info Saving: true
+[11:09:48] [Server thread/INFO]: Hopper Transfer: 8 Hopper Check: 1 Hopper Amount: 1
+[11:09:48] [Server thread/INFO]: Random Lighting Updates: false
+[11:09:48] [Server thread/INFO]: Custom Map Seeds:  Village: 10387312 Feature: 14357617
+[11:09:48] [Server thread/INFO]: Max Entity Collisions: 8
+[11:09:48] [Server thread/INFO]: -------- World Settings For [jew_nether] --------
+[11:09:48] [Server thread/INFO]: Item Despawn Rate: 6000
+[11:09:48] [Server thread/INFO]: Item Merge Radius: 2.5
+[11:09:48] [Server thread/INFO]: View Distance: 10
+[11:09:48] [Server thread/INFO]: Arrow Despawn Rate: 1200
+[11:09:48] [Server thread/INFO]: Zombie Aggressive Towards Villager: true
+[11:09:48] [Server thread/INFO]: Allow Zombie Pigmen to spawn from portal blocks: true
+[11:09:48] [Server thread/INFO]: Experience Merge Radius: 3.0
+[11:09:48] [Server thread/INFO]: Mob Spawn Range: 4
+[11:09:48] [Server thread/INFO]: Nerfing mobs spawned from spawners: false
+[11:09:48] [Server thread/INFO]: Entity Tracking Range: Pl 48 / An 48 / Mo 48 / Mi 32 / Other 64
+[11:09:48] [Server thread/INFO]: Entity Activation Range: An 32 / Mo 32 / Mi 16
+[11:09:48] [Server thread/INFO]: Cactus Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Cane Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Melon Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Mushroom Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Pumpkin Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Sapling Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Wheat Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: NetherWart Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Max TNT Explosions: 100
+[11:09:48] [Server thread/INFO]: Tile Max Tick Time: 50ms Entity max Tick Time: 50ms
+[11:09:48] [Server thread/INFO]: Structure Info Saving: true
+[11:09:48] [Server thread/INFO]: Hopper Transfer: 8 Hopper Check: 1 Hopper Amount: 1
+[11:09:48] [Server thread/INFO]: Random Lighting Updates: false
+[11:09:48] [Server thread/INFO]: Custom Map Seeds:  Village: 10387312 Feature: 14357617
+[11:09:48] [Server thread/INFO]: Max Entity Collisions: 8
+[11:09:48] [Server thread/INFO]: -------- World Settings For [jew_the_end] --------
+[11:09:48] [Server thread/INFO]: Item Despawn Rate: 6000
+[11:09:48] [Server thread/INFO]: Item Merge Radius: 2.5
+[11:09:48] [Server thread/INFO]: View Distance: 10
+[11:09:48] [Server thread/INFO]: Arrow Despawn Rate: 1200
+[11:09:48] [Server thread/INFO]: Zombie Aggressive Towards Villager: true
+[11:09:48] [Server thread/INFO]: Allow Zombie Pigmen to spawn from portal blocks: true
+[11:09:48] [Server thread/INFO]: Experience Merge Radius: 3.0
+[11:09:48] [Server thread/INFO]: Mob Spawn Range: 4
+[11:09:48] [Server thread/INFO]: Nerfing mobs spawned from spawners: false
+[11:09:48] [Server thread/INFO]: Entity Tracking Range: Pl 48 / An 48 / Mo 48 / Mi 32 / Other 64
+[11:09:48] [Server thread/INFO]: Entity Activation Range: An 32 / Mo 32 / Mi 16
+[11:09:48] [Server thread/INFO]: Cactus Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Cane Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Melon Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Mushroom Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Pumpkin Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Sapling Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Wheat Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: NetherWart Growth Modifier: 100%
+[11:09:48] [Server thread/INFO]: Max TNT Explosions: 100
+[11:09:48] [Server thread/INFO]: Tile Max Tick Time: 50ms Entity max Tick Time: 50ms
+[11:09:48] [Server thread/INFO]: Structure Info Saving: true
+[11:09:48] [Server thread/INFO]: Hopper Transfer: 8 Hopper Check: 1 Hopper Amount: 1
+[11:09:48] [Server thread/INFO]: Random Lighting Updates: false
+[11:09:48] [Server thread/INFO]: Custom Map Seeds:  Village: 10387312 Feature: 14357617
+[11:09:48] [Server thread/INFO]: Max Entity Collisions: 8
+[11:09:48] [Server thread/INFO]: Preparing start region for level 0 (Seed: 0)
+[11:09:48] [Server thread/INFO]: Preparing start region for level 1 (Seed: 4691782395035069185)
+[11:09:49] [Server thread/INFO]: Preparing start region for level 2 (Seed: 4691782395035069185)
+[11:09:49] [Server thread/INFO]: [PracticeServer] Enabling PracticeServer v1.1.0
+[11:09:49] [Server thread/INFO]: Red is gay
+
+[11:09:49] [Server thread/INFO]: [PracticeServer] [RetroDB] has been Enabled
+[11:09:50] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Alignments] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Antibuild] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Banks] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Buddies] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [ChatMechanics] has been enabled.
+[11:09:50] [Server thread/INFO]: [Merchant] has been enabled
+
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Durability] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Enchants] has been enabled.
+[11:09:50] [Server thread/WARN]: [PracticeServer] Could not save WorldBoss.yml to plugins\PracticeServer\WorldBoss.yml because WorldBoss.yml already exists.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Energy] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [GemPouches] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Hearthstone] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Altars] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Drop Priority] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Horses] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [ItemVendors] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] Forcefield 
+[11:09:50] [Server thread/INFO]: [PracticeServer] [PracticeServer] donations Enabled
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Listeners] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Logout] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [LootChests] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [MerchantMechanics] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Mining] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [MobDrops] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Mobs] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Parties] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [ProfessionMechanics] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Repairing] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Respawn] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Spawners] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Speedfish] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Staffs] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Practice Server] Economy has been enabled
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Toggles] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [GuildBanks] has been enabled.
+[11:09:50] [Server thread/INFO]: [Trading] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [Untradeable] has been enabled.
+[11:09:50] [Server thread/INFO]: [BossBarAPI] Enabling BossBarAPI v2.4.1
+[11:09:50] [Server thread/INFO]: [BossBarAPI] Metrics started
+[11:09:50] [Server thread/INFO]: [PacketListenerApi] Enabling PacketListenerApi v3.4.0
+[11:09:50] [Server thread/INFO]: [PacketListenerApi] Metrics started
+[11:09:50] [Server thread/INFO]: Adding channels for online players...
+[11:09:50] [Server thread/INFO]: [GlowAPI] Enabling GlowAPI v1.4.4
+[11:09:50] [Server thread/INFO]: [GlowAPI] Metrics started
+[11:09:50] [Server thread/INFO]: [ViaVersion] Enabling ViaVersion v4.5.1
+[11:09:50] [Server thread/INFO]: [Votifier] Enabling Votifier v1.9
+[11:09:50] [Server thread/ERROR]: Error occurred while enabling Votifier v1.9 (Is it up to date?)
+java.lang.NoClassDefFoundError: javax/xml/bind/DatatypeConverter
+	at com.vexsoftware.votifier.crypto.RSAIO.load(RSAIO.java:87) ~[?:?]
+	at com.vexsoftware.votifier.Votifier.onEnable(Votifier.java:151) ~[?:?]
+	at org.bukkit.plugin.java.JavaPlugin.setEnabled(JavaPlugin.java:292) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.JavaPluginLoader.enablePlugin(JavaPluginLoader.java:340) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.enablePlugin(SimplePluginManager.java:405) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.loadPlugin(CraftServer.java:362) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.enablePlugins(CraftServer.java:322) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.t(MinecraftServer.java:416) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.l(MinecraftServer.java:381) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.a(MinecraftServer.java:336) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.init(DedicatedServer.java:268) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:532) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.ClassNotFoundException: javax.xml.bind.DatatypeConverter
+	at java.net.URLClassLoader.findClass(URLClassLoader.java:445) ~[?:?]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:101) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:86) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:588) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:521) ~[?:?]
+	... 13 more
+[11:09:50] [Server thread/INFO]: [Holograms] Enabling Holograms v2.4.0-SNAPSHOT
+[11:09:50] [Server thread/INFO]: [Holograms] HologramEntityController set to: com.sainttx.holograms.nms.v1_12_R1.HologramEntityControllerImpl
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Enabling NoCheatPlus v3.16.0-RC-sMD5NET-b1134
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] McAccess set to: 1.9.4 / Spigot-CB-1.9_R2
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Added block-info for Minecraft 1.5 blocks.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Added block-info for Minecraft 1.6.1 blocks.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Added block-info for Minecraft 1.7.2 blocks.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Added block-info for Minecraft 1.8 blocks.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Added block-info for Minecraft 1.9 blocks.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Update block-info: WATER_LILY block shape patch for multi client protocol support around 1.7.x - 1.11.x.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Inventory checks: FastConsume is available, disabled InstantEat.
+[11:09:50] [Server thread/WARN]: [NoCheatPlus] Failed to set up packet level access with ProtocolLib.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Force disable FastHeal on Minecraft 1.9 and later.
+[11:09:50] [Server thread/INFO]: [NoCheatPlus] Version 3.16.0-RC-sMD5NET-b1134 is enabled.
+[11:09:50] [Server thread/INFO]: [Citizens] Enabling Citizens v2.0.18-SNAPSHOT (build 1371)
+[11:09:50] [Server thread/INFO]: [WorldEdit] Enabling WorldEdit v6.1.9;caf0ad9
+[11:09:51] [Server thread/INFO]: WEPIF: Using the Bukkit Permissions API.
+[11:09:51] [Server thread/INFO]: [WorldEdit] Using com.sk89q.worldedit.bukkit.adapter.impl.Spigot_v1_12_R1 as the Bukkit adapter
+[11:09:51] [Server thread/INFO]: [Essentials] Enabling Essentials v2.0.1-b330
+[11:09:51] [Server thread/INFO]: Using locale en_US
+[11:09:51] [Server thread/INFO]: [Essentials] Using 1.8.3+ BlockStateMeta provider as mob spawner provider.
+[11:09:51] [Server thread/INFO]: [Essentials] Using legacy item data provider as spawn egg provider.
+[11:09:51] [Server thread/INFO]: [Essentials] Using 1.9+ BasePotionData provider as potion meta provider.
+[11:09:51] [Server thread/INFO]: Using locale en_US
+[11:09:51] [Server thread/INFO]: [Essentials] Starting Metrics. Opt-out using the global PluginMetrics config.
+[11:09:51] [Server thread/INFO]: [Vault][Economy] Essentials Economy hooked.
+[11:09:51] [Server thread/INFO]: [Essentials] Using config file enhanced permissions.
+[11:09:51] [Server thread/INFO]: [Essentials] Permissions listed in as player-commands will be given to all users.
+[11:09:51] [Server thread/INFO]: [HolographicDisplays] Enabling HolographicDisplays v2.2.5
+[11:09:51] [Server thread/INFO]: [TabAPI] Enabling TabAPI v3.6.1
+[11:09:51] [Server thread/ERROR]: Error occurred while enabling TabAPI v3.6.1 (Is it up to date?)
+java.lang.NoClassDefFoundError: com/comphenix/protocol/ProtocolLibrary
+	at org.mcsg.double0negative.tabapi.TabAPI.onEnable(TabAPI.java:81) ~[?:?]
+	at org.bukkit.plugin.java.JavaPlugin.setEnabled(JavaPlugin.java:292) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.JavaPluginLoader.enablePlugin(JavaPluginLoader.java:340) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.enablePlugin(SimplePluginManager.java:405) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.loadPlugin(CraftServer.java:362) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.enablePlugins(CraftServer.java:322) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.t(MinecraftServer.java:416) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.l(MinecraftServer.java:381) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.a(MinecraftServer.java:336) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.init(DedicatedServer.java:268) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:532) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.ClassNotFoundException: com.comphenix.protocol.ProtocolLibrary
+	at java.net.URLClassLoader.findClass(URLClassLoader.java:445) ~[?:?]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:101) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.java.PluginClassLoader.findClass(PluginClassLoader.java:86) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:588) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:521) ~[?:?]
+	... 12 more
+[11:09:51] [Server thread/INFO]: [WorldGuard] Enabling WorldGuard v6.1.3-SNAPSHOT;c904242
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew) TNT ignition is PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew) Lighters are PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew) Lava fire is blocked.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew) Fire spread is UNRESTRICTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] Loaded configuration for world 'jew'
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_nether) TNT ignition is PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_nether) Lighters are PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_nether) Lava fire is blocked.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_nether) Fire spread is UNRESTRICTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] Loaded configuration for world 'jew_nether'
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_the_end) TNT ignition is PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_the_end) Lighters are PERMITTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_the_end) Lava fire is blocked.
+[11:09:51] [Server thread/INFO]: [WorldGuard] (jew_the_end) Fire spread is UNRESTRICTED.
+[11:09:51] [Server thread/INFO]: [WorldGuard] Loaded configuration for world 'jew_the_end'
+[11:09:51] [Server thread/INFO]: [WorldGuard] Loading region data...
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] Enabling VanishNoPacket v3.20
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] Colored nametags enabled, but I couldn't find TagAPI
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] For awesome colored nametags on vanish, visit
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] http://dev.bukkit.org/server-mods/tag/ 
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] and download TagAPI.jar
+[11:09:51] [Server thread/INFO]: [VanishNoPacket] 3.20 loaded.
+[11:09:51] [Server thread/INFO]: [WGRegionEvents] Enabling WGRegionEvents vS_Ryan
+[11:09:51] [Server thread/INFO]: [WGRegionEvents] [WGRegionEvents] Version: 2.1.0
+[11:09:51] [Server thread/INFO]: [WGRegionEvents] [WGRegionEvents] Successfully Enabled.
+[11:09:51] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[11:09:51] [Server thread/INFO]: Done (3.411s)! For help, type "help" or "?"
+[11:09:51] [Server thread/INFO]: [HolographicDisplays] Found a new version available: v3.0.0
+[11:09:51] [Server thread/INFO]: [HolographicDisplays] Download it on Bukkit Dev:
+[11:09:51] [Server thread/INFO]: [HolographicDisplays] dev.bukkit.org/bukkit-plugins/holographic-displays
+[11:09:51] [Server thread/INFO]: [ViaVersion] ViaVersion detected server version: 1.9.3/4 (110)
+[11:09:51] [Server thread/WARN]: [ViaVersion] This version of Minecraft is extremely outdated and support for it has reached its end of life. You will still be able to run Via on this Minecraft version, but we are unlikely to provide any further fixes or help with problems specific to legacy Minecraft versions. Please consider updating to give your players a better experience and to avoid issues that have long been fixed.
+[11:09:51] [Craft Scheduler Thread - 4/INFO]: [NoCheatPlus] Added hook: AllViolations(NCP) [1.0].
+[11:09:51] [Server thread/INFO]: [NoCheatPlus] Post-enable running...
+[11:09:52] [Server thread/INFO]: [NoCheatPlus] Post-enable finished.
+[11:09:52] [Server thread/WARN]: [Holograms] holograms.yml file had no 'holograms' section defined, no holograms loaded
+[11:09:52] [Server thread/INFO]: [Citizens] Loaded 0 NPCs.
+[11:09:52] [Server thread/INFO]: [ViaVersion] Finished mapping loading, shutting down loader executor!
+[11:09:52] [Craft Scheduler Thread - 1/INFO]: [Vault] Checking for Updates ... 
+[11:09:52] [Craft Scheduler Thread - 1/WARN]: [Vault] Stable Version: 1.7.3 is out! You are still running version: 1.5.6
+[11:09:52] [Craft Scheduler Thread - 1/WARN]: [Vault] Update at: http://dev.bukkit.org/server-mods/vault
+[11:09:53] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:09:53] [Craft Scheduler Thread - 0/INFO]: [VanishNoPacket] Found a different version available: v3.22
+[11:09:53] [Craft Scheduler Thread - 0/INFO]: [VanishNoPacket] Check http://www.curse.com/server-mods/minecraft/vanish
+[11:10:01] [User Authenticator #1/INFO]: UUID of player AfricansInParis is b81f7fb4-be34-499d-89c4-6a786b709bfc
+[11:10:01] [Server thread/ERROR]: Could not pass event PlayerJoinEvent to PacketListenerApi v3.4.0
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.onPlayerJoin(PlayerList.java:333) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.a(PlayerList.java:159) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.b(LoginListener.java:144) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.c(LoginListener.java:54) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.a(NetworkManager.java:233) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:140) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Field.get(Object)" because "org.inventivetalent.packetlistener.channel.INCChannel.playerConnection" is null
+	at org.inventivetalent.packetlistener.channel.INCChannel.getChannel(INCChannel.java:93) ~[?:?]
+	at org.inventivetalent.packetlistener.channel.INCChannel.addChannel(INCChannel.java:54) ~[?:?]
+	at org.inventivetalent.packetlistener.ChannelInjector.addChannel(ChannelInjector.java:75) ~[?:?]
+	at org.inventivetalent.packetlistener.PacketListenerAPI.onJoin(PacketListenerAPI.java:113) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+[11:10:01] [Server thread/INFO]: [ReflectionHelper] Version is v1_12_R1 (10902)
+
+[11:10:01] [Server thread/ERROR]: Could not pass event PlayerJoinEvent to GlowAPI v1.4.4
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.onPlayerJoin(PlayerList.java:333) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.a(PlayerList.java:159) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.b(LoginListener.java:144) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.c(LoginListener.java:54) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.a(NetworkManager.java:233) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:140) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.RuntimeException: java.lang.NoSuchFieldException: Could not resolve field for [ResolverQuery{name='i', types=[]}] in class class net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam
+	at org.inventivetalent.glow.GlowAPI.sendTeamPacket(GlowAPI.java:366) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:317) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:327) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.onJoin(GlowAPI.java:501) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+Caused by: java.lang.NoSuchFieldException: Could not resolve field for [ResolverQuery{name='i', types=[]}] in class class net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.notFoundException(FieldResolver.java:186) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.notFoundException(FieldResolver.java:39) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.ResolverAbstract.resolve(ResolverAbstract.java:88) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.resolve(FieldResolver.java:85) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.sendTeamPacket(GlowAPI.java:340) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:317) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:327) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.onJoin(GlowAPI.java:501) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+[11:10:01] [Server thread/INFO]: AfricansInParis[/127.0.0.1:52660] logged in with entity id 21 at ([jew]415.0, 48.0, -113.0)
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:01] [Server thread/INFO]: 5
+
+[11:10:04] [Server thread/INFO]: 5
+
+[11:10:04] [Server thread/INFO]: 5
+
+[11:10:04] [Server thread/INFO]: 5
+
+[11:10:05] [Server thread/INFO]: AfricansInParis issued server command: /playerclone 1'
+[11:10:05] [Server thread/ERROR]: null
+org.bukkit.command.CommandException: Unhandled exception executing command 'playerclone' in plugin PracticeServer v1.1.0
+	at org.bukkit.command.PluginCommand.execute(PluginCommand.java:46) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.command.SimpleCommandMap.dispatch(SimpleCommandMap.java:141) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.craftbukkit.v1_12_R1.CraftServer.dispatchCommand(CraftServer.java:646) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerConnection.handleCommand(PlayerConnection.java:1349) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerConnection.a(PlayerConnection.java:1184) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PacketPlayInChat.a(PacketPlayInChat.java:45) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PacketPlayInChat.a(PacketPlayInChat.java:1) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerConnectionUtils$1.run(SourceFile:13) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:577) [?:?]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:317) [?:?]
+	at net.minecraft.server.v1_12_R1.SystemUtils.a(SourceFile:45) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:726) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NumberFormatException: For input string: "1'"
+	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:67) ~[?:?]
+	at java.lang.Integer.parseInt(Integer.java:665) ~[?:?]
+	at java.lang.Integer.parseInt(Integer.java:781) ~[?:?]
+	at me.retrorealms.practiceserver.commands.moderation.CloneCommand.onCommand(CloneCommand.java:26) ~[?:?]
+	at org.bukkit.command.PluginCommand.execute(PluginCommand.java:44) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 15 more
+[11:10:08] [Server thread/INFO]: 5
+
+[11:10:08] [Server thread/INFO]: 5
+
+[11:10:08] [Server thread/INFO]: AfricansInParis issued server command: /playerclone 1
+[11:10:08] [Server thread/INFO]: 5
+
+[11:10:08] [Server thread/INFO]: 4
+
+[11:10:08] [Server thread/INFO]: 8
+
+[11:10:08] [Server thread/INFO]: 12
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 4
+
+[11:10:08] [Server thread/INFO]: 8
+
+[11:10:08] [Server thread/INFO]: 12
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 4
+
+[11:10:08] [Server thread/INFO]: 8
+
+[11:10:08] [Server thread/INFO]: 12
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 350
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 10
+
+[11:10:08] [Server thread/INFO]: 4
+
+[11:10:08] [Server thread/INFO]: 950
+
+[11:10:08] [Server thread/INFO]: 1000
+
+[11:10:08] [Server thread/INFO]: 1010
+
+[11:10:08] [Server thread/INFO]: 1050
+
+[11:10:08] [Server thread/INFO]: 15
+
+[11:10:08] [Server thread/INFO]: 15
+
+[11:10:08] [Server thread/INFO]: 15
+
+[11:10:08] [Server thread/INFO]: 50
+
+[11:10:08] [Server thread/INFO]: 50
+
+[11:11:03] [Netty Server IO #1/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:11:03] [Netty Server IO #1/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:13:46] [Netty Server IO #1/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:13:46] [Netty Server IO #1/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:14:36] [Server thread/INFO]: 5
+
+[11:14:36] [Server thread/INFO]: 5
+
+[11:14:58] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:15:17] [Server thread/INFO]: 5
+
+[11:16:01] [Server thread/INFO]: 5
+
+[11:16:02] [Server thread/INFO]: 5
+
+[11:16:02] [Server thread/INFO]: 5
+
+[11:16:03] [Server thread/INFO]: 5
+
+[11:16:03] [Server thread/INFO]: 5
+
+[11:16:05] [Server thread/INFO]: 5
+
+[11:16:05] [Server thread/INFO]: 5
+
+[11:16:05] [Server thread/INFO]: 5
+
+[11:16:07] [Server thread/INFO]: 4
+
+[11:16:07] [Server thread/INFO]: 4
+
+[11:16:07] [Server thread/INFO]: 4
+
+[11:16:07] [Server thread/INFO]: 5
+
+[11:16:07] [Server thread/INFO]: 5
+
+[11:16:07] [Server thread/INFO]: 5
+
+[11:16:18] [Server thread/INFO]: 4
+
+[11:16:18] [Server thread/INFO]: 4
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:28] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:29] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:30] [Server thread/INFO]: 5
+
+[11:16:40] [Server thread/INFO]: 5
+
+[11:16:40] [Server thread/INFO]: 5
+
+[11:16:58] [Server thread/INFO]: 4
+
+[11:16:58] [Server thread/INFO]: 4
+
+[11:16:58] [Server thread/INFO]: 4
+
+[11:16:58] [Server thread/INFO]: 4
+
+[11:17:00] [Server thread/INFO]: 4
+
+[11:17:00] [Server thread/INFO]: 4
+
+[11:17:01] [Server thread/INFO]: 4
+
+[11:17:01] [Server thread/INFO]: 4
+
+[11:17:01] [Server thread/INFO]: 4
+
+[11:17:02] [Server thread/INFO]: 3
+
+[11:17:02] [Server thread/INFO]: 3
+
+[11:17:02] [Server thread/INFO]: 3
+
+[11:17:03] [Server thread/INFO]: 3
+
+[11:17:10] [Server thread/INFO]: 4
+
+[11:17:12] [Server thread/INFO]: 4
+
+[11:17:12] [Server thread/INFO]: 4
+
+[11:17:13] [Server thread/INFO]: 4
+
+[11:17:13] [Server thread/INFO]: 4
+
+[11:17:13] [Server thread/INFO]: 3
+
+[11:17:13] [Server thread/INFO]: 3
+
+[11:17:28] [Server thread/INFO]: 3
+
+[11:17:54] [Server thread/INFO]: 3
+
+[11:17:54] [Server thread/INFO]: 3
+
+[11:17:58] [Server thread/INFO]: 3
+
+[11:17:58] [Server thread/INFO]: 3
+
+[11:18:03] [Server thread/INFO]: 3
+
+[11:18:03] [Server thread/INFO]: 3
+
+[11:18:12] [Server thread/INFO]: 3
+
+[11:18:12] [Server thread/INFO]: 3
+
+[11:18:31] [Server thread/INFO]: 3
+
+[11:18:31] [Server thread/INFO]: 3
+
+[11:19:36] [Server thread/INFO]: AfricansInParis lost connection: Disconnected
+[11:19:36] [Server thread/INFO]: [PracticeServer] [RetroDB] Saved Player Data for AfricansInParis
+[11:19:37] [Server thread/INFO]: [PracticeServer] [RetroDB] Saved Persistent Data for AfricansInParis
+[11:19:37] [Server thread/ERROR]: Could not pass event PlayerQuitEvent to PacketListenerApi v3.4.0
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.disconnect(PlayerList.java:385) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerConnection.a(PlayerConnection.java:1059) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.handleDisconnection(NetworkManager.java:318) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:174) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Field.get(Object)" because "org.inventivetalent.packetlistener.channel.INCChannel.playerConnection" is null
+	at org.inventivetalent.packetlistener.channel.INCChannel.getChannel(INCChannel.java:93) ~[?:?]
+	at org.inventivetalent.packetlistener.channel.INCChannel.removeChannel(INCChannel.java:73) ~[?:?]
+	at org.inventivetalent.packetlistener.ChannelInjector.removeChannel(ChannelInjector.java:79) ~[?:?]
+	at org.inventivetalent.packetlistener.PacketListenerAPI.onQuit(PacketListenerAPI.java:118) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 12 more
+[11:20:03] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:21:28] [User Authenticator #2/INFO]: UUID of player AfricansInParis is b81f7fb4-be34-499d-89c4-6a786b709bfc
+[11:21:29] [Server thread/ERROR]: Could not pass event PlayerJoinEvent to PacketListenerApi v3.4.0
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.onPlayerJoin(PlayerList.java:333) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.a(PlayerList.java:159) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.b(LoginListener.java:144) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.c(LoginListener.java:54) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.a(NetworkManager.java:233) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:140) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Field.get(Object)" because "org.inventivetalent.packetlistener.channel.INCChannel.playerConnection" is null
+	at org.inventivetalent.packetlistener.channel.INCChannel.getChannel(INCChannel.java:93) ~[?:?]
+	at org.inventivetalent.packetlistener.channel.INCChannel.addChannel(INCChannel.java:54) ~[?:?]
+	at org.inventivetalent.packetlistener.ChannelInjector.addChannel(ChannelInjector.java:75) ~[?:?]
+	at org.inventivetalent.packetlistener.PacketListenerAPI.onJoin(PacketListenerAPI.java:113) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+[11:21:29] [Server thread/ERROR]: Could not pass event PlayerJoinEvent to GlowAPI v1.4.4
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.onPlayerJoin(PlayerList.java:333) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.a(PlayerList.java:159) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.b(LoginListener.java:144) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.LoginListener.c(LoginListener.java:54) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.a(NetworkManager.java:233) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:140) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.RuntimeException: java.lang.NoSuchFieldException: Could not resolve field for [ResolverQuery{name='i', types=[]}] in class class net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam
+	at org.inventivetalent.glow.GlowAPI.sendTeamPacket(GlowAPI.java:366) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:317) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:327) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.onJoin(GlowAPI.java:501) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+Caused by: java.lang.NoSuchFieldException: Could not resolve field for [ResolverQuery{name='i', types=[]}] in class class net.minecraft.server.v1_12_R1.PacketPlayOutScoreboardTeam
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.notFoundException(FieldResolver.java:186) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.notFoundException(FieldResolver.java:39) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.ResolverAbstract.resolve(ResolverAbstract.java:88) ~[?:?]
+	at org.inventivetalent.glow.reflection.resolver.FieldResolver.resolve(FieldResolver.java:85) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.sendTeamPacket(GlowAPI.java:340) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:317) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.initTeam(GlowAPI.java:327) ~[?:?]
+	at org.inventivetalent.glow.GlowAPI.onJoin(GlowAPI.java:501) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 14 more
+[11:21:29] [Server thread/INFO]: AfricansInParis[/127.0.0.1:51492] logged in with entity id 36762 at ([jew]405.0, 50.0, -156.0)
+[11:21:29] [Server thread/INFO]: 5
+
+[11:21:29] [Server thread/INFO]: 5
+
+[11:21:29] [Server thread/INFO]: 4
+
+[11:21:29] [Server thread/INFO]: 4
+
+[11:21:29] [Server thread/INFO]: 4
+
+[11:21:29] [Server thread/INFO]: 4
+
+[11:21:29] [Server thread/INFO]: 5
+
+[11:21:29] [Server thread/INFO]: 5
+
+[11:21:29] [Server thread/INFO]: 5
+
+[11:21:31] [Server thread/INFO]: 5
+
+[11:21:31] [Server thread/INFO]: 5
+
+[11:21:32] [Server thread/INFO]: 5
+
+[11:21:32] [Server thread/INFO]: 5
+
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:35] [Server thread/INFO]: 5
+
+[11:21:35] [Server thread/INFO]: 5
+
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:35] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:36] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:37] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:38] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:39] [Server thread/INFO]: 5
+
+[11:21:39] [Server thread/INFO]: 5
+
+[11:21:39] [Server thread/INFO]: 5
+
+[11:21:40] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:40] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:41] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:42] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:47] [Server thread/INFO]: 5
+
+[11:21:47] [Server thread/INFO]: 5
+
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:48] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:49] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:49] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:50] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:51] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:52] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:53] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:21:53] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:21:57] [Server thread/INFO]: 4
+
+[11:21:57] [Server thread/INFO]: 4
+
+[11:21:57] [Server thread/INFO]: 5
+
+[11:21:57] [Server thread/INFO]: 5
+
+[11:21:57] [Server thread/INFO]: 5
+
+[11:21:57] [Server thread/INFO]: 5
+
+[11:21:57] [Server thread/INFO]: 5
+
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:03] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:04] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:05] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:06] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:06] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:07] [Server thread/INFO]: 5
+
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:08] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Server thread/INFO]: 5
+
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:09] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:09] [Server thread/INFO]: 5
+
+[11:22:10] [Server thread/INFO]: 5
+
+[11:22:10] [Server thread/INFO]: 5
+
+[11:22:10] [Server thread/INFO]: 5
+
+[11:22:14] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:14] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:14] [Server thread/INFO]: 5
+
+[11:22:14] [Server thread/INFO]: 5
+
+[11:22:14] [Server thread/INFO]: 5
+
+[11:22:14] [Server thread/INFO]: 5
+
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:15] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:16] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:18] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:20] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:20] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:20] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:20] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:21] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8194)
+[11:22:21] [Netty Server IO #0/WARN]: [ViaVersion] Received unknown 1.11 -> 1.10.2 potion data (8196)
+[11:22:21] [Server thread/INFO]: 5
+
+[11:22:21] [Server thread/INFO]: 5
+
+[11:22:21] [Server thread/INFO]: 5
+
+[11:22:23] [Server thread/INFO]: 4
+
+[11:22:23] [Server thread/INFO]: 4
+
+[11:22:32] [Server thread/INFO]: 3
+
+[11:22:32] [Server thread/INFO]: 3
+
+[11:22:32] [Server thread/INFO]: 3
+
+[11:22:32] [Server thread/INFO]: 3
+
+[11:23:26] [Server thread/INFO]: 1
+
+[11:23:26] [Server thread/INFO]: 1
+
+[11:25:08] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:26:17] [Server thread/INFO]: 1
+
+[11:26:17] [Server thread/INFO]: 1
+
+[11:26:17] [Server thread/INFO]: 1
+
+[11:26:17] [Server thread/INFO]: 1
+
+[11:26:19] [Server thread/INFO]: 1
+
+[11:26:19] [Server thread/INFO]: 1
+
+[11:26:19] [Server thread/INFO]: 1
+
+[11:26:38] [Server thread/INFO]: AfricansInParis issued server command: /NCP info riph
+[11:26:44] [Server thread/INFO]: 1
+
+[11:26:44] [Server thread/INFO]: 1
+
+[11:26:44] [Server thread/INFO]: AfricansInParis lost connection: Disconnected
+[11:26:44] [Server thread/INFO]: [PracticeServer] [RetroDB] Saved Player Data for AfricansInParis
+[11:26:44] [Server thread/INFO]: [PracticeServer] [RetroDB] Saved Persistent Data for AfricansInParis
+[11:26:44] [Server thread/ERROR]: Could not pass event PlayerQuitEvent to PacketListenerApi v3.4.0
+org.bukkit.event.EventException: null
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:310) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:62) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.fireEvent(SimplePluginManager.java:502) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:487) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerList.disconnect(PlayerList.java:385) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.PlayerConnection.a(PlayerConnection.java:1059) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.NetworkManager.handleDisconnection(NetworkManager.java:318) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.ServerConnection.c(ServerConnection.java:174) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.D(MinecraftServer.java:825) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.DedicatedServer.D(DedicatedServer.java:399) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.C(MinecraftServer.java:665) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at net.minecraft.server.v1_12_R1.MinecraftServer.run(MinecraftServer.java:564) [spigga.jar:git-Spigot-c6871e2-e1d3516]
+	at java.lang.Thread.run(Thread.java:1589) [?:?]
+Caused by: java.lang.NullPointerException: Cannot invoke "java.lang.reflect.Field.get(Object)" because "org.inventivetalent.packetlistener.channel.INCChannel.playerConnection" is null
+	at org.inventivetalent.packetlistener.channel.INCChannel.getChannel(INCChannel.java:93) ~[?:?]
+	at org.inventivetalent.packetlistener.channel.INCChannel.removeChannel(INCChannel.java:73) ~[?:?]
+	at org.inventivetalent.packetlistener.ChannelInjector.removeChannel(ChannelInjector.java:79) ~[?:?]
+	at org.inventivetalent.packetlistener.PacketListenerAPI.onQuit(PacketListenerAPI.java:118) ~[?:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:578) ~[?:?]
+	at org.bukkit.plugin.java.JavaPluginLoader$1.execute(JavaPluginLoader.java:306) ~[spigga.jar:git-Spigot-c6871e2-e1d3516]
+	... 12 more
+[11:30:12] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:35:17] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:40:22] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:45:28] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:50:33] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:55:21] [Craft Scheduler Thread - 27/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:55:32] [User Authenticator #3/INFO]: UUID of player AfricansInParis is b81f7fb4-be34-499d-89c4-6a786b709bfc
+[11:55:32] [Server thread/INFO]: com.mojang.authlib.GameProfile@51fa71ed[id=b81f7fb4-be34-499d-89c4-6a786b709bfc,name=AfricansInParis,properties={textures=[com.mojang.authlib.properties.Property@5864f5b]},legacy=false] (/127.0.0.1:64426) lost connection: Disconnected
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:55:37] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:55:38] [Server thread/INFO]: [RetroDB] Connection Established
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:55:52] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:56:07] [Craft Scheduler Thread - 30/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:56:22] [Craft Scheduler Thread - 26/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:56:38] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:56:53] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:57:08] [Craft Scheduler Thread - 22/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: Table 'db_666470.Guilds' doesn't exist
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:67)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:484)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.Util.handleNewInstance(Util.java:404)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.Util.getInstance(Util.java:387)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:941)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3870)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:3806)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2470)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2617)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2546)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2504)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at com.mysql.jdbc.StatementImpl.executeQuery(StatementImpl.java:1370)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at me.retrorealms.practiceserver.utils.SQLUtil.SQLMain.loadGuilds(SQLMain.java:461)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager.updateCache(GuildManager.java:53)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftTask.run(CraftTask.java:71)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at org.bukkit.craftbukkit.v1_12_R1.scheduler.CraftAsyncTask.run(CraftAsyncTask.java:53)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+
+[11:57:23] [Craft Scheduler Thread - 31/WARN]: 	at java.base/java.lang.Thread.run(Thread.java:1589)
+
+[12:00:43] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:05:47] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:10:52] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:15:56] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:21:01] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:26:06] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:31:11] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:36:16] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:41:21] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:46:26] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:51:30] [Server thread/INFO]: [RetroDB] Connection Established
+
+[12:56:35] [Server thread/INFO]: [RetroDB] Connection Established
+
+[13:01:40] [Server thread/INFO]: [RetroDB] Connection Established
+

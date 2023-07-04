@@ -93,11 +93,36 @@ public class SQLMain implements Listener {
         UUID uuid = player.getUniqueId();
         String[] pinv = BukkitSerialization.playerInventoryToBase64(player.getInventory());
         GuildPlayers gp = GuildPlayers.getInstance();
-
-        try (PreparedStatement pstmt = con.prepareStatement("REPLACE INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " +
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " +
                 "Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, HorseTier, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, " +
                 "T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (UUID) DO UPDATE SET " +
+                "Username = excluded.Username, " +
+                "XCoord = excluded.XCoord, " +
+                "YCoord = excluded.YCoord, " +
+                "ZCoord = excluded.ZCoord, " +
+                "Yaw = excluded.Yaw, " +
+                "Pitch = excluded.Pitch, " +
+                "Inventory = excluded.Inventory, " +
+                "Armor = excluded.Armor, " +
+                "MaxHP = excluded.MaxHP, " +
+                "Gems = excluded.Gems, " +
+                "GuildName = excluded.GuildName, " +
+                "Alignment = excluded.Alignment, " +
+                "AlignTime = excluded.AlignTime, " +
+                "HorseTier = excluded.HorseTier, " +
+                "T1Kills = excluded.T1Kills, " +
+                "T2Kills = excluded.T2Kills, " +
+                "T3Kills = excluded.T3Kills, " +
+                "T4Kills = excluded.T4Kills, " +
+                "T5Kills = excluded.T5Kills, " +
+                "T6Kills = excluded.T6Kills, " +
+                "Deaths = excluded.Deaths, " +
+                "PlayerKills = excluded.PlayerKills, " +
+                "OreMined = excluded.OreMined, " +
+                "ChestsOpened = excluded.ChestsOpened, " +
+                "RespawnData = excluded.RespawnData")) {
 
             Location loc = player.getLocation();
             pstmt.setString(1, uuid.toString());
@@ -158,11 +183,43 @@ public class SQLMain implements Listener {
         } catch (NoClassDefFoundError ignored) {
         }
 
-        try (PreparedStatement pstmt = con.prepareStatement("REPLACE INTO PersistentData (UUID, Username, PlayerRank, Buddies, PVPToggle, " +
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PersistentData (UUID, Username, PlayerRank, Buddies, PVPToggle, " +
                 "ChaoToggle, FFToggle, DebugToggle, HologramToggle, LVLHPToggle, GlowToggle, PMToggle, TradingToggle, GemsToggle, " +
                 "TrailToggle, DropToggle, KitToggle, Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, OrbRolls, Luck, Reaper, " +
                 "KitWeapon, KitHelm, KitChest, KitLegs, KitBoots) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (UUID) DO UPDATE SET " +
+                "Username = excluded.Username, " +
+                "PlayerRank = excluded.PlayerRank, " +
+                "Buddies = excluded.Buddies, " +
+                "PVPToggle = excluded.PVPToggle, " +
+                "ChaoToggle = excluded.ChaoToggle, " +
+                "FFToggle = excluded.FFToggle, " +
+                "DebugToggle = excluded.DebugToggle, " +
+                "HologramToggle = excluded.HologramToggle, " +
+                "LVLHPToggle = excluded.LVLHPToggle, " +
+                "GlowToggle = excluded.GlowToggle, " +
+                "PMToggle = excluded.PMToggle, " +
+                "TradingToggle = excluded.TradingToggle, " +
+                "GemsToggle = excluded.GemsToggle, " +
+                "TrailToggle = excluded.TrailToggle, " +
+                "DropToggle = excluded.DropToggle, " +
+                "KitToggle = excluded.KitToggle, " +
+                "Tokens = excluded.Tokens, " +
+                "Mount = excluded.Mount, " +
+                "BankPages = excluded.BankPages, " +
+                "Pickaxe = excluded.Pickaxe, " +
+                "Farmer = excluded.Farmer, " +
+                "LastStand = excluded.LastStand, " +
+                "OrbRolls = excluded.OrbRolls, " +
+                "Luck = excluded.Luck, " +
+                "Reaper = excluded.Reaper, " +
+                "KitWeapon = excluded.KitWeapon, " +
+                "KitHelm = excluded.KitHelm, " +
+                "KitChest = excluded.KitChest, " +
+                "KitLegs = excluded.KitLegs, " +
+                "KitBoots = excluded.KitBoots")) {
+
 
             pstmt.setString(1, uuid.toString());
             pstmt.setString(2, player.getName());
@@ -237,15 +294,23 @@ public class SQLMain implements Listener {
             }
             members = members.substring(0, Math.max(members.length() - 1, 0));
             officers = officers.substring(0, Math.max(officers.length() - 1, 0)); //getting rid of last space
-            String stats = "REPLACE INTO Guilds (GuildName, GuildTag, GuildMOTD, Owner, Officers, Members)" + "VALUES ('" + guild.getName() + "'," + " '" + guild.getTag() + "'," + " '" + guild.getMotd() + "'," + " '" + guild.getOwner().toString() + "'," + " '" + officers + "'," + " '" + members + "');";
-            try {
-                con.createStatement().execute(stats);
+            String stats = "INSERT INTO Guilds (GuildName, GuildTag, GuildMOTD, Owner, Officers, Members)" +
+                    "VALUES (?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pstmt = con.prepareStatement(stats)) {
+                pstmt.setString(1, guild.getName());
+                pstmt.setString(2, guild.getTag());
+                pstmt.setString(3, guild.getMotd());
+                pstmt.setString(4, guild.getOwner().toString());
+                pstmt.setString(5, officers);
+                pstmt.setString(6, members);
+                pstmt.executeUpdate();
                 PracticeServer.log.info("[RetroDB] Saved Guild Data for " + guild.getName());
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
     public static void loadGuilds() {
         try (ResultSet rs = con.createStatement().executeQuery("SELECT * FROM Guilds")) {
@@ -274,7 +339,7 @@ public class SQLMain implements Listener {
         try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM Guilds WHERE GuildName = ?")) {
             pstmt.setString(1, guild.getName());
             pstmt.executeUpdate();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -283,7 +348,7 @@ public class SQLMain implements Listener {
         if (PracticeServer.DATABASE) {
             String table = getTableName(page);
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
-            String query = "REPLACE INTO " + table + " (UUID, Username, Inventory) VALUES (?,?,?)";
+            String query = "INSERT INTO " + table + " (UUID, Username, Inventory) VALUES (?, ?, ?)";
             try (PreparedStatement statement = con.prepareStatement(query)) {
                 statement.setString(1, uuid.toString());
                 statement.setString(2, Bukkit.getOfflinePlayer(uuid).getName());
@@ -298,10 +363,14 @@ public class SQLMain implements Listener {
     public static void saveGuildBank(Inventory inv, Guild guild) {
         if (PracticeServer.DATABASE) {
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
-            String stats = "REPLACE INTO GuildBanks (GuildName, GuildBank, Mutex, OccupiedBy)" + "VALUES ('" + guild.getName() + "'," + " '" + items + "'," + false + "," + "'None');";
-            try {
-                con.createStatement().execute(stats);
-            } catch (Exception e) {
+            String stats = "INSERT INTO GuildBanks (GuildName, GuildBank, Mutex, OccupiedBy) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement pstmt = con.prepareStatement(stats)) {
+                pstmt.setString(1, guild.getName());
+                pstmt.setString(2, items);
+                pstmt.setBoolean(3, false);
+                pstmt.setString(4, "None");
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
@@ -313,8 +382,7 @@ public class SQLMain implements Listener {
         String table = getTableName(page);
         PersistentPlayer pp = PersistentPlayers.get(uuid);
         Inventory inv = Bukkit.createInventory(null, Banks.banksize, "Bank Chest (" + page + "/" + pp.bankpages + ")");
-        try {
-            PreparedStatement stmt = con.prepareStatement("SELECT * FROM " + table + " WHERE UUID = ?");
+        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM " + table + " WHERE UUID = ?")) {
             stmt.setString(1, uuid.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -328,6 +396,7 @@ public class SQLMain implements Listener {
         }
         return inv;
     }
+
 
     public static String getTableName(int page) {
         switch (page) {
@@ -349,8 +418,7 @@ public class SQLMain implements Listener {
     public static Inventory getGuildBank(Player p, Guild guild) {
         Inventory inv = Bukkit.createInventory(null, GuildBank.guildBankSize, "Guild Bank Chest (1/1)");
         try {
-            PreparedStatement stmt1 = con
-                    .prepareStatement("UPDATE GuildBanks SET OccupiedBy = ?, Mutex = 1 WHERE GuildName = ? AND Mutex = 0");
+            PreparedStatement stmt1 = con.prepareStatement("UPDATE GuildBanks SET OccupiedBy = ?, Mutex = 1 WHERE GuildName = ? AND Mutex = 0");
             stmt1.setString(1, p.getName());
             stmt1.setString(2, guild.getName());
             stmt1.execute();
@@ -388,6 +456,7 @@ public class SQLMain implements Listener {
         }
     }
 
+
     public static void clonePlayer(Player p, String target) {
         try {
             PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PlayerData WHERE Username = ?");
@@ -398,7 +467,7 @@ public class SQLMain implements Listener {
                 new AsyncTask(() -> {
                     try {
                         PreparedStatement stmt2 = con.prepareStatement(
-                                "REPLACE INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) "
+                                "INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) "
                                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         stmt2.setString(1, p.getUniqueId().toString());
                         stmt2.setString(2, p.getName());
@@ -454,38 +523,48 @@ public class SQLMain implements Listener {
         if (PracticeServer.DATABASE) {
             PracticeServer.log.info("[RetroDB] has been Enabled");
             try {
+                Class.forName("org.postgresql.Driver");
+
                 Properties props = new Properties();
                 FileInputStream in = new FileInputStream(PracticeServer.plugin.getDataFolder() + "/db.properties");
                 props.load(in);
                 in.close();
 
-                String driver = props.getProperty("jdbc.driver");
-                if (driver != null) {
-                    Class.forName(driver);
-                }
                 String url = props.getProperty("jdbc.url");
                 String username = props.getProperty("jdbc.username");
                 String password = props.getProperty("jdbc.password");
-                con = DriverManager.getConnection(url, username, password);
+
+                // Set connection properties using the Properties object
+                Properties connectionProps = new Properties();
+                connectionProps.put("user", username);
+                connectionProps.put("password", password);
+
+                con = DriverManager.getConnection(url, connectionProps);
                 System.out.println("[RetroDB] Connection Established");
+
                 new BukkitRunnable() {
                     public void run() {
                         try {
-                            con = DriverManager.getConnection(url, username, password);
-                            System.out.println("[RetroDB] Connection Established");
+                            if (con.isClosed()) {
+                                con = DriverManager.getConnection(url, connectionProps);
+                                System.out.println("[RetroDB] Connection Reestablished");
+                            }
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }
                     }
                 }.runTaskTimer(PracticeServer.plugin, 20, 6000);
+
                 SQLCreate.createTables(con);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             loadPersistentData();
             loadGems();
         }
     }
+
 
     public void onDisable() {
         try {

@@ -7,7 +7,6 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.money.Money;
-import me.retrorealms.practiceserver.utils.SQLUtil.SQLCreate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -123,6 +122,7 @@ public class Mining
 
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         MiningConfig.setup();
+
         for (final String key : MiningConfig.get().getKeys(false)) {
             final String[] str = key.split(",");
             final World world = Bukkit.getWorld(str[0]);
@@ -131,7 +131,7 @@ public class Mining
             final double y = Double.valueOf(str[2]);
             final double z = Double.valueOf(str[3]);
             final Location loc = new Location(world, x, y, z);
-            loc.getBlock().setType(material);
+            if (loc.getBlock() != null) loc.getBlock().setType(material);
         }
         new BukkitRunnable() {
 
