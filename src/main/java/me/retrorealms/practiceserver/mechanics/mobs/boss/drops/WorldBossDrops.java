@@ -1,15 +1,16 @@
-package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss;
+package me.retrorealms.practiceserver.mechanics.mobs.boss.drops;
 
 import me.retrorealms.practiceserver.apis.itemapi.NBTAccessor;
 import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
 import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
 import me.retrorealms.practiceserver.mechanics.item.Items;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBoss;
+import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.inventivetalent.glow.GlowAPI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -176,7 +177,7 @@ public class WorldBossDrops {
             }
         }
         String loreTag = BossGearGenerator.getString(itemType, "lore", worldbossName);
-        if (!loreTag.equals("")) lore.add(ChatColor.GRAY.toString() + loreTag);
+        if (!loreTag.equals("")) lore.add(ChatColor.GRAY + loreTag);
         lore.add(oldlore.get(oldlore.size() - 1));
 
         final ItemMeta im = is.getItemMeta();

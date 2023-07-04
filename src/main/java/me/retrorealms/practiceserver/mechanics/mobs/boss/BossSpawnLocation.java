@@ -1,4 +1,4 @@
-package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss;
+package me.retrorealms.practiceserver.mechanics.mobs.boss;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
