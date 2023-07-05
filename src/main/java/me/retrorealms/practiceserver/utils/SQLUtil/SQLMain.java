@@ -55,11 +55,23 @@ public class SQLMain implements Listener {
 
         updatePlayerStats(player);
 
-        try (PreparedStatement pstmt = con.prepareStatement("UPDATE PlayerData SET RespawnData = ? WHERE UUID = ?")) {
-            pstmt.setString(1, BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0])));
-            pstmt.setString(2, player.getUniqueId().toString());
-            if (!items.isEmpty()) {
-                pstmt.executeUpdate();
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
+            pstmt.setString(1, player.getUniqueId().toString());
+            ResultSet resultSet = pstmt.executeQuery();
+            if (resultSet.next()) {
+                // Player record already exists, perform update
+                try (PreparedStatement updateStmt = con.prepareStatement("UPDATE PlayerData SET RespawnData = ? WHERE UUID = ?")) {
+                    updateStmt.setString(1, BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0])));
+                    updateStmt.setString(2, player.getUniqueId().toString());
+                    updateStmt.executeUpdate();
+                }
+            } else {
+                // Player record doesn't exist, perform insert
+                try (PreparedStatement insertStmt = con.prepareStatement("INSERT INTO PlayerData (UUID, RespawnData) VALUES (?, ?)")) {
+                    insertStmt.setString(1, player.getUniqueId().toString());
+                    insertStmt.setString(2, BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0])));
+                    insertStmt.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -71,9 +83,11 @@ public class SQLMain implements Listener {
             return;
         }
 
-        try (ResultSet rs = getPlayerData("PlayerData", "RespawnData", player)) {
-            if (rs.next()) {
-                ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(rs.getString("RespawnData"));
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
+            pstmt.setString(1, player.getUniqueId().toString());
+            ResultSet resultSet = pstmt.executeQuery();
+            if (resultSet.next()) {
+                ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(resultSet.getString("RespawnData"));
                 List<ItemStack> itemList = Arrays.asList(items);
                 itemList.removeAll(Collections.singleton(null));
                 for (ItemStack itemStack : itemList) {
@@ -84,6 +98,7 @@ public class SQLMain implements Listener {
             e.printStackTrace();
         }
     }
+
 
     public static boolean updatePlayerStats(Player player) {
         if (!PracticeServer.DATABASE) {
@@ -348,12 +363,29 @@ public class SQLMain implements Listener {
         if (PracticeServer.DATABASE) {
             String table = getTableName(page);
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
-            String query = "INSERT INTO " + table + " (UUID, Username, Inventory) VALUES (?, ?, ?)";
+            String query = "SELECT * FROM " + table + " WHERE UUID = ?";
             try (PreparedStatement statement = con.prepareStatement(query)) {
                 statement.setString(1, uuid.toString());
-                statement.setString(2, Bukkit.getOfflinePlayer(uuid).getName());
-                statement.setString(3, items);
-                statement.executeUpdate();
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    // Bank record already exists, perform update
+                    String updateQuery = "UPDATE " + table + " SET Username = ?, Inventory = ? WHERE UUID = ?";
+                    try (PreparedStatement updateStatement = con.prepareStatement(updateQuery)) {
+                        updateStatement.setString(1, Bukkit.getOfflinePlayer(uuid).getName());
+                        updateStatement.setString(2, items);
+                        updateStatement.setString(3, uuid.toString());
+                        updateStatement.executeUpdate();
+                    }
+                } else {
+                    // Bank record doesn't exist, perform insert
+                    String insertQuery = "INSERT INTO " + table + " (UUID, Username, Inventory) VALUES (?, ?, ?)";
+                    try (PreparedStatement insertStatement = con.prepareStatement(insertQuery)) {
+                        insertStatement.setString(1, uuid.toString());
+                        insertStatement.setString(2, Bukkit.getOfflinePlayer(uuid).getName());
+                        insertStatement.setString(3, items);
+                        insertStatement.executeUpdate();
+                    }
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -363,18 +395,37 @@ public class SQLMain implements Listener {
     public static void saveGuildBank(Inventory inv, Guild guild) {
         if (PracticeServer.DATABASE) {
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
-            String stats = "INSERT INTO GuildBanks (GuildName, GuildBank, Mutex, OccupiedBy) VALUES (?, ?, ?, ?)";
-            try (PreparedStatement pstmt = con.prepareStatement(stats)) {
-                pstmt.setString(1, guild.getName());
-                pstmt.setString(2, items);
-                pstmt.setBoolean(3, false);
-                pstmt.setString(4, "None");
-                pstmt.executeUpdate();
+            String query = "SELECT * FROM GuildBanks WHERE GuildName = ?";
+            try (PreparedStatement statement = con.prepareStatement(query)) {
+                statement.setString(1, guild.getName());
+                ResultSet resultSet = statement.executeQuery();
+                if (resultSet.next()) {
+                    // Guild bank record already exists, perform update
+                    String updateQuery = "UPDATE GuildBanks SET GuildBank = ?, Mutex = ?, OccupiedBy = ? WHERE GuildName = ?";
+                    try (PreparedStatement updateStatement = con.prepareStatement(updateQuery)) {
+                        updateStatement.setString(1, items);
+                        updateStatement.setBoolean(2, false);
+                        updateStatement.setString(3, "None");
+                        updateStatement.setString(4, guild.getName());
+                        updateStatement.executeUpdate();
+                    }
+                } else {
+                    // Guild bank record doesn't exist, perform insert
+                    String insertQuery = "INSERT INTO GuildBanks (GuildName, GuildBank, Mutex, OccupiedBy) VALUES (?, ?, ?, ?)";
+                    try (PreparedStatement insertStatement = con.prepareStatement(insertQuery)) {
+                        insertStatement.setString(1, guild.getName());
+                        insertStatement.setString(2, items);
+                        insertStatement.setBoolean(3, false);
+                        insertStatement.setString(4, "None");
+                        insertStatement.executeUpdate();
+                    }
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
     public static Inventory getBank(UUID uuid, int page) {
         if (page < 1 || page > 5)

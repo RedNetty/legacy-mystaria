@@ -24,40 +24,39 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class ForceField implements Listener {
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("PvP ForceField Thread").build());
+    private ExecutorService executorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("PvP ForceField Thread").build());
     private final Map<UUID, Set<Location>> previousUpdates = new HashMap<>();
     public final CopyOnWriteArrayList<Player> tag = Lists.newCopyOnWriteArrayList();
     private static final List<BlockFace> ALL_DIRECTIONS = ImmutableList.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
 
     public void onEnable() {
-        PracticeServer.log.info("Forcefield ");
-        Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
+        Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.getInstance());
         new BukkitRunnable() {
             @Override
             public void run() {
                 Bukkit.getOnlinePlayers().forEach(player -> {
 
                     if (player == null) return;
-                    // check if we have to send blocks or remove them
                     if (!Listeners.isInCombat(player) && !Alignments.chaotic.containsKey(player.getName()) &&
                             !previousUpdates.containsKey(player.getUniqueId()))
                         return;
 
-                    // Do nothing if player hasn't moved over a whole block
 
-                    // Asynchronously send block changes around player
-                    executorService.submit(() -> {
-                        // Stop processing if player has logged off
+                    if (executorService.isShutdown()) {
+                        executorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("PvP ForceField Thread").build());
+                        return;
+                    }
+
+                    executorService.execute(() -> {
                         UUID uuid = player.getUniqueId();
                         if (!player.isOnline()) {
                             previousUpdates.remove(uuid);
                             return;
                         }
 
-                        // Update the players force field perspective and find all blocks to stop spoofing
                         Set<Location> changedBlocks = getChangedBlocks(player);
                         Material forceFieldMaterial = Material.STAINED_GLASS;
-                        byte forceFieldMaterialDamage = 14; // 14 = red for stained glass
+                        byte forceFieldMaterialDamage = 14;
 
                         Set<Location> removeBlocks;
                         if (previousUpdates.containsKey(uuid)) {
@@ -71,7 +70,6 @@ public class ForceField implements Listener {
                             removeBlocks.remove(location);
                         }
 
-                        // Remove no longer used spoofed blocks
                         for (Location location : removeBlocks) {
                             Block block = location.getBlock();
                             player.sendBlockChange(location, block.getType(), block.getData());
@@ -88,14 +86,7 @@ public class ForceField implements Listener {
 
     @EventHandler
     public void shutdown(PluginDisableEvent event) {
-        // Shutdown executor service and clean up threads
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException ignore) {
-        }
-
-        // Go through all previous updates and revert spoofed blocks
+        System.out.println("Shutdown method called");
         for (UUID uuid : previousUpdates.keySet()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null) continue;
@@ -104,6 +95,15 @@ public class ForceField implements Listener {
                 Block block = location.getBlock();
                 player.sendBlockChange(location, block.getType(), block.getData());
             }
+        }
+        // Shutdown executor service and clean up threads
+        executorService.shutdown();
+        try {
+            if(!executorService.awaitTermination(5, TimeUnit.SECONDS)){
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
         }
     }
 

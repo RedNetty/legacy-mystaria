@@ -264,8 +264,8 @@ public class EliteDrops {
                 break;
             case "weakSkeletonEntity":
                 tier = 5;
-                rarityId = 1;
-                rarity = ChatColor.GREEN.toString() + ChatColor.ITALIC + "Uncommon";
+                rarityId = 2;
+                rarity = ChatColor.AQUA.toString() + ChatColor.ITALIC + "Rare";
 
                 if (item <= 4) {
                     boolean nameType = random.nextBoolean();
@@ -795,7 +795,7 @@ public class EliteDrops {
         if (mobname.equalsIgnoreCase("copjak")) {
             nrghp = 2;
             armdps = 1;
-            str = true;
+            vit = true;
             elem = 2;
             elemamt = 14;
             crit = true;

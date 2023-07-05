@@ -3,7 +3,7 @@ package me.retrorealms.practiceserver.commands.items;
 import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
 import me.retrorealms.practiceserver.mechanics.drops.EliteDrops;
 import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
-import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossDrops;
+import me.retrorealms.practiceserver.mechanics.mobs.boss.drops.WorldBossDrops;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

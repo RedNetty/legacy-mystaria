@@ -9,6 +9,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.gmail.filoghost.holographicdisplays.api.Hologram;
+import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.commands.moderation.ToggleGMCommand;
@@ -51,9 +53,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import com.sainttx.holograms.api.Hologram;
-import com.sainttx.holograms.api.line.HologramLine;
-import com.sainttx.holograms.api.line.TextLine;
 
 import me.retrorealms.practiceserver.mechanics.player.Toggles;
 
@@ -330,28 +329,22 @@ public class Damage implements Listener {
 			float y = r.nextFloat();
 			float z = r.nextFloat();
 			int dmgs = dmg;
-			Hologram hg = new Hologram("dmg", le.getLocation().clone().add(x, 0.5 + y, z));
+			Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), le.getLocation().clone().add(x, 0.5 + y, z));
 			if (d.equalsIgnoreCase("dmg")) {
-				HologramLine line = new TextLine(hg, ChatColor.RED + "-" + dmg + "❤");
-				hg.addLine(line);
-				hg.spawn();
+				hologram.appendTextLine( ChatColor.RED + "-" + dmg + "❤");
 			}
 			if (d.equalsIgnoreCase("dodge")) {
-				HologramLine line = new TextLine(hg, ChatColor.RED + "*DODGE*");
-				hg.addLine(line);
-				hg.spawn();
+				hologram.appendTextLine( ChatColor.RED + "*DODGE*");
 			}
 			if (d.equalsIgnoreCase("block")) {
-				HologramLine line = new TextLine(hg, ChatColor.RED + "*BLOCK*");
-				hg.addLine(line);
-				hg.spawn();
+				hologram.appendTextLine( ChatColor.RED + "*BLOCK*");
 			}
 			new BukkitRunnable() {
 				@Override
 				public void run() {
-					hg.despawn();
+					hologram.delete();
 				}
-			}.runTaskLaterAsynchronously(PracticeServer.plugin, 20L);
+			}.runTaskLater(PracticeServer.plugin, 20L);
 		}
 	}
 
@@ -1004,47 +997,83 @@ public class Damage implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onKnockback(EntityDamageByEntityEvent e) {
-		try {
-			if (e.getEntity() instanceof LivingEntity && e.getDamager() instanceof LivingEntity) {
+	private final long knockbackDelay = 500; // Delay in milliseconds
+	private final float playerKnockbackMultiplier = 0.54f;
+	private final float playerSpadeKnockbackMultiplier = 0.9f;
+	private final float nonPlayerKnockbackMultiplier = 0.5f;
+	private final double verticalKnockback = 0.25;
+	private final double SpadeVerticalKnockback = 0.4;
 
-				LivingEntity p = (LivingEntity) e.getEntity();
-				LivingEntity d = (LivingEntity) e.getDamager();
-				p.setNoDamageTicks(0);
-				if (e.getDamage() <= 0.0) {
-					return;
-				}
-				if (p instanceof Player) {
-					Vector v = p.getLocation().toVector().subtract(d.getLocation().toVector());
-					if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
-						v.normalize();
-					}
-					p.setVelocity(v.multiply(0.24f));
-				} else if (!this.kb.containsKey(p.getUniqueId()) || this.kb.containsKey(p.getUniqueId())
-						&& System.currentTimeMillis() - this.kb.get(p.getUniqueId()) > 500) {
-					this.kb.put(p.getUniqueId(), System.currentTimeMillis());
-					Vector v = p.getLocation().toVector().subtract(d.getLocation().toVector());
-					if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
-						v.normalize();
-					}
-					if (d instanceof Player) {
-						Player dam = (Player) d;
-						if (dam.getInventory().getItemInMainHand() != null
-								&& dam.getInventory().getItemInMainHand().getType().name().contains("_SPADE")) {
-							p.setVelocity(v.multiply(0.9F).setY(0.40));
-						} else {
-							p.setVelocity(v.multiply(0.54f).setY(0.25));
-						}
-					} else {
-						p.setVelocity(v.multiply(0.5f).setY(0.35));
-					}
-				}
+	// You can remove this if you're not using the 'kb' map for anything else.
+	// private final Map<UUID, Long> kb = new HashMap<>();
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onKnockback(EntityDamageByEntityEvent event) {
+		try {
+			if (event.isCancelled() || !(event.getEntity() instanceof LivingEntity) || !(event.getDamager() instanceof LivingEntity)) {
+				return;
 			}
+
+			LivingEntity damagedEntity = (LivingEntity) event.getEntity();
+			LivingEntity damagerEntity = (LivingEntity) event.getDamager();
+
+			damagedEntity.setNoDamageTicks(0);
+
+			if (!(damagedEntity instanceof Player)) {
+				applyKnockback(damagedEntity, damagerEntity, nonPlayerKnockbackMultiplier, verticalKnockback);
+				return;
+			}
+
+			Player damagedPlayer = (Player) damagedEntity;
+
+			Vector knockbackVector = damagedPlayer.getLocation().toVector().subtract(damagerEntity.getLocation().toVector());
+			if (knockbackVector.length() > 0.0) {
+				knockbackVector.normalize();
+			}
+
+			if (damagerEntity instanceof Player) {
+				Player damagerPlayer = (Player) damagerEntity;
+
+				if (damagerPlayer.getInventory().getItemInMainHand() != null
+						&& damagerPlayer.getInventory().getItemInMainHand().getType().name().contains("_SPADE")) {
+					applyKnockback(damagedPlayer, knockbackVector, playerSpadeKnockbackMultiplier, SpadeVerticalKnockback);
+				} else {
+					applyKnockback(damagedPlayer, knockbackVector, playerKnockbackMultiplier, verticalKnockback);
+				}
+			} else {
+				applyKnockback(damagedPlayer, knockbackVector, nonPlayerKnockbackMultiplier, verticalKnockback);
+			}
+
+			// If you're not using the 'kb' map for anything else, you can remove this.
+			// kb.put(damagedPlayer.getUniqueId(), System.currentTimeMillis());
+
 		} catch (Exception ex) {
-			System.out.println("onKnockback");
+			ex.printStackTrace();
 		}
 	}
+
+	private void applyKnockback(Player player, Vector knockbackVector, float horizontalMultiplier, double verticalMultiplier) {
+		Vector velocity = knockbackVector.multiply(horizontalMultiplier);
+		double vert = verticalMultiplier;
+
+		if(!player.isOnGround()) vert /= 2;
+		velocity.setY(vert);
+		player.setVelocity(velocity);
+	}
+
+	private void applyKnockback(LivingEntity entity, LivingEntity damager, float horizontalMultiplier, double verticalMultiplier) {
+		Vector knockbackVector = entity.getLocation().toVector().subtract(damager.getLocation().toVector());
+		if (knockbackVector.length() > 0.0) {
+			knockbackVector.normalize();
+		}
+
+		Vector velocity = knockbackVector.multiply(horizontalMultiplier);
+		double vert = verticalMultiplier;
+		if(!entity.isOnGround()) vert /= 2;
+		velocity.setY(vert);
+		entity.setVelocity(velocity);
+	}
+
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityDeath(EntityDamageEvent e) {

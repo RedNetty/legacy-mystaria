@@ -1,7 +1,5 @@
 package me.retrorealms.practiceserver.mechanics.player;
 
-import com.vexsoftware.votifier.model.Vote;
-import com.vexsoftware.votifier.model.VotifierEvent;
 import lombok.Getter;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.API;
@@ -306,17 +304,6 @@ public class Listeners implements Listener {
 		return P;
 	}
 
-	@EventHandler(priority=EventPriority.NORMAL)
-	public void onVotifierEvent(VotifierEvent event) {
-		Vote vote = event.getVote();
-		if(Bukkit.getPlayer(event.getVote().getUsername()) != null) {
-			Player player = Bukkit.getPlayer(event.getVote().getUsername());
-			player.getInventory().addItem(CratesMain.createCrate(0, false));
-		}
-		/*
-		 * Process Vote record as you see fit
-		 */
-	}
 
 	@EventHandler
 	public void onEntityDamage(EntityDamageEvent event) {

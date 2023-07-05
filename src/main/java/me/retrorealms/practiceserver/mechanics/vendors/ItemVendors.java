@@ -27,6 +27,8 @@
  */
 package me.retrorealms.practiceserver.mechanics.vendors;
 
+import com.gmail.filoghost.holographicdisplays.api.Hologram;
+import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.mechanics.item.Items;
@@ -39,11 +41,11 @@ import me.retrorealms.practiceserver.mechanics.profession.Fishing;
 import me.retrorealms.practiceserver.mechanics.profession.Mining;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
+import net.citizensnpcs.api.event.NPCRemoveEvent;
+import net.citizensnpcs.api.event.NPCSpawnEvent;
+import net.citizensnpcs.api.npc.NPC;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
@@ -91,6 +93,7 @@ public class ItemVendors
     public static ItemStack createFishingPole(int tier) {
         ItemStack rawStack = null;
         String name = "";
+
         ArrayList<String> lore = new ArrayList<>();
         rawStack = new ItemStack(Material.FISHING_ROD, 1);
 
@@ -243,6 +246,67 @@ public class ItemVendors
         return is;
     }
 
+    private Hologram getHologramAtLocation(Location location) {
+        for (Hologram hologram : HologramsAPI.getHolograms(PracticeServer.getInstance())) {
+            Location hologramLocation = hologram.getLocation();
+            if (hologramLocation.getWorld() != null && hologramLocation.getWorld().getUID().equals(location.getWorld().getUID())) {
+                if (hologram.getLocation().distance(location) < 0.1) {
+                    return hologram;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean hasHologramAtLocation(Location location) {
+        return getHologramAtLocation(location) != null;
+    }
+
+    @EventHandler
+    public void onNPCRemove(NPCRemoveEvent e) {
+        NPC npc = e.getNPC();
+        Location npcLocation = e.getNPC().getEntity().getLocation();
+        Location hologramLocation = new Location(npc.getEntity().getWorld(), npcLocation.getX(), npcLocation.getY() + 2.8, npcLocation.getZ(), npcLocation.getYaw(), npcLocation.getPitch());
+        Hologram hologram = getHologramAtLocation(hologramLocation);
+        if (hologram != null) {
+            hologram.delete();
+        }
+    }
+    @EventHandler
+    public void onNPCSpawn(NPCSpawnEvent e) {
+        NPC npc = e.getNPC();
+        Location npcLocation = e.getNPC().getEntity().getLocation();
+        Location hologramLocation = new Location(npc.getEntity().getWorld(), npcLocation.getX(), npcLocation.getY() + 2.8, npcLocation.getZ(), npcLocation.getYaw(), npcLocation.getPitch());
+
+        if (hasHologramAtLocation(hologramLocation)) {
+            return;
+        }
+
+        String hologramString = "";
+        String npcName = npc.getName();
+        switch (npcName) {
+            case "Item Vendor":
+            case "Merchant":
+            case "Food Vendor":
+            case "Guild Registrar":
+            case "Fisherman":
+            case "Animal Tamer":
+            case "Skill Trainer":
+            case "Dungeoneer":
+            case "Book Vendor":
+            case "Isaam":
+                hologramString = ChatColor.GOLD + ChatColor.ITALIC.toString() + "Vendor";
+                break;
+            case "Upgrade Vendor":
+                hologramString = ChatColor.YELLOW + ChatColor.ITALIC.toString() + "Permanent Upgrades";
+                break;
+            default:
+                hologramString = ChatColor.GRAY + ChatColor.ITALIC.toString() + "NPC";
+                break;
+        }
+        Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), hologramLocation);
+        hologram.appendTextLine(hologramString);
+    }
     @EventHandler
     public void onBankClick(PlayerInteractEntityEvent e) {
         if (DeployCommand.patchlockdown) {
@@ -351,7 +415,7 @@ public class ItemVendors
         return inv;
     }
     private Inventory openBookVendorInventory(Player player) {
-        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
+        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Book Vendor");
         inv.addItem(TeleportBooks.deadpeaks_book(true).clone());
         inv.addItem(TeleportBooks.tripoli_book(true).clone());
         inv.addItem(TeleportBooks.avalonBook(true).clone());
@@ -410,6 +474,8 @@ public class ItemVendors
         }
 
         List<String> lore = meta.getLore();
+
+        lore.remove(lore.size() - 1);
         if (lore == null) {
             return;
         }

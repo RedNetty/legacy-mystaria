@@ -87,9 +87,9 @@ public class TeleportBooks implements Listener {
         avalonPortal = new AvalonPortal();
         Bukkit.getServer().getPluginManager().registerEvents(avalonPortal, PracticeServer.getInstance());
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        tripoli = new Location(Bukkit.getWorlds().get(0), 807.0, 19.0, 49.0, 1.0f, 1.0f);
-        stonePeaks = new Location(Bukkit.getWorlds().get(0), 662.0, 29.0, -273.0, 1.0f, 1.0f);
-        theBeneath = new Location(Bukkit.getWorlds().get(0), 600.0, 99.0, 517.0, 1.0f, 1.0f);
+        tripoli = new Location(Bukkit.getWorlds().get(0), 807.0, 19.0, 48.0, 1.0f, 1.0f);
+        stonePeaks = new Location(Bukkit.getWorlds().get(0), 649.0, 25.0, -297.0, 1.0f, 1.0f);
+        theBeneath = new Location(Bukkit.getWorlds().get(0), 636.0, 96.0, 261.0, 1.0f, 1.0f);
 
         avalonPortal.onLoad();
 
@@ -126,11 +126,11 @@ public class TeleportBooks implements Listener {
     public static ItemStack avalonBook(boolean inshop) {
         ItemStack is = new ItemStack(Material.BOOK);
         ItemMeta im = is.getItemMeta();
-        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " The Beneath");
+        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Avalon");
         if (inshop == false) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to The Beneath."));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to Avalon."));
         } else if (inshop == true) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to The Beneath.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g"));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to Avalon.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g"));
         }
         is.setItemMeta(im);
         return is;
@@ -140,11 +140,11 @@ public class TeleportBooks implements Listener {
     public static ItemStack deadpeaks_book(boolean inshop) {
         ItemStack is = new ItemStack(Material.BOOK);
         ItemMeta im = is.getItemMeta();
-        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Stonepeaks Mountain Camp");
+        im.setDisplayName(ChatColor.WHITE.toString() + ChatColor.BOLD + "Teleport:" + ChatColor.WHITE + " Stone-peaks Manor");
         if (!inshop) {
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to Stonepeaks Mountain Camp."));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to Stone-peaks Manor."));
         } else{
-            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the Stonepeaks Mountain Camp.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "50g"));
+            im.setLore(Arrays.asList(ChatColor.GRAY + "Teleports the user to the Stone-peaks Manor.", ChatColor.GREEN + "Price: " + ChatColor.WHITE + "50g"));
         }
         is.setItemMeta(im);
         return is;
@@ -278,11 +278,11 @@ public class TeleportBooks implements Listener {
 
 
     Location getLocationFromString(String s) {
-        if (s.toLowerCase().contains("beneath")) {
+        if (s.toLowerCase().contains("avalon")) {
             return theBeneath;
         }
 
-        if (s.toLowerCase().contains("stonepeaks")) {
+        if (s.toLowerCase().contains("stone-peaks")) {
             return stonePeaks;
         }
 
@@ -293,16 +293,16 @@ public class TeleportBooks implements Listener {
     }
 
     String getTeleportMessage(String s) {
-        if (s.toLowerCase().contains("the beneath")) {
-            return "Teleport Scroll: The Beneath";
+        if (s.toLowerCase().contains("avalon")) {
+            return "Teleport Scroll: Avalon";
         }
         if (s.toLowerCase().contains("stonepeaks")) {
-            return "Teleport Scroll: Stonepeaks Mountain Camp";
+            return "Teleport Scroll: Stone-peaks Manor";
         }
         if (s.toLowerCase().contains("tripoli")) {
             return "Teleport Scroll: Tripoli";
         }
-        return "Teleport Scroll: Stonepeaks Mountain Camp";
+        return "Teleport Scroll: Stone-peaks Manor";
     }
 
     @EventHandler

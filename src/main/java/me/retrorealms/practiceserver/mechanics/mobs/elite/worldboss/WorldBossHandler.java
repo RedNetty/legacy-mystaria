@@ -3,6 +3,8 @@ package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
 import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
+import me.retrorealms.practiceserver.mechanics.mobs.boss.BossSpawnLocation;
+import me.retrorealms.practiceserver.mechanics.mobs.boss.drops.BossGearGenerator;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.bosses.BossEnum;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.bosses.Frostwing;
 import me.retrorealms.practiceserver.utils.StringUtil;
@@ -59,11 +61,8 @@ public class WorldBossHandler implements Listener {
             case TRIPOLI:
                 bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in 'The Tripoli Plains' *";
                 break;
-            case DRAGONS_DEN:
-                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in front of 'Dragon's Den' *";
-                break;
-            case THE_BENEATH:
-                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in 'The Beneath' *";
+            case AVALON:
+                bossSpawnMessage = ChatColor.YELLOW + "* " + activeBoss.bossEnum.getDisplayName() + " spawned in 'Avalon' *";
                 break;
         }
         String finalBossSpawnMessage = bossSpawnMessage;
@@ -84,7 +83,7 @@ public class WorldBossHandler implements Listener {
 
     public void onLoad() {
         Bukkit.getPluginManager().registerEvents(this, PracticeServer.getInstance());
-        BossGearGenerator.onLoad();
+        me.retrorealms.practiceserver.mechanics.mobs.boss.WorldBossHandler.onLoad();
         new BukkitRunnable() {
             public void run() {
                 if (totalT5Kills > 450 && activeBoss == null) {

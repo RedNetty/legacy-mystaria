@@ -90,6 +90,7 @@ class AltarInstance {
                 p.sendMessage(ChatColor.RED + "- " + item1.getItemMeta().getDisplayName());
             }
             for (Item i : droppedItems) i.remove();
+            Altar.alterTimeout.put(p, System.currentTimeMillis() + (110 * 50L));
             Altar.altarInstances.remove(p);
             p.sendMessage(ChatColor.RED + ">> Altar has been cancelled!");
         }
@@ -124,6 +125,7 @@ class AltarInstance {
 public class Altar implements Listener {
 
     public static Map<Player, AltarInstance> altarInstances = new HashMap<>();
+    public static Map<Player, Long> alterTimeout = new HashMap<>();
 
     public static int getItemAmoutByRarirty(String rare) {
         if (rare.contains("Common")) {
@@ -274,9 +276,14 @@ public class Altar implements Listener {
                 p.sendMessage(ChatColor.YELLOW + ">> This item is too rare to be upgraded.");
                 return;
             }
+            if(alterTimeout.containsKey(p) && !(System.currentTimeMillis() >= alterTimeout.get(p))) {
+                p.sendMessage(ChatColor.YELLOW + ">> Please wait before using the Altar again.");
+                return;
+            }
 
             if (!altarInstances.containsKey(p)
                     || altarInstances.get(p).items.size() <= (max - 1)) {
+                if(alterTimeout.containsKey(p)) alterTimeout.remove(p);
                 if (!altarInstances.containsKey(p) || altarInstances.get(p).items.size() < 1) {
                     p.sendMessage(ChatColor.YELLOW + "Punch Altar to cancel at any time.");
                     altarInstances.put(p, new AltarInstance(new ArrayList<>(), loc, p));
@@ -295,15 +302,17 @@ public class Altar implements Listener {
                                     new BukkitRunnable() {
                                         @Override
                                         public void run() {
-                                            if (rollChance < 50) {
-                                                altarInstances.get(p).generateItem(loc);
-                                            } else {
-                                                loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 2.0f, 1.25f);
-                                                Particles.LAVA.display(0.0f, 0.0f, 0.0f, 5.0f, 10, loc.add(0.5, 0, 0.5), 20.0);
-                                                p.sendMessage(ChatColor.RED + "You failed your Altar!");
+                                            if(altarInstances.containsKey(p)) {
+                                                if (rollChance < 50) {
+                                                    altarInstances.get(p).generateItem(loc);
+                                                } else {
+                                                    loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 2.0f, 1.25f);
+                                                    Particles.LAVA.display(0.0f, 0.0f, 0.0f, 5.0f, 10, loc.add(0.5, 0, 0.5), 20.0);
+                                                    p.sendMessage(ChatColor.RED + "You failed your Altar!");
+                                                }
+                                                for (Item i : altarInstances.get(p).droppedItems) i.remove();
+                                                altarInstances.remove(p);
                                             }
-                                            for (Item i : altarInstances.get(p).droppedItems) i.remove();
-                                            altarInstances.remove(p);
                                         }
                                     }.runTaskLater(PracticeServer.plugin, 100L);
                                 }

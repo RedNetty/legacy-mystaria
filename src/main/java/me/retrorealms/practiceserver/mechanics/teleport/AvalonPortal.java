@@ -29,7 +29,7 @@ public class AvalonPortal implements Listener {
     public static List<Player> glidingPlayers = new ArrayList<>();
 
     //Location the Portal Leads to
-    public Location portalEndLoc = new Location(Bukkit.getWorld("jew"), 653.125, 130.817, 481.947);
+    public Location portalEndLoc = new Location(Bukkit.getWorld("jew"), 603.125, 43.817, 410.947);
 
     //Checks if a given location is the world Guard portal tp
     public static boolean isPortalZone(Location loc) {

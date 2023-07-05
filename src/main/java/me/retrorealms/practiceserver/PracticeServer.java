@@ -1,5 +1,11 @@
 package me.retrorealms.practiceserver;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import me.retrorealms.practiceserver.apis.API;
 import me.retrorealms.practiceserver.apis.files.MarketData;
 import me.retrorealms.practiceserver.apis.files.PlayerData;
@@ -26,6 +32,7 @@ import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.chat.gui.ChatTagGUIHandler;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
+import me.retrorealms.practiceserver.mechanics.damage.HitRegisterEvent;
 import me.retrorealms.practiceserver.mechanics.damage.Staffs;
 import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
 import me.retrorealms.practiceserver.mechanics.donations.Nametags.Nametag;
@@ -356,8 +363,8 @@ public class PracticeServer extends JavaPlugin {
 		altars.onEnable();
 		dropPriority.onEnable();
 		horses.onEnable();
-		itemVendors.onEnable();
 		ff.onEnable();
+		itemVendors.onEnable();
 		cm.onEnable();
 		listeners.onEnable();
 		logout.onEnable();
@@ -551,6 +558,42 @@ public class PracticeServer extends JavaPlugin {
 		getCommand("combust").setExecutor(new CombustOrb());
 
 
+	}
+
+	public void startProtocol() {
+		ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
+
+		protocolManager.addPacketListener(new PacketAdapter(this, PacketType.Play.Client.USE_ENTITY) {
+			@Override
+			public void onPacketReceiving(PacketEvent event) {
+				if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
+					// Get the action of the packet (ATTACK, INTERACT, INTERACT_AT)
+					EnumWrappers.EntityUseAction action = event.getPacket().getEntityUseActions().read(0);
+
+					// Check if the action was an attack
+					if (action == EnumWrappers.EntityUseAction.ATTACK) {
+						// Get the player who sent the packet
+						Player player = event.getPlayer();
+
+						// Get the entity that was hit
+						int targetId = event.getPacket().getIntegers().read(0);
+						org.bukkit.entity.Entity target = null;
+						for (org.bukkit.entity.Entity entity : player.getWorld().getEntities()) {
+							if (entity.getEntityId() == targetId) {
+								target = entity;
+								break;
+							}
+						}
+
+						if (target != null) {
+							// Call your custom HitRegistryEvent here
+							HitRegisterEvent hitEvent = new HitRegisterEvent(player, target);
+							getServer().getPluginManager().callEvent(hitEvent);
+						}
+					}
+				}
+			}
+		});
 	}
 
 	public static void refreshPatchNotes() {
