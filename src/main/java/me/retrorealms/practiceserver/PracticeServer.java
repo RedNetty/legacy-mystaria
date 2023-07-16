@@ -1,11 +1,6 @@
 package me.retrorealms.practiceserver;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.EnumWrappers;
+import ac.grim.grimac.GrimAbstractAPI;
 import me.retrorealms.practiceserver.apis.API;
 import me.retrorealms.practiceserver.apis.files.MarketData;
 import me.retrorealms.practiceserver.apis.files.PlayerData;
@@ -23,6 +18,7 @@ import me.retrorealms.practiceserver.commands.duels.PartyDuelAcceptCommand;
 import me.retrorealms.practiceserver.commands.duels.PartyDuelCommand;
 import me.retrorealms.practiceserver.commands.guilds.GuildWipeAllCommand;
 import me.retrorealms.practiceserver.commands.items.*;
+import me.retrorealms.practiceserver.commands.minigame.RaceCommands;
 import me.retrorealms.practiceserver.commands.misc.*;
 import me.retrorealms.practiceserver.commands.moderation.*;
 import me.retrorealms.practiceserver.commands.party.*;
@@ -32,7 +28,6 @@ import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.chat.gui.ChatTagGUIHandler;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
-import me.retrorealms.practiceserver.mechanics.damage.HitRegisterEvent;
 import me.retrorealms.practiceserver.mechanics.damage.Staffs;
 import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
 import me.retrorealms.practiceserver.mechanics.donations.Nametags.Nametag;
@@ -77,19 +72,20 @@ import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.pvp.Deadman;
 import me.retrorealms.practiceserver.mechanics.pvp.ForceField;
 import me.retrorealms.practiceserver.mechanics.pvp.Respawn;
-import me.retrorealms.practiceserver.mechanics.shard.Shard;
 import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.useless.command.CommandStart;
 import me.retrorealms.practiceserver.mechanics.vendors.*;
 import me.retrorealms.practiceserver.mechanics.world.Antibuild;
 import me.retrorealms.practiceserver.mechanics.world.Logout;
+import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
 import me.retrorealms.practiceserver.mechanics.world.region.RegionHandler;
 import me.retrorealms.practiceserver.utils.ArmorListener;
 import me.retrorealms.practiceserver.utils.CustomFilter;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -100,7 +96,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Jaxson (Red29 - uncureableAutism@outlook.com)
+ * @author Jack (Red29 - jack@codered.gg)
  * @author Giovanni N. (VawkeNetty - development@vawke.io)
  * @author Subby (Availor - Haven't learnt any java but is already fluent???)
  *         (xxbboy)
@@ -111,14 +107,14 @@ import java.util.logging.Logger;
  *         Updated to Minecraft 1.9 -> - Written by Giovanni (VawkeNetty) 2017.
  *         - Written by Jaxson (Red29) 2016/2017.
  *         <p>
- *         Development continued by -> - Written by Jaxson (Red29) 2016/2017. -
+ *         Development continued by -> - Written by Jack (Red29) 2016/2017. -
  *         Written by Brandon (Kayaba) 2017. (Big scammer) (Stole $2k from
  *         Jaxson)
  *         <p>
  *         --------------- From Feb 2017 to May 2017 -------------- Server
  *         offline --------------------- - Written by Giovanni N. (VawkeNetty)
  *         2017-2017. (April 30th to August 1st) - Subby (Availor) April 30th
- *         2017 - ??? (Brought back AR with Giovanni). - Jaxson (Red) (HES BACK)
+ *         2017 - ??? (Brought back AR with Giovanni). - Jack (Red) (HES BACK)
  *         (HE LEFT AGAIN) 10th July 2017 - 17th October 2017 - Khalid
  *         (Lightlord323) (Took temporary leave) 25th July 2017 - 1st Sepetmber
  *         2017
@@ -131,6 +127,7 @@ import java.util.logging.Logger;
  *         - CUXNT October 2018 - ????
  *         - Zinkz October 2018 - ????
  *         - MistaCat December 2018 - ????
+ *         - 2022
  */
 
 public class PracticeServer extends JavaPlugin {
@@ -139,7 +136,6 @@ public class PracticeServer extends JavaPlugin {
 	public static final boolean FFA = false;
 	public static final boolean BETA_VENDOR_ENABLED = false;
 	public static final double MIN_DAMAGE_MULTIPLIER = 1;
-	public static final boolean DOUBLE_DROP_RATE = false;
 	public static final double MAX_DAMAGE_MULTIPLIER = 1;
 	public static final double HPS_MULTIPLIER = 5;
 	public static final boolean GLOWING_NAMED_ELITE_DROP = true;
@@ -152,11 +148,11 @@ public class PracticeServer extends JavaPlugin {
 
 	public static PracticeServer plugin;
 	public static Logger log;
-	private static PatchIO patchIO;
 	private static Alignments alignments;
 	private static Antibuild antibuild;
 	private static Banks banks;
 	private static Buddies buddies;
+	private static RaceMinigame raceMinigame;
 	private static DropPriority dropPriority;
 	private static ChatMechanics chatMechanics;
 	private static Damage damage;
@@ -176,6 +172,7 @@ public class PracticeServer extends JavaPlugin {
 	private static Mobdrops mobdrops;
 	private static Mobs mobs;
 	private static GuildMechanics guildMechanics;
+	private static CraftingMenu craftingMenu;
 	private static Orbs orbs;
 	private static Parties parties;
 	private static ProfessionMechanics professionMechanics;
@@ -210,8 +207,9 @@ public class PracticeServer extends JavaPlugin {
 	private static CustomFilter customFilter;
 	private static NewMerchant merchant;
 	private static GemGambling gemGambling;
-	private static Shard shard;
+	private static GrimAbstractAPI grimAPI;
 	private static PersistentPlayers persistentPlayers;
+	private static LeaderboardCommand leaderboard;
 	public static boolean devstatus;
 	public static ArrayList<String> patchnotes = new ArrayList<String>();
 
@@ -230,6 +228,7 @@ public class PracticeServer extends JavaPlugin {
 	public static PracticeServer getInstance() {
 		return instance;
 	}
+	public static LeaderboardCommand getLeaderboard() { return leaderboard;}
 
 	public static BuffHandler buffHandler() {
 		return buffHandler;
@@ -238,21 +237,29 @@ public class PracticeServer extends JavaPlugin {
 	    return worldBoss;
 	}
 
-	public static PatchIO getPatchIO() {
-		return patchIO;
-	}
-
 	public static MarketData getMarketData() {
 		return marketData;
 	}
+
 
 	public static PlayerData getPlayerData() {
 		return playerData;
 	}
 
+	public static RaceMinigame getRaceMinigame() {
+		return raceMinigame;
+	}
+
+
+
+	public static SQLMain getSQL() {
+		return sqlmain;
+	}
 	public static ManagerHandler getManagerHandler() {
 		return managerHandler;
 	}
+
+
 
 	@Override
 	public void onEnable() {
@@ -270,6 +277,7 @@ public class PracticeServer extends JavaPlugin {
 		if (!getDataFolder().exists()) {
 			getDataFolder().mkdirs();
 		}
+		raceMinigame = new RaceMinigame();
 		marketData = new MarketData(this);
 		playerData = new PlayerData(this);
 		Bukkit.getPluginManager().registerEvents(new ChatTagGUIHandler(), this);
@@ -284,13 +292,18 @@ public class PracticeServer extends JavaPlugin {
 		customFilter = new CustomFilter();
 		Bukkit.getServer().getLogger().setFilter(customFilter);
         PracticeServer.plugin.getLogger().setFilter(customFilter);
+		RegisteredServiceProvider<GrimAbstractAPI> provider = Bukkit.getServicesManager().getRegistration(GrimAbstractAPI.class);
+		if (provider != null) {
+			grimAPI = provider.getProvider();
+		}
+
         log.setFilter(customFilter);
 		moderationMechanics = new ModerationMechanics();
 		cm = new CratesMain();
+		craftingMenu = new CraftingMenu();
 		guildMechanics = GuildMechanics.getInstance();
 		trading = new Trading();
 		deadman = new Deadman();
-		shard = new Shard();
 		nt = new Nametag();
 		wepTrak = new WepTrak();
 		pickTrak = new PickTrak();
@@ -334,9 +347,11 @@ public class PracticeServer extends JavaPlugin {
 		untradeable = new Untradeable();
 		golemElite = new GolemElite();
 		merchant = new NewMerchant();
+		leaderboard = new LeaderboardCommand();
 		GuildPlayers.getInstance();
 		managerHandler.onEnable();
 		gap.onEnable();
+		raceMinigame.onEnable();
 		if (PracticeServer.DATABASE)
 			sqlmain.onEnable();
 
@@ -358,12 +373,12 @@ public class PracticeServer extends JavaPlugin {
 		pickTrak.onEnable();
 		energy.onEnable();
 		persistentPlayers.onEnable();
+		craftingMenu.startInitialization();
 		gemPouches.onEnable();
 		hearthstone.onEnable();
 		altars.onEnable();
 		dropPriority.onEnable();
 		horses.onEnable();
-		ff.onEnable();
 		itemVendors.onEnable();
 		cm.onEnable();
 		listeners.onEnable();
@@ -380,7 +395,6 @@ public class PracticeServer extends JavaPlugin {
 		respawn.onEnable();
 		spawners.onEnable();
 		speedfish.onEnable();
-		shard.onEnable();
 		staffs.onEnable();
 		teleportBooks.onEnable();
 		em.onEnable();
@@ -389,6 +403,9 @@ public class PracticeServer extends JavaPlugin {
 		trading.onEnable();
 		untradeable.onEnable();
 		golemElite.onEnable();
+		leaderboard.registerEvent();
+		ff.onEnable();
+
 		registerCommands();
 		getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 		ItemAPI.init();
@@ -462,6 +479,7 @@ public class PracticeServer extends JavaPlugin {
 	}
 
 	public void registerCommands() {
+		getCommand("racegame").setExecutor(new RaceCommands());
 		getCommand("setrates").setExecutor(new SetRatesCommand());
 		getCommand("droprates").setExecutor(new DropRatesCommand());
 		getCommand("givemask").setExecutor(new GiveMaskCommand()); // share all
@@ -469,7 +487,6 @@ public class PracticeServer extends JavaPlugin {
 		getCommand("givehallowcrate").setExecutor(new HalloweenCrateCommand()); // this
 		getCommand("CheckGems").setExecutor(new CheckGemsCommand()); // this
 		getCommand("giveLegendaryOrb").setExecutor(new LegendaryOrbCommand()); // this
-		getCommand("shard").setExecutor(new ShardCommand());
 		getCommand("toggleff").setExecutor(new ToggleFFCommand());
 		getCommand("givetokens").setExecutor(new GiveTokensCommand());
         getCommand("awardtokens").setExecutor(new AwardTokensCommand());
@@ -560,41 +577,6 @@ public class PracticeServer extends JavaPlugin {
 
 	}
 
-	public void startProtocol() {
-		ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
-
-		protocolManager.addPacketListener(new PacketAdapter(this, PacketType.Play.Client.USE_ENTITY) {
-			@Override
-			public void onPacketReceiving(PacketEvent event) {
-				if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
-					// Get the action of the packet (ATTACK, INTERACT, INTERACT_AT)
-					EnumWrappers.EntityUseAction action = event.getPacket().getEntityUseActions().read(0);
-
-					// Check if the action was an attack
-					if (action == EnumWrappers.EntityUseAction.ATTACK) {
-						// Get the player who sent the packet
-						Player player = event.getPlayer();
-
-						// Get the entity that was hit
-						int targetId = event.getPacket().getIntegers().read(0);
-						org.bukkit.entity.Entity target = null;
-						for (org.bukkit.entity.Entity entity : player.getWorld().getEntities()) {
-							if (entity.getEntityId() == targetId) {
-								target = entity;
-								break;
-							}
-						}
-
-						if (target != null) {
-							// Call your custom HitRegistryEvent here
-							HitRegisterEvent hitEvent = new HitRegisterEvent(player, target);
-							getServer().getPluginManager().callEvent(hitEvent);
-						}
-					}
-				}
-			}
-		});
-	}
 
 	public static void refreshPatchNotes() {
 
@@ -612,6 +594,9 @@ public class PracticeServer extends JavaPlugin {
 
 	}
 
+	public static GrimAbstractAPI getGrim() {
+		return grimAPI;
+	}
 	public static void loadDefaultDevStatusConfig() {
 		plugin.getConfig().addDefault("dev-server", false);
 		plugin.getConfig().options().copyDefaults(true);

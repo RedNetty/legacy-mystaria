@@ -164,316 +164,261 @@ public class ChatMechanics implements Listener {
     }
 
     public static String getTag(Player p) {
-        String tag = "";
-        String rank = "";
-        if (playerTags.containsKey(p.getUniqueId()) && playerTags.get(p.getUniqueId()) != ChatTag.DEFAULT) {
-            tag = playerTags.get(p.getUniqueId()).getTag() + " ";
-        }
-        if (ModerationMechanics.getRank(p) != RankEnum.DEFAULT) {
-            rank = ModerationMechanics.getRank(p).tag + " ";
-        }
+        String tag = Optional.ofNullable(playerTags.get(p.getUniqueId()))
+                .filter(t -> t != ChatTag.DEFAULT)
+                .map(ChatTag::getTag)
+                .map(t -> t + " ")
+                .orElse("");
+
+        String rank = Optional.ofNullable(ModerationMechanics.getRank(p))
+                .filter(r -> r != RankEnum.DEFAULT)
+                .map(r -> r.tag + " ")
+                .orElse("");
+
         return ChatColor.translateAlternateColorCodes('&', tag + rank);
     }
 
-
     public static String censorMessage(String msg) {
-        String personal_msg = "";
         if (msg == null) {
             return "";
         }
-        if (!msg.contains(" ")) {
-            msg = String.valueOf(msg) + " ";
+        for (String bad : bad_words) {
+            msg = msg.replaceAll("(?i)" + bad, "*");
         }
-        String[] split;
-        for (int length = (split = msg.split(" ")).length, i = 0; i < length; ++i) {
-            String s = split[i];
-            for (final String bad : bad_words) {
-                if (s.toLowerCase().contains(bad.toLowerCase())) {
-                    int letters = bad.length();
-                    String replace_char = "";
-                    while (letters > 0) {
-                        replace_char = String.valueOf(replace_char) + "*";
-                        --letters;
-                    }
-                    int censor_start = 0;
-                    int censor_end = 1;
-                    censor_start = s.toLowerCase().indexOf(bad);
-                    censor_end = censor_start + bad.length();
-                    final String real_bad_word = s.substring(censor_start, censor_end);
-                    s = s.replaceAll(real_bad_word, replace_char);
-                }
-            }
-            personal_msg = String.valueOf(personal_msg) + s + " ";
-        }
-        if (personal_msg.endsWith(" ")) {
-            personal_msg = personal_msg.substring(0, personal_msg.lastIndexOf(" "));
-        }
-        return personal_msg;
+        return msg.trim();
     }
 
     public static String getDisplayNameFor(Player p, Player sendee) {
-        String nameColor = ChatColor.GRAY + "";
-        if (!Alignments.chaotic.containsKey(p.getName()) && (!Alignments.neutral.containsKey(p.getName()))) {
-
-            if (Buddies.getBuddies(sendee.getName()).contains(p.getName().toLowerCase())) {
-                nameColor = ChatColor.GREEN + "";
-            } else {
-                nameColor = ChatColor.GRAY + "";
-            }
-            String endColor;
-            if (ModerationMechanics.isStaff(p) || (ModerationMechanics.isDonator(p))) {
-                endColor = ChatColor.WHITE + "";
-            } else {
-                endColor = ChatColor.GRAY + "";
-            }
-            return nameColor + p.getName() + endColor;
+        String nameColor;
+        if (!Alignments.chaotic.containsKey(p.getName()) && !Alignments.neutral.containsKey(p.getName())) {
+            nameColor = Buddies.getBuddies(sendee.getName()).contains(p.getName().toLowerCase()) ? ChatColor.GREEN + "" : ChatColor.GRAY + "";
         } else {
-            if (Alignments.neutral.containsKey(p.getName())) {
-                nameColor = ChatColor.YELLOW + "";
-            }
-            if (Alignments.chaotic.containsKey(p.getName())) {
-                nameColor = ChatColor.RED + "";
-            }
-            String endColor;
-            if (ModerationMechanics.isStaff(p) || (ModerationMechanics.isDonator(p))) {
-                endColor = ChatColor.WHITE + "";
-            } else {
-                endColor = ChatColor.GRAY + "";
-            }
-            return nameColor + p.getName() + endColor;
+            nameColor = Alignments.neutral.containsKey(p.getName()) ? ChatColor.YELLOW + "" : ChatColor.RED + "";
         }
+        String endColor = (ModerationMechanics.isStaff(p) || ModerationMechanics.isDonator(p)) ? ChatColor.WHITE + "" : ChatColor.GRAY + "";
+        return nameColor + p.getName() + endColor;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerChat(PlayerCommandPreprocessEvent e) {
-        Player p = e.getPlayer();
-        String s = e.getMessage().toLowerCase();
-        if (s.startsWith("/")) {
-            s = s.replace("/", "");
-        }
-        if (s.contains(" ")) {
-            s = s.split(" ")[0];
-        }
-        if (s.equals("save-all") || s.equalsIgnoreCase("stack") || s.equals("stop") || s.equals("restart") || s.equals("reload") || s.equals("tpall") || s.equals("kill") || s.equals("mute")) {
-            e.setCancelled(true);
-            p.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
+    public void onPlayerChat(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        String command = extractCommand(event.getMessage());
+
+        if (isRestrictedCommand(command)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
             return;
         }
-        if (ModerationMechanics.isStaff(p)) {
-            if (ModerationMechanics.getPerms().containsKey(p.getUniqueId())) {
-                ModerationMechanics.getPerms().remove(p.getUniqueId());
-            }
-            PermissionAttachment attachment = p.addAttachment(PracticeServer.getInstance());
-            ModerationMechanics.getPerms().put(p.getUniqueId(), attachment);
-            PermissionAttachment playerPerms = ModerationMechanics.getPerms().get(p.getUniqueId());
-            for (String perm : ModerationMechanics.getPermsForRank(ModerationMechanics.getRank(p))) {
-                playerPerms.setPermission(perm, true);
-            }
+
+        if (ModerationMechanics.isStaff(player)) {
+            updateStaffPermissions(player);
         }
-        if (false) {//!p.isOp() && !isStaff(p)) {
-            RankEnum rankEnum = ModerationMechanics.getRank(p);
-            List<String> allowedCommands = Arrays.asList("guildshow",
-                    "ginfo",
-                    "gwho",
-                    "guildpromote",
-                    "gpromote",
-                    "gdemote",
-                    "guilddemote",
-                    "orbs",
-                    "guildwho",
-                    "guildinfo",
-                    "gshow",
-                    "guildquit",
-                    "gquit",
-                    "guildcreate",
-                    "gaccept",
-                    "guildaccept",
-                    "gcreate",
-                    "ginvite",
-                    "guildinvite",
-                    "gkick",
-                    "guildkick",
-                    "guilddecline",
-                    "gdecline",
-                    "guild",
-                    "g");
-            //if (rankEnum == RankEnum.PMOD) {
-            //  if (!(s.equals("ban") || s.equals("tempban") || s.equals("history") || s.equals("ipmute") ||  s.equals("staffhistory") || s.equals("alts") || s.equals("pet") || s.equals("unban") || s.equals("unmute") || s.equals("tempmute") || s.equals("kick") || s.equals("patch") || s.equals("mount") || s.equalsIgnoreCase("shard") || s.equals("tags") || s.equals("mount") || s.equals("roll") || s.equals("toggletrading") || s.equals("sc") || s.equals("gl") || s.equals("toggle") || s.equals("toggles") || s.equals("togglepvp") || s.equals("togglechaos") || s.equals("toggledebug") || s.equals("Debug") || s.equals("toggleff") || s.equals("add") || s.equals("del") || s.equals("delete") || s.equals("message") || s.equals("msg") || s.equals("m") || s.equals("whisper") || s.equals("w") || s.equals("tell") || (allowedCommands.contains(s.toLowerCase())) || s.equals("t") || s.equals("reply") || s.equals("r") || s.equals("logout") || s.equals("sync") || s.equals("reboot") || s.equals("pinvite") || s.equals("paccept") || s.equals("pquit") || s.equals("pkick") || s.equals("pdecline") || s.equals("p") || s.equals("psban") || s.equals("psunban") || s.equals("psmute") || s.equals("psunmute") || s.equals("report") || s.equals("editreport"))) {
-            //    e.setCancelled(true);
-            //       p.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
-            // }
-            if (ModerationMechanics.isDonator(p)) {
-                if (!(s.equals("togglegems") || s.equals("lootbuff") || s.equals("pet") || s.equalsIgnoreCase("shard") || s.equals("market") || s.equals("patch") || s.equals("mount") || s.equals("tags") || s.equals("mount") || s.equals("roll") || s.equals("toggletrading") || s.equals("gl") || s.equals("toggle") || s.equals("toggles") || s.equals("togglepvp") || s.equals("togglechaos") || s.equals("toggledebug") || s.equals("Debug") || s.equals("toggleff") || s.equals("add") || s.equals("del") || s.equals("delete") || s.equals("message") || s.equals("msg") || s.equals("m") || s.equals("whisper") || s.equals("w") || s.equals("tell") || s.equals("t") || (allowedCommands.contains(s.toLowerCase())) || s.equals("reply") || s.equals("r") || s.equals("logout") || s.equals("sync") || s.equals("reboot") || s.equals("pinvite") || s.equals("paccept") || s.equals("pquit") || s.equals("pkick") || s.equals("pdecline") || s.equals("p") || s.equals("toggletrail") || s.equals("g") || s.equals("guilds") || s.equals("guilds") || s.equals("abandon") || s.equals("create") || s.equals("join") || s.equals("gi") || s.equals("report") || s.equals("editreport"))) {
-                    e.setCancelled(true);
-                    p.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
-                }
-            } else if (!(s.equals("patch") || s.equals("pet") || s.equalsIgnoreCase("shard") || s.equals("mount") || s.equals("tags") || s.equals("mount") || s.equals("roll") || s.equals("toggletrading") || s.equals("gl") || s.equals("toggle") || s.equals("toggles") || s.equals("togglepvp") || s.equals("togglechaos") || s.equals("toggledebug") || s.equals("Debug") || s.equals("toggleff") || s.equals("add") || s.equals("del") || s.equals("delete") || s.equals("message") || s.equals("msg") || s.equals("m") || s.equals("whisper") || s.equals("w") || s.equals("tell") || s.equals("t") || (allowedCommands.contains(s.toLowerCase())) || s.equals("reply") || s.equals("r") || s.equals("logout") || s.equals("sync") || s.equals("reboot") || s.equals("pinvite") || s.equals("paccept") || s.equals("pquit") || s.equals("pkick") || s.equals("pdecline") || s.equals("p") || s.equals("g") || s.equals("guilds") || s.equals("guilds") || s.equals("abandon") || s.equals("create") || s.equals("guildcreate") || s.equals("gcreate") || s.equals("join") || s.equals("gi") || s.equals("report") || s.equals("editreport"))) {
-                e.setCancelled(true);
-                p.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
+
+        if (!player.isOp() && !ModerationMechanics.isStaff(player)) {
+            if (!isAllowedCommand(command, player)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.WHITE + "Unknown command. View your Character Journal's Index for a list of commands.");
             }
         }
     }
 
+    private String extractCommand(String message) {
+        String command = message.toLowerCase();
+        if (command.startsWith("/")) {
+            command = command.replaceFirst("/", "");
+        }
+        if (command.contains(" ")) {
+            command = command.split(" ")[0];
+        }
+        return command;
+    }
+
+    private boolean isRestrictedCommand(String command) {
+        List<String> restrictedCommands = Arrays.asList("save-all", "stack", "stop", "restart", "reload", "tpall", "kill", "mute");
+        return restrictedCommands.contains(command);
+    }
+
+    private void updateStaffPermissions(Player player) {
+        if (ModerationMechanics.getPerms().containsKey(player.getUniqueId())) {
+            ModerationMechanics.getPerms().remove(player.getUniqueId());
+        }
+        PermissionAttachment attachment = player.addAttachment(PracticeServer.getInstance());
+        ModerationMechanics.getPerms().put(player.getUniqueId(), attachment);
+        PermissionAttachment playerPerms = ModerationMechanics.getPerms().get(player.getUniqueId());
+        for (String perm : ModerationMechanics.getPermsForRank(ModerationMechanics.getRank(player))) {
+            playerPerms.setPermission(perm, true);
+        }
+    }
+
+    private boolean isAllowedCommand(String command, Player player) {
+        List<String> allowedCommands = Arrays.asList("guildshow", "ginfo", "gwho", "guildpromote", "gpromote", "gdemote", "guilddemote", "orbs", "guildwho", "guildinfo", "gshow", "guildquit", "gquit", "guildcreate", "gaccept", "guildaccept", "gcreate", "ginvite", "guildinvite", "gkick", "guildkick", "guilddecline", "gdecline", "guild", "g");
+        if (ModerationMechanics.isDonator(player)) {
+            allowedCommands.addAll(Arrays.asList("togglegems", "lootbuff", "pet", "shard", "market", "patch", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "toggletrail", "g", "guilds", "guilds", "abandon", "create", "join", "gi", "report", "editreport"));
+        } else {
+            allowedCommands.addAll(Arrays.asList("patch", "pet", "shard", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "g", "guilds", "guilds", "abandon", "create", "guildcreate", "gcreate", "join", "gi", "report", "editreport"));
+        }
+        return allowedCommands.contains(command);
+    }
+
+
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onChatTabComplete(PlayerChatTabCompleteEvent e) {
-        Player p = e.getPlayer();
-        if (e.getChatMessage() != null && e.getChatMessage().length() > 0) {
-            p.closeInventory();
-            p.performCommand("gl " + e.getChatMessage());
-            PracticeServer.log.info("<G> " + e.getPlayer().getName() + ": " + e.getChatMessage());
+    public void onChatTabComplete(PlayerChatTabCompleteEvent event) {
+        Player player = event.getPlayer();
+        String chatMessage = event.getChatMessage();
+        if (chatMessage != null && !chatMessage.isEmpty()) {
+            player.closeInventory();
+            player.performCommand("gl " + chatMessage);
+            PracticeServer.log.info("<G> " + player.getName() + ": " + chatMessage);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerChat(AsyncPlayerChatEvent e) {
-        if (!e.isCancelled()) {
-            Player p = e.getPlayer();
-            e.setCancelled(true);
-            if(muted.containsKey(p)){
-                if(!GemGambling.inPlayGem.contains(p.getName()) && !OrbGambling.chatHandling.contains(p.getUniqueId()) && !OreMerchant.chatInteractive.containsKey(p.getUniqueId()) && !Banks.withdraw.contains(p.getName())){
-                    p.sendMessage(ChatColor.RED + "You are currently muted");
-                    if(ChatMechanics.muted.get(p) > 0) {
-                        Integer minutes = ChatMechanics.muted.get(p) / 60;
-                        p.sendMessage(ChatColor.RED + "Your tmute expires in " + minutes.toString() + " minutes.");
-                    }else{
-                        p.sendMessage(ChatColor.RED + "Your mute WILL NOT expire.");
-                    }
-                    return;
-                }
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
+        if (!event.isCancelled()) {
+            Player player = event.getPlayer();
+            event.setCancelled(true);
+            if (isPlayerMutedAndNotInPlay(player)) {
+                sendMuteMessage(player);
+                return;
             }
-            String message = e.getMessage();
-            if (message.contains("@i@") && p.getInventory().getItemInMainHand() != null && p.getInventory().getItemInMainHand().getType() != Material.AIR) {
-                this.sendShowString(p, p.getInventory().getItemInMainHand(), getTag(p), message, p);
-                ArrayList<Player> to_send = new ArrayList<Player>();
-                for (Player pl2 : Bukkit.getServer().getOnlinePlayers()) {
-
-                    if (pl2.getLocation().getWorld() != p.getLocation().getWorld()) {
-                        continue;
-                    }
-
-                    if (VanishCommand.vanished.contains(pl2.getName().toLowerCase()) || pl2 == null || pl2 == p || pl2.getLocation().distance(p.getLocation()) >= 50.0)
-                        continue;
-                    to_send.add(pl2);
-                }
-                if (to_send.size() <= 0) {
-                    p.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "No one heard you.");
-                } else {
-                    for (Player pl2 : to_send) {
-                        this.sendShowString(p, p.getInventory().getItemInMainHand(), getTag(p), message, pl2);
-                    }
-                }
-                for (Player op : Bukkit.getServer().getOnlinePlayers()) {
-                    if (!op.isOp() || !VanishCommand.vanished.contains(op.getName().toLowerCase()) || op == p)
-                        continue;
-                    this.sendShowString(p, p.getInventory().getItemInMainHand(), getTag(p) + p.getDisplayName(), message, op);
-                }
-                PracticeServer.log.info(String.valueOf(p.getDisplayName()) + ": " + ChatColor.WHITE + message);
+            String message = event.getMessage();
+            if (isValidMessageAndItem(message, player.getInventory().getItemInMainHand())) {
+                processChatWithItem(player, message);
             } else {
-
-                //      p.sendMessage(String.valueOf(getTag(p) + p.getDisplayName()) + ": " + ChatColor.WHITE + message);
-                String playerPrefix = getDisplayNameFor(p, p);
-
-                GuildPlayer guildPlayer = GuildPlayers.getInstance().get(p.getUniqueId());
-                if (guildPlayer.isInGuild()) {
-                    p.sendMessage(ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + String.valueOf(getTag(p) + playerPrefix) + ": " + ChatColor.WHITE + message);
-                } else {
-                    p.sendMessage(String.valueOf(getTag(p) + playerPrefix) + ": " + ChatColor.WHITE + message);
-
-                }
-                ArrayList<Player> to_send = new ArrayList<Player>();
-                for (Player pl3 : Bukkit.getServer().getOnlinePlayers()) {
-                    if (pl3.getLocation().getWorld() != p.getLocation().getWorld()) {
-                        continue;
-                    }
-
-                    if (VanishCommand.vanished.contains(pl3.getName().toLowerCase()) || pl3 == null || pl3 == p || pl3.getLocation().distance(p.getLocation()) >= 50.0)
-                        continue;
-                    to_send.add(pl3);
-                }
-                if (to_send.size() <= 0) {
-                    p.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "No one heard you.");
-                } else {
-                    for (Player pl3 : to_send) {
-                        String playerPrefix1 = getDisplayNameFor(p, pl3);
-
-
-                        if (guildPlayer.isInGuild()) {
-                            pl3.sendMessage(ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + String.valueOf(getTag(p) + playerPrefix1) + ": " + ChatColor.WHITE + message);
-                        } else {
-                            pl3.sendMessage(String.valueOf(getTag(p) + playerPrefix1) + ": " + ChatColor.WHITE + message);
-
-                        }
-                    }
-                }
-                for (Player op : Bukkit.getServer().getOnlinePlayers()) {
-                    if (!op.isOp() || !VanishCommand.vanished.contains(op.getName().toLowerCase()) || op == p)
-                        continue;
-                    op.sendMessage(String.valueOf(getTag(p) + p.getDisplayName()) + ": " + ChatColor.WHITE + message);
-                }
-                PracticeServer.log.info(String.valueOf(p.getDisplayName()) + ": " + ChatColor.WHITE + message);
+                processChatWithoutItem(player, message);
             }
-        }
-
-    }
-
-    public static void sendShowStringGlobal(Player sender, ItemStack is, String prefix, String message, Player p) {
-        if (message.contains("@i@") && is != null && is.getType() != Material.AIR) {
-            String[] split = message.split("@i@");
-            String after = "";
-            String before = "";
-            if (split.length > 0)
-                before = split[0];
-            if (split.length > 1)
-                after = split[1];
-
-            ItemStack stack = is;
-
-            List<String> hoveredChat = new ArrayList<>();
-            ItemMeta meta = stack.getItemMeta();
-            hoveredChat.add((meta.hasDisplayName() ? meta.getDisplayName() : stack.getType().name()));
-            if (meta.hasLore())
-                hoveredChat.addAll(meta.getLore());
-            JSONMessage normal = new JSONMessage(prefix + ": ");
-            before = ChatColor.WHITE + before;
-            normal.addText(before);
-            normal.addHoverText(hoveredChat, ChatColor.getLastColors(is.getItemMeta().getDisplayName()) + ChatColor.BOLD + ChatColor.UNDERLINE.toString() + "SHOW");
-            normal.addText(after);
-            normal.sendToPlayer(p);
         }
     }
 
-    public static void sendShowString(Player sender, ItemStack is, String prefix, String message, Player p) {
-        if (message.contains("@i@") && is != null && is.getType() != Material.AIR) {
-            String name;
-            String playerPrefix = ChatMechanics.getDisplayNameFor(sender, p);
-            GuildPlayer guildPlayer = GuildPlayers.getInstance().get(sender.getUniqueId());
-            if (guildPlayer.isInGuild()) {
-                name = ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + String.valueOf(ChatMechanics.getTag(sender) + playerPrefix);
-            } else {
-                name = String.valueOf(ChatMechanics.getTag(sender) + playerPrefix);
+    private boolean isPlayerMutedAndNotInPlay(Player player) {
+        return muted.containsKey(player) && !GemGambling.inPlayGem.contains(player.getName()) && !OrbGambling.chatHandling.contains(player.getUniqueId()) && !OreMerchant.chatInteractive.containsKey(player.getUniqueId()) && !Banks.withdraw.contains(player.getName());
+    }
+
+    private void sendMuteMessage(Player player) {
+        player.sendMessage(ChatColor.RED + "You are currently muted");
+        if (ChatMechanics.muted.get(player) > 0) {
+            Integer minutes = ChatMechanics.muted.get(player) / 60;
+            player.sendMessage(ChatColor.RED + "Your tmute expires in " + minutes.toString() + " minutes.");
+        } else {
+            player.sendMessage(ChatColor.RED + "Your mute WILL NOT expire.");
+        }
+    }
+
+    private void processChatWithItem(Player player, String message) {
+        this.sendShowString(player, player.getInventory().getItemInMainHand(), fullDisplayName(player), message, player);
+        List<Player> recipients = getNearbyPlayers(player);
+        if (recipients.isEmpty()) {
+            player.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "No one heard you.");
+        } else {
+            for (Player recipient : recipients) {
+                this.sendShowString(player, player.getInventory().getItemInMainHand(), fullDisplayName(player), message, recipient);
             }
-            String[] split = message.split("@i@");
-            String after = "";
-            String before = "";
-            if (split.length > 0)
-                before = split[0];
-            if (split.length > 1)
-                after = split[1];
+        }
+        sendToVanishedOps(player, ChatMechanics.fullDisplayName(player), message);
+        PracticeServer.log.info(player.getDisplayName() + ": " + ChatColor.WHITE + message);
+    }
 
-            ItemStack stack = is;
+    public static String fullDisplayName(Player player) {
+        String playerPrefix = ChatMechanics.getDisplayNameFor(player, player);
+        String name = "";
+        GuildPlayer guildPlayer = GuildPlayers.getInstance().get(player.getUniqueId());
+        if (guildPlayer.isInGuild()) {
+            name = ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + String.valueOf(ChatMechanics.getTag(player) + playerPrefix);
+        } else {
+            name = String.valueOf(ChatMechanics.getTag(player) + playerPrefix);
+        }
+        return name;
+    }
 
-            List<String> hoveredChat = new ArrayList<>();
-            ItemMeta meta = stack.getItemMeta();
-            hoveredChat.add((meta.hasDisplayName() ? meta.getDisplayName() : stack.getType().name()));
-            if (meta.hasLore())
-                hoveredChat.addAll(meta.getLore());
-            JSONMessage normal = new JSONMessage(name);
+    private void processChatWithoutItem(Player player, String message) {
+        String playerMessage = getPlayerMessage(player, player, message);
+        player.sendMessage(playerMessage);
+        List<Player> recipients = getNearbyPlayers(player);
+        if (recipients.isEmpty()) {
+            player.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "No one heard you.");
+        } else {
+            for (Player recipient : recipients) {
+                recipient.sendMessage(getPlayerMessage(player, recipient, message));
+            }
+        }
+        sendToVanishedOps(player, ChatMechanics.fullDisplayName(player), message);
+        PracticeServer.log.info(player.getDisplayName() + ": " + ChatColor.WHITE + message);
+    }
 
-            before = ": " + ChatColor.WHITE + before;
-            normal.addText(before + "");
-            normal.addHoverText(hoveredChat, ChatColor.getLastColors(is.getItemMeta().getDisplayName()) + ChatColor.BOLD + ChatColor.UNDERLINE.toString() + "SHOW");
-            normal.addText(after);
-            normal.sendToPlayer(p);
+    private List<Player> getNearbyPlayers(Player player) {
+        List<Player> nearbyPlayers = new ArrayList<>();
+        for (Player otherPlayer : Bukkit.getServer().getOnlinePlayers()) {
+            if (isPlayerNearby(player, otherPlayer)) {
+                nearbyPlayers.add(otherPlayer);
+            }
+        }
+        return nearbyPlayers;
+    }
+
+    private boolean isPlayerNearby(Player player, Player otherPlayer) {
+        return otherPlayer.getLocation().getWorld() == player.getLocation().getWorld() && !VanishCommand.vanished.contains(otherPlayer.getName().toLowerCase()) && otherPlayer != player && otherPlayer.getLocation().distance(player.getLocation()) < 50.0;
+    }
+
+    private void sendToVanishedOps(Player player, String prefix, String message) {
+        for (Player op : Bukkit.getServer().getOnlinePlayers()) {
+            if (op.isOp() && VanishCommand.vanished.contains(op.getName().toLowerCase()) && op != player) {
+                this.sendShowString(player, player.getInventory().getItemInMainHand(), prefix, message, op);
+            }
+        }
+    }
+
+    private String getPlayerMessage(Player sender, Player recipient, String message) {
+        String playerPrefix = getDisplayNameFor(sender, recipient);
+        GuildPlayer guildPlayer = GuildPlayers.getInstance().get(sender.getUniqueId());
+        if (guildPlayer != null && guildPlayer.isInGuild()) {
+            return ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + getTag(sender) + playerPrefix + ": " + ChatColor.WHITE + message;
+        } else {
+            return getTag(sender) + playerPrefix + ": " + ChatColor.WHITE + message;
+        }
+    }
+
+
+    public static void sendShowString(Player sender, ItemStack itemStack, String prefix, String message, Player recipient) {
+        if (isValidMessageAndItem(message, itemStack)) {
+            String[] splitMessage = message.split("@i@");
+            String before = splitMessage.length > 0 ? splitMessage[0] : "";
+            String after = splitMessage.length > 1 ? splitMessage[1] : "";
+
+            List<String> hoveredChat = getHoveredChat(itemStack);
+
+            JSONMessage jsonMessage = new JSONMessage(prefix);
+            jsonMessage.addText(": " + ChatColor.WHITE + before);
+            jsonMessage.addHoverText(hoveredChat, getHoverText(itemStack));
+            jsonMessage.addText(after);
+            jsonMessage.sendToPlayer(recipient);
+        }
+    }
+
+    private static boolean isValidMessageAndItem(String message, ItemStack itemStack) {
+        return message.contains("@i@") && itemStack != null && itemStack.getType() != Material.AIR;
+    }
+
+    private static List<String> getHoveredChat(ItemStack itemStack) {
+        ItemMeta meta = itemStack.getItemMeta();
+        List<String> hoveredChat = new ArrayList<>();
+        hoveredChat.add(meta.hasDisplayName() ? meta.getDisplayName() : itemStack.getType().name());
+        if (meta.hasLore()) {
+            hoveredChat.addAll(meta.getLore());
+        }
+        return hoveredChat;
+    }
+
+    private static String getHoverText(ItemStack itemStack) {
+        return ChatColor.getLastColors(itemStack.getItemMeta().getDisplayName()) + ChatColor.BOLD + ChatColor.UNDERLINE.toString() + "SHOW";
+    }
+
+    private static String getPlayerName(Player sender, Player recipient) {
+        String playerPrefix = ChatMechanics.getDisplayNameFor(sender, recipient);
+        GuildPlayer guildPlayer = GuildPlayers.getInstance().get(sender.getUniqueId());
+        if (guildPlayer.isInGuild()) {
+            return ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + ChatMechanics.getTag(sender) + playerPrefix;
+        } else {
+            return ChatMechanics.getTag(sender) + playerPrefix;
         }
     }
 }

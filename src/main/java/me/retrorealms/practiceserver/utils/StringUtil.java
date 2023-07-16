@@ -4,6 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
+import java.util.stream.IntStream;
+
 /**
  * Created by Giovanni on 12-2-2017.
  */
@@ -11,6 +14,14 @@ public class StringUtil {
     private final static int CENTER_PX = 154;
 
 
+    public static void clearChat(@Nullable Player player) {
+        if(player == null) {
+            Bukkit.getOnlinePlayers().forEach(target ->
+                    IntStream.range(0, 50).forEach(number -> target.sendMessage(" ")));
+        }else {
+            IntStream.range(0, 50).forEach(number -> player.sendMessage(" "));
+        }
+    }
     public static String getFullMessage(String[] args, int start) {
         StringBuilder sb = new StringBuilder();
         for (int i = start; i < args.length; i++) {

@@ -1,14 +1,12 @@
 
 package me.retrorealms.practiceserver.mechanics.damage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+import ac.grim.grimac.GrimAbstractAPI;
+import ac.grim.grimac.events.FlagEvent;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.retrorealms.practiceserver.PracticeServer;
@@ -47,6 +45,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -67,80 +66,94 @@ public class Damage implements Listener {
 		Bukkit.getPluginManager().registerEvents(this, PracticeServer.getInstance());
 
 		new BukkitRunnable() {
-
 			public void run() {
-
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					double healthPercentage = (p.getHealth() / p.getMaxHealth());
-					String safeZone = Alignments.isSafeZone(p.getLocation()) ? ChatColor.GRAY + " - " + ChatColor.GREEN.toString() + ChatColor.BOLD + "SAFE-ZONE" : "";
-					if (healthPercentage * 100.0F > 100.0F) {
-						healthPercentage = 1.0;
-					}
-					float pcnt = (float) (healthPercentage * 1.F);
-					BarColor barColor = getBarColor(p);
-					ChatColor titleColor = barTitleColor(p);
-					if (!Alignments.playerBossBars.containsKey(p)) {
-						// Set new one
-						BossBar bossBar = Bukkit.createBossBar(
-								titleColor + "" + ChatColor.BOLD + "HP " + titleColor
-										+ (int) p.getHealth() + titleColor + ChatColor.BOLD + " / "
-										+ titleColor + (int) p.getMaxHealth() + safeZone,
-								barColor, BarStyle.SOLID);
-						bossBar.addPlayer(p);
-						Alignments.playerBossBars.put(p, bossBar);
-						Alignments.playerBossBars.get(p).setProgress(pcnt);
-					} else {
-						Alignments.playerBossBars.get(p).setColor(barColor);
-						Alignments.playerBossBars.get(p)
-								.setTitle(titleColor + "" + ChatColor.BOLD + "HP "
-										+ titleColor + (int) p.getHealth() + titleColor
-										+ ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth() + safeZone);
-						Alignments.playerBossBars.get(p).setProgress(pcnt);
-					}
+				for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+					updateBossBar(player);
 				}
 			}
 		}.runTaskTimerAsynchronously(PracticeServer.plugin, 0, 1);
-		new BukkitRunnable() {
 
+		new BukkitRunnable() {
 			public void run() {
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					if (Damage.this.playerslow.containsKey(p)) {
-						if (System.currentTimeMillis() - Damage.this.playerslow.get(p) <= 3000)
+				for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+					if (playerslow.containsKey(player)) {
+						if (System.currentTimeMillis() - playerslow.get(player) <= 3000) {
 							continue;
-						syncSpeed(p, 0.2f);
-						continue;
+						}
+						syncSpeed(player, 0.2f);
+					} else if (player.getWalkSpeed() != 0.2f) {
+						syncSpeed(player, 0.2f);
 					}
-					if (p.getWalkSpeed() == 0.2f)
-						continue;
-					syncSpeed(p, 0.2f);
 				}
 			}
 		}.runTaskTimerAsynchronously(PracticeServer.plugin, 20, 20);
 	}
 
-	public void syncSpeed(Player player, float f) {
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(PracticeServer.plugin, () -> player.setWalkSpeed(f));
+	public void syncSpeed(Player player, float speed) {
+		Bukkit.getScheduler().runTask(PracticeServer.plugin, () -> player.setWalkSpeed(speed));
 	}
 
 	public void onDisable() {
+		// Perform any necessary cleanup or actions when the plugin is disabled.
+	}
+
+	public void updateBossBar(Player player) {
+		double maxHealth = player.getMaxHealth();
+		double currentHealth = player.getHealth();
+		double healthPercentage = currentHealth / maxHealth;
+		String safeZone = Alignments.isSafeZone(player.getLocation()) ? ChatColor.GRAY + " - " + ChatColor.GREEN.toString() + ChatColor.BOLD + "SAFE-ZONE" : "";
+		if (healthPercentage > 1.0) {
+			healthPercentage = 1.0;
+		}
+		float progress = (float) healthPercentage;
+
+		BarColor barColor = getBarColor(player);
+		ChatColor titleColor = barTitleColor(player);
+		BossBar bossBar = Alignments.playerBossBars.get(player);
+
+		if (bossBar == null) {
+			bossBar = Bukkit.createBossBar(
+					titleColor + "" + ChatColor.BOLD + "HP " + titleColor
+							+ (int) currentHealth + titleColor + ChatColor.BOLD + " / "
+							+ titleColor + (int) maxHealth + safeZone,
+					barColor, BarStyle.SOLID);
+			bossBar.addPlayer(player);
+			Alignments.playerBossBars.put(player, bossBar);
+		}
+
+		bossBar.setColor(barColor);
+		bossBar.setTitle(titleColor + "" + ChatColor.BOLD + "HP "
+				+ titleColor + (int) currentHealth + titleColor
+				+ ChatColor.BOLD + " / " + titleColor + (int) maxHealth + safeZone);
+		bossBar.setProgress(progress);
 	}
 
 	public static BarColor getBarColor(Player player) {
 		double maxHealth = player.getMaxHealth();
 		double currentHealth = player.getHealth();
-		if((currentHealth / maxHealth) > .5) return BarColor.GREEN;
-		if((currentHealth / maxHealth) < .25) return BarColor.RED;
-		if((currentHealth / maxHealth) < .5) return BarColor.YELLOW;
-		return BarColor.RED;
+		double healthPercentage = currentHealth / maxHealth;
+
+		if (healthPercentage > 0.5) {
+			return BarColor.GREEN;
+		} else if (healthPercentage > 0.25) {
+			return BarColor.YELLOW;
+		} else {
+			return BarColor.RED;
+		}
 	}
 
-	public static ChatColor barTitleColor(Player player){
+	public static ChatColor barTitleColor(Player player) {
 		double maxHealth = player.getMaxHealth();
 		double currentHealth = player.getHealth();
-		if((currentHealth / maxHealth) > .5) return ChatColor.GREEN;
-		if((currentHealth / maxHealth) < .25) return ChatColor.RED;
-		if((currentHealth / maxHealth) < .5) return ChatColor.YELLOW;
-		return ChatColor.RED;
+		double healthPercentage = currentHealth / maxHealth;
+
+		if (healthPercentage > 0.5) {
+			return ChatColor.GREEN;
+		} else if (healthPercentage > 0.25) {
+			return ChatColor.YELLOW;
+		} else {
+			return ChatColor.RED;
+		}
 	}
 
 	public static int getHp(ItemStack is) {
@@ -225,75 +238,77 @@ public class Damage implements Listener {
 		}
 		return 0;
 	}
-
-	public static int getElem(ItemStack is, String type) {
-		if (is != null && is.getType() != Material.AIR && is.getItemMeta().hasLore()) {
-			List<String> lore = is.getItemMeta().getLore();
-			for (String s : lore) {
-				if (!s.contains(type))
-					continue;
-				try {
-					return Integer.parseInt(s.split(": +")[1]);
-				} catch (Exception e) {
-					return 0;
+	public static int getElem(ItemStack itemStack, String type) {
+		if (itemStack != null && itemStack.getType() != Material.AIR && itemStack.hasItemMeta()) {
+			ItemMeta itemMeta = itemStack.getItemMeta();
+			if (itemMeta.hasLore()) {
+				List<String> lore = itemMeta.getLore();
+				for (String line : lore) {
+					if (line.contains(type)) {
+						try {
+							return Integer.parseInt(line.split(": +")[1]);
+						} catch (Exception e) {
+							return 0;
+						}
+					}
 				}
 			}
 		}
 		return 0;
 	}
 
-	public static List<Integer> getDamageRange(ItemStack is) {
-		List<String> lore;
-		ArrayList<Integer> dmg = new ArrayList<Integer>();
-		dmg.add(1);
-		dmg.add(1);
-		if (is != null && is.getType() != Material.AIR && is.getItemMeta().hasLore()
-				&& (lore = is.getItemMeta().getLore()).size() > 0 && lore.get(0).contains("DMG")) {
-			try {
-				int min = 1;
-				int max = 1;
-				min = Integer.parseInt(lore.get(0).split("DMG: ")[1].split(" - ")[0]);
-				max = Integer.parseInt(lore.get(0).split(" - ")[1]);
-				dmg.set(0, min);
-				dmg.set(1, max);
-			} catch (Exception e) {
-				dmg.set(0, 1);
-				dmg.set(1, 1);
+	public static List<Integer> getDamageRange(ItemStack itemStack) {
+		List<Integer> damageRange = new ArrayList<>(Arrays.asList(1, 1));
+		if (itemStack != null && itemStack.getType() != Material.AIR && itemStack.hasItemMeta()) {
+			ItemMeta itemMeta = itemStack.getItemMeta();
+			if (itemMeta.hasLore()) {
+				List<String> lore = itemMeta.getLore();
+				if (lore.size() > 0 && lore.get(0).contains("DMG")) {
+					try {
+						String[] dmgValues = lore.get(0).split("DMG: ")[1].split(" - ");
+						int min = Integer.parseInt(dmgValues[0]);
+						int max = Integer.parseInt(dmgValues[1]);
+						damageRange.set(0, min);
+						damageRange.set(1, max);
+					} catch (Exception e) {
+						damageRange.set(0, 1);
+						damageRange.set(1, 1);
+					}
+				}
 			}
 		}
-		return dmg;
+		return damageRange;
 	}
 
-	public static int getCrit(Player p) {
+	public static int getCrit(Player player) {
 		int crit = 0;
-		ItemStack wep = p.getInventory().getItemInMainHand();
-		if (Staffs.staff.containsKey(p)) {
-			wep = Staffs.staff.get(p);
+		ItemStack weapon = player.getInventory().getItemInMainHand();
+		if (Staffs.getStaff().containsKey(player)) {
+			weapon = Staffs.getStaff().get(player);
 		}
-		if (wep != null && wep.getType() != Material.AIR && wep.getItemMeta().hasLore()) {
-			List<String> lore = wep.getItemMeta().getLore();
-			for (String line : lore) {
-				if (!line.contains("CRITICAL HIT"))
-					continue;
-				crit = Damage.getPercent(wep, "CRITICAL HIT");
-			}
-			if (wep.getType().name().contains("_AXE")) {
-				crit += 10;
-			}
-			int intel = 0;
-			ItemStack[] arritemStack = p.getInventory().getArmorContents();
-			int n = arritemStack.length;
-			int n2 = 0;
-			while (n2 < n) {
-				ItemStack is = arritemStack[n2];
-				if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
-					int addint = Damage.getElem(is, "INT");
-					intel += addint;
+		if (weapon != null && weapon.getType() != Material.AIR && weapon.hasItemMeta()) {
+			ItemMeta weaponMeta = weapon.getItemMeta();
+			if (weaponMeta.hasLore()) {
+				List<String> lore = weaponMeta.getLore();
+				for (String line : lore) {
+					if (line.contains("CRITICAL HIT")) {
+						crit = getPercent(weapon, "CRITICAL HIT");
+					}
 				}
-				++n2;
-			}
-			if (intel > 0) {
-				crit = (int) ((long) crit + Math.round((double) intel * 0.015));
+				if (weapon.getType().name().contains("_AXE")) {
+					crit += 10;
+				}
+				int intel = 0;
+				ItemStack[] armorContents = player.getInventory().getArmorContents();
+				for (ItemStack armor : armorContents) {
+					if (armor != null && armor.getType() != Material.AIR && armor.hasItemMeta()) {
+						int addInt = getElem(armor, "INT");
+						intel += addInt;
+					}
+				}
+				if (intel > 0) {
+					crit += Math.round(intel * 0.015);
+				}
 			}
 		}
 		return crit;
@@ -320,51 +335,54 @@ public class Damage implements Listener {
 		}
 	}
 
-	public void callHGDMG(Player p, LivingEntity le, String d, int dmg) {
-		ArrayList<String> gettoggles = Toggles.getToggles(p.getUniqueId());
+	private static final int HOLOGRAM_DELAY = 20; // Delay in ticks before hologram disappears
 
-		if (gettoggles.contains("Hologram Damage")) {
-			Random r = new Random();
-			float x = r.nextFloat();
-			float y = r.nextFloat();
-			float z = r.nextFloat();
-			int dmgs = dmg;
-			Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), le.getLocation().clone().add(x, 0.5 + y, z));
-			if (d.equalsIgnoreCase("dmg")) {
-				hologram.appendTextLine( ChatColor.RED + "-" + dmg + "❤");
+	@EventHandler
+	public void onEntityDamage(EntityDamageByEntityEvent event) {
+		if (event.getDamage() <= 0) {
+			return;
+		}
+
+		try {
+			if (event.getEntity() instanceof LivingEntity && event.getDamager() instanceof Player) {
+				if (event.getDamage() > 0 && !event.isCancelled()) {
+					Player damager = (Player) event.getDamager();
+					LivingEntity entity = (LivingEntity) event.getEntity();
+					int damage = (int) event.getDamage();
+					callHologramDamage(damager, entity, "dmg", damage);
+				}
 			}
-			if (d.equalsIgnoreCase("dodge")) {
-				hologram.appendTextLine( ChatColor.RED + "*DODGE*");
+		} catch (Exception ignored) {
+		}
+	}
+
+	private void callHologramDamage(Player player, LivingEntity entity, String type, int damage) {
+		ArrayList<String> toggles = Toggles.getToggles(player.getUniqueId());
+
+		if (toggles.contains("Hologram Damage")) {
+			Random random = new Random();
+			float x = random.nextFloat();
+			float y = random.nextFloat();
+			float z = random.nextFloat();
+
+			Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), entity.getLocation().clone().add(x, 0.5 + y, z));
+
+			if (type.equalsIgnoreCase("dmg")) {
+				hologram.appendTextLine(ChatColor.RED + "-" + damage + "❤");
 			}
-			if (d.equalsIgnoreCase("block")) {
-				hologram.appendTextLine( ChatColor.RED + "*BLOCK*");
+			if (type.equalsIgnoreCase("dodge")) {
+				hologram.appendTextLine(ChatColor.RED + "*DODGE*");
 			}
+			if (type.equalsIgnoreCase("block")) {
+				hologram.appendTextLine(ChatColor.RED + "*BLOCK*");
+			}
+
 			new BukkitRunnable() {
 				@Override
 				public void run() {
 					hologram.delete();
 				}
-			}.runTaskLater(PracticeServer.plugin, 20L);
-		}
-	}
-
-	@EventHandler
-	public void holoDMG(EntityDamageByEntityEvent e) {
-		if (e.getDamage() <= 0) {
-			return;
-		}
-		try {
-			ArrayList<String> gettoggles = Toggles.getToggles(e.getDamager().getUniqueId());
-			if (e.getEntity() instanceof LivingEntity && e.getDamager() instanceof Player) {
-				if (e.getDamage() > 0 && !e.isCancelled()) {
-					Player p = (Player) e.getDamager();
-					LivingEntity le = (LivingEntity) e.getEntity();
-					int dmg = (int) e.getDamage();
-					callHGDMG(p, le, "dmg", dmg);
-				}
-			}
-		} catch (Exception ex) {
-			System.out.println("HoloDMG");
+			}.runTaskLater(PracticeServer.plugin, HOLOGRAM_DELAY);
 		}
 	}
 
@@ -373,79 +391,75 @@ public class Damage implements Listener {
 		Player player = event.getPlayer();
 
 		if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-
 			Block block = event.getClickedBlock();
 
 			if (block == null)
 				return;
 
 			if (block.getType() == Material.ARMOR_STAND) {
-				ItemStack wep = player.getInventory().getItemInMainHand();
+				ItemStack weapon = player.getInventory().getItemInMainHand();
 
-				if (wep != null && wep.getType() != Material.AIR && wep.getItemMeta().hasLore()) {
+				if (weapon != null && weapon.getType() != Material.AIR && weapon.getItemMeta().hasLore()) {
+					int minDamage = Damage.getDamageRange(weapon).get(0);
+					int maxDamage = Damage.getDamageRange(weapon).get(1);
+					int damage = ThreadLocalRandom.current().nextInt(minDamage, maxDamage);
 
-					int min = Damage.getDamageRange(wep).get(0);
-					int max = Damage.getDamageRange(wep).get(1);
-
-					int damage = ThreadLocalRandom.current().nextInt(min, max);
-
-					for (String line : wep.getItemMeta().getLore()) {
-						int eldmg;
+					for (String line : weapon.getItemMeta().getLore()) {
+						int elementalDamage;
 						if (line.contains("ICE DMG")) {
-							eldmg = Damage.getElem(wep, "ICE DMG");
-							damage += eldmg;
+							elementalDamage = Damage.getElem(weapon, "ICE DMG");
+							damage += elementalDamage;
 						}
 						if (line.contains("POISON DMG")) {
-							eldmg = Damage.getElem(wep, "POISON DMG");
-							damage += eldmg;
+							elementalDamage = Damage.getElem(weapon, "POISON DMG");
+							damage += elementalDamage;
 						}
 						if (line.contains("FIRE DMG")) {
-							eldmg = Damage.getElem(wep, "FIRE DMG");
-							damage += eldmg;
+							elementalDamage = Damage.getElem(weapon, "FIRE DMG");
+							damage += elementalDamage;
 						}
 						if (!line.contains("PURE DMG")) {
-							eldmg = Damage.getElem(wep, "PURE DMG");
-							damage += eldmg;
+							elementalDamage = Damage.getElem(weapon, "PURE DMG");
+							damage += elementalDamage;
 						}
 					}
 
 					double dps = 0.0;
-					double vit = 0.0;
-					double dex = 0.0;
-					double intel = 0.0;
-					double str = 0.0;
-					ItemStack[] arritemStack = player.getInventory().getArmorContents();
-					int n = arritemStack.length;
-					int n4 = 0;
-					while (n4 < n) {
-						ItemStack is = arritemStack[n4];
-						if (is != null && is.getType() != Material.AIR && is.hasItemMeta()
-								&& is.getItemMeta().hasLore()) {
-							int adddps = Damage.getDps(is);
-							dps += (double) adddps;
-							int addvit = Damage.getElem(is, "VIT");
-							vit += (double) addvit;
-							int adddex = Damage.getElem(is, "DEX");
-							dex += (double) adddex;
-							int addint = Damage.getElem(is, "INT");
-							intel += (double) addint;
-							int addstr = Damage.getElem(is, "STR");
-							str += (double) addstr;
+					double vitality = 0.0;
+					double dexterity = 0.0;
+					double intellect = 0.0;
+					double strength = 0.0;
+
+					ItemStack[] armorContents = player.getInventory().getArmorContents();
+
+					for (ItemStack armor : armorContents) {
+						if (armor != null && armor.getType() != Material.AIR && armor.hasItemMeta()
+								&& armor.getItemMeta().hasLore()) {
+							int addDps = Damage.getDps(armor);
+							dps += addDps;
+							int addVitality = Damage.getElem(armor, "VIT");
+							vitality += addVitality;
+							int addDexterity = Damage.getElem(armor, "DEX");
+							dexterity += addDexterity;
+							int addIntellect = Damage.getElem(armor, "INT");
+							intellect += addIntellect;
+							int addStrength = Damage.getElem(armor, "STR");
+							strength += addStrength;
 						}
-						++n4;
 					}
-					if (vit > 0.0 && wep.getType().name().contains("_SWORD")) {
-						double divide = vit / 5000.0;
+
+					if (vitality > 0.0 && weapon.getType().name().contains("_SWORD")) {
+						double divide = vitality / 5000.0;
 						double pre = (double) damage * divide;
 						damage = (int) ((double) damage + pre);
 					}
-					if (str > 0.0 && wep.getType().name().contains("_AXE")) {
-						double divide = str / 5000.0;
+					if (strength > 0.0 && weapon.getType().name().contains("_AXE")) {
+						double divide = strength / 5000.0;
 						double pre = (double) damage * divide;
 						damage = (int) ((double) damage + pre);
 					}
-					if (intel > 0.0 && wep.getType().name().contains("_HOE")) {
-						double divide = intel / 100.0;
+					if (intellect > 0.0 && weapon.getType().name().contains("_HOE")) {
+						double divide = intellect / 100.0;
 						double pre = (double) damage * divide;
 						damage = (int) ((double) damage + pre);
 					}
@@ -457,32 +471,40 @@ public class Damage implements Listener {
 
 					event.setCancelled(true);
 
-					player.sendMessage(
-							ChatColor.RED + "            " + damage + ChatColor.RED + ChatColor.BOLD + " DMG "
-									+ ChatColor.RED + "-> " + ChatColor.RESET + "DPS DUMMY" + " [" + 99999999 + "HP]");
+					player.sendMessage(ChatColor.RED + "            " + damage + ChatColor.RED + ChatColor.BOLD + " DMG "
+							+ ChatColor.RED + "-> " + ChatColor.RESET + "DPS DUMMY" + " [" + 99999999 + "HP]");
 				}
 			}
 		}
 	}
 
+
 	@EventHandler(priority = EventPriority.LOW)
 	public void onBlodge(EntityDamageByEntityEvent e) {
+		// Check if patchlockdown is enabled
 		if (DeployCommand.patchlockdown) {
 			e.setCancelled(true);
 			return;
 		}
+
 		Player p;
 		int crit = 0;
+
 		if (e.getDamager() instanceof Player) {
 			Player dmgr = (Player) e.getDamager();
 			crit = Damage.getCrit(dmgr);
 		}
+
 		Random random = new Random();
 		int drop = random.nextInt(100) + 1;
+
 		if (e.getEntity() instanceof Player) {
+			// Handle damage between players
 			if (e.getDamager() instanceof Player) {
 				Player d = (Player) e.getDamager();
 				Player x = (Player) e.getEntity();
+
+				// Check if both players are duelers and on the same team
 				if (Duels.duelers.containsKey(x) && Duels.duelers.containsKey(d)) {
 					if (Duels.duelers.get(x).team == Duels.duelers.get(d).team) {
 						e.setDamage(0.0);
@@ -490,148 +512,190 @@ public class Damage implements Listener {
 					}
 				}
 			}
+
 			if (e.getDamage() <= 0.0) {
 				return;
 			}
+
 			p = (Player) e.getEntity();
 			PlayerInventory i = p.getInventory();
 			p.setNoDamageTicks(0);
 			int block = 0;
 			int dodge = 0;
-			if (p.getHealth() > 0.0) {
-				ItemStack[] arritemStack = i.getArmorContents();
-				int n = arritemStack.length;
-				int n2 = 0;
-				while (n2 < n) {
-					ItemStack is = arritemStack[n2];
-					if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
-						int addedblock = Damage.getPercent(is, "BLOCK");
-						block += addedblock;
-						int addeddodge = Damage.getPercent(is, "DODGE");
-						dodge += addeddodge;
-					}
-					++n2;
+
+			// Calculate block and dodge percentages based on equipped armor
+			for (ItemStack is : i.getArmorContents()) {
+				if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+					int addedblock = Damage.getPercent(is, "BLOCK");
+					block += addedblock;
+					int addeddodge = Damage.getPercent(is, "DODGE");
+					dodge += addeddodge;
 				}
-				int str = 0;
-				int dex = 0;
-				ItemStack[] addedblock = p.getInventory().getArmorContents();
-				int n3 = addedblock.length;
-				n = 0;
-				while (n < n3) {
-					ItemStack is = addedblock[n];
-					if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
-						int addstr = Damage.getElem(is, "STR");
-						str += addstr;
-						int adddex = Damage.getElem(is, "DEX");
-						dex += adddex;
-					}
-					++n;
+			}
+
+			int str = 0;
+			int dex = 0;
+
+			// Calculate strength and dexterity values based on equipped armor
+			for (ItemStack is : p.getInventory().getArmorContents()) {
+				if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+					int addstr = Damage.getElem(is, "STR");
+					str += addstr;
+					int adddex = Damage.getElem(is, "DEX");
+					dex += adddex;
 				}
-				if (str > 0) {
-					block = (int) ((long) block + Math.round((double) str * 0.015));
+			}
+
+			// Adjust block and dodge values based on strength and dexterity
+			if (str > 0) {
+				block += Math.round((double) str * 0.015);
+			}
+			if (dex > 0) {
+				dodge += Math.round((double) dex * 0.015);
+			}
+
+			int dodger = random.nextInt(110) + 1;
+			int blockr = random.nextInt(110) + 1;
+
+			if (drop < crit && ((Player) e.getDamager()).getInventory().getItemInMainHand().getType().name().contains("_AXE")) {
+				// Reset block and dodge if critical hit with an axe
+				block = 0;
+				dodge = 0;
+			}
+
+			if (e.getDamager() instanceof Player) {
+				Player d = (Player) e.getDamager();
+				ItemStack wep = d.getInventory().getItemInMainHand();
+
+				if (Staffs.getStaff().containsKey(d)) {
+					wep = Staffs.getStaff().get(d);
 				}
-				if (dex > 0) {
-					dodge = (int) ((long) dodge + Math.round((double) dex * 0.015));
-				}
-				random = new Random();
-				int dodger = random.nextInt(110) + 1;
-				int blockr = random.nextInt(110) + 1;
-				if (drop < crit && ((Player) e.getDamager()).getInventory().getItemInMainHand().getType().name()
-						.contains("_AXE")) {
-					block = 0;
-					dodge = 0;
-				}
-				if (e.getDamager() instanceof Player) {
-					int accuracy;
-					Player d = (Player) e.getDamager();
-					ItemStack wep = d.getInventory().getItemInMainHand();
-					if (Staffs.staff.containsKey(d)) {
-						wep = Staffs.staff.get(d);
-					}
-					if ((accuracy = Damage.getPercent(wep, "ACCURACY")) > 0) {
-						block -= accuracy;
-						dodge -= accuracy;
-					}
-					if (blockr <= block) {
-						e.setDamage(0.0);
-						e.setCancelled(true);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						callHGDMG(d, p, "block", 0);
-						if(Toggles.getToggleStatus(d, "Debug")) d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+
+				int accuracy = Damage.getPercent(wep, "ACCURACY");
+
+				// Reduce block and dodge based on weapon accuracy
+				block -= accuracy;
+				dodge -= accuracy;
+
+				if (blockr <= block) {
+					// Blocked damage
+					e.setDamage(0.0);
+					e.setCancelled(true);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
+					callHologramDamage(d, p, "block", 0);
+					if (Toggles.getToggleStatus(d, "Debug")) {
+						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
-								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
-					} else if (dodger <= dodge) {
-						e.setDamage(0.0);
-						e.setCancelled(true);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
-						callHGDMG(d, p, "dodge", 0);
-						if(Toggles.getToggleStatus(d, "Debug"))d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT DODGED* ("
-								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* ("
-								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
-					} else if (blockr <= 80 && p.isBlocking()) {
-						e.setDamage((double) ((int) e.getDamage() / 2));
-						callHGDMG(d, p, "block", 0);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						if(Toggles.getToggleStatus(d, "Debug")) d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
-								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
-						if(Toggles.getToggleStatus(p, "Debug")) p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+					}
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
-				} else if (e.getDamager() instanceof LivingEntity) {
-					LivingEntity li = (LivingEntity) e.getDamager();
-					if (Mobs.isFrozenBoss(li) || Mobs.isGolemBoss(li)) {
-						block -= 25;
-						dodge -= 25;
+				} else if (dodger <= dodge) {
+					// Dodged damage
+					e.setDamage(0.0);
+					e.setCancelled(true);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
+					callHologramDamage(d, p, "dodge", 0);
+					if (Toggles.getToggleStatus(d, "Debug")) {
+						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT DODGED* ("
+								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
 					}
-					String mname = "";
-					if (li.hasMetadata("name")) {
-						mname = li.getMetadata("name").get(0).asString();
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* ("
+								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
-					if (blockr <= block) {
-						e.setDamage(0.0);
-						e.setCancelled(true);
-						callHGDMG(p, li, "block", 0);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						if(Toggles.getToggleStatus(p, "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+				} else if (blockr <= 80 && p.isBlocking()) {
+					// Partially blocked damage while blocking
+					e.setDamage((double) ((int) e.getDamage() / 2));
+					callHologramDamage(d, p, "block", 0);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
+					if (Toggles.getToggleStatus(d, "Debug")) {
+						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
+					}
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
+					}
+				}
+			} else if (e.getDamager() instanceof LivingEntity) {
+				LivingEntity li = (LivingEntity) e.getDamager();
+
+				if (Mobs.isFrozenBoss(li) || Mobs.isGolemBoss(li)) {
+					// Reduce block and dodge against frozen and golem bosses
+					block -= 25;
+					dodge -= 25;
+				}
+
+				String mname = "";
+				if (li.hasMetadata("name")) {
+					mname = li.getMetadata("name").get(0).asString();
+				}
+
+				if (blockr <= block) {
+					// Blocked damage from a living entity
+					e.setDamage(0.0);
+					e.setCancelled(true);
+					callHologramDamage(p, li, "block", 0);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
-					} else if (dodger <= dodge) {
-						e.setDamage(0.0);
-						e.setCancelled(true);
-						callHGDMG(p, li, "dodge", 0);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
-						if(Toggles.getToggleStatus(p, "Debug")) p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* (" + mname
+					}
+				} else if (dodger <= dodge) {
+					// Dodged damage from a living entity
+					e.setDamage(0.0);
+					e.setCancelled(true);
+					callHologramDamage(p, li, "dodge", 0);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* (" + mname
 								+ ChatColor.GREEN + ")");
-					} else if (blockr <= 80 && p.isBlocking()) {
-						e.setDamage((double) ((int) e.getDamage() / 2));
-						callHGDMG(p, li, "block", 0);
-						p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
-						if(Toggles.getToggleStatus(p , "Debug"))p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+					}
+				} else if (blockr <= 80 && p.isBlocking()) {
+					// Partially blocked damage while blocking against a living entity
+					e.setDamage((double) ((int) e.getDamage() / 2));
+					callHologramDamage(p, li, "block", 0);
+					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
+					if (Toggles.getToggleStatus(p, "Debug")) {
+						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
 					}
 				}
 			}
 		}
+
 		if (e.getDamage() <= 0.0) {
 			return;
 		}
+
 		if (e.getDamager() instanceof Player && e.getEntity() instanceof LivingEntity) {
+			if (!(e.getEntity() instanceof Player)) {
+				p = (Player) e.getDamager();
+				GrimAbstractAPI api = PracticeServer.getGrim();
+				// Continue processing the event with the appropriate variables
+			}
+
 			p = (Player) e.getDamager();
 			LivingEntity li = (LivingEntity) e.getEntity();
 			ItemStack wep = p.getInventory().getItemInMainHand();
-			if (Staffs.staff.containsKey(p)) {
-				wep = Staffs.staff.get(p);
+
+			if (Staffs.getStaff().containsKey(p)) {
+				wep = Staffs.getStaff().get(p);
 			}
+
 			if (p.getInventory().getItemInOffHand().getType() != Material.AIR) {
 				ItemStack material = p.getInventory().getItemInOffHand();
 				p.getInventory().setItemInOffHand(new ItemStack(Material.AIR));
+
 				if (p.getInventory().firstEmpty() == -1) {
 					p.getWorld().dropItemNaturally(p.getLocation(), material);
 				} else {
 					p.getInventory().addItem(material);
 				}
 			}
+
 			if (wep != null && wep.getType() != Material.AIR && wep.getItemMeta().hasLore()) {
 				int min = Damage.getDamageRange(wep).get(0);
 				int max = Damage.getDamageRange(wep).get(1);
@@ -641,11 +705,14 @@ public class Damage implements Listener {
 
 				int tier = Items.getTierFromColor(wep);
 				List<String> lore = wep.getItemMeta().getLore();
+
 				for (String line : lore) {
 					int eldmg;
+
 					if (line.contains("ICE DMG")) {
+						// Apply ice damage effect
 						DyeColor blockColor = DyeColor.LIGHT_BLUE;
-						MaterialData data = new MaterialData(Material.STAINED_GLASS_PANE, (byte)3);
+						MaterialData data = new MaterialData(Material.STAINED_GLASS_PANE, (byte) 3);
 						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.01, data);
 						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "ICE DMG");
@@ -668,11 +735,13 @@ public class Damage implements Listener {
 							li.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 0));
 						}
 					}
+
 					if (line.contains("POISON DMG")) {
+						// Apply poison damage effect
 						boolean color = ThreadLocalRandom.current().nextBoolean();
-						byte bytes = color ? (byte)5 : (byte)13;
+						byte bytes = color ? (byte) 5 : (byte) 13;
 						MaterialData data = new MaterialData(Material.STAINED_GLASS, bytes);
-						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0,1,0), 10, 0.5, 0.5, 0.5, 0.01, data);
+						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.01, data);
 						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "POISON DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
@@ -694,10 +763,13 @@ public class Damage implements Listener {
 							li.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 40, 1));
 						}
 					}
+
 					if (line.contains("FIRE DMG")) {
+						// Apply fire damage effect
 						eldmg = Damage.getElem(wep, "FIRE DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
 						dmg += elemult;
+
 						if (tier == 1) {
 							li.setFireTicks(15);
 						}
@@ -714,26 +786,33 @@ public class Damage implements Listener {
 							li.setFireTicks(40);
 						}
 					}
+
 					if (line.contains("PURE DMG")) {
+						// Apply pure damage effect
 						eldmg = Damage.getElem(wep, "PURE DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
 						dmg += elemult;
 					}
+
 					if (li instanceof Player && line.contains("VS PLAYERS")) {
+						// Apply damage against players effect
 						int addedDMG = dmg * getPercent(wep, "VS PLAYERS") / 100;
 						dmg += addedDMG;
 					} else if (!(li instanceof Player) && line.contains("VS MONSTERS")) {
+						// Apply damage against monsters effect
 						int addedDMG = dmg * getPercent(wep, "VS MONSTERS") / 100;
 						dmg += addedDMG;
 					}
-
 				}
+
 				if (drop <= crit) {
+					// Apply critical hit effect
 					e.setCancelled(false);
 					dmg *= 2;
 					p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.5f, 0.5f);
 					Particles.CRIT_MAGIC.display(0.0f, 0.0f, 0.0f, 1.0f, 50, li.getLocation(), 20.0);
 				}
+
 				PlayerInventory i = p.getInventory();
 				double dps = 0.0;
 				double vit = 0.0;
@@ -742,8 +821,10 @@ public class Damage implements Listener {
 				ItemStack[] arritemStack = i.getArmorContents();
 				int n = arritemStack.length;
 				int n4 = 0;
+
 				while (n4 < n) {
 					ItemStack is = arritemStack[n4];
+
 					if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
 						int adddps = Damage.getDps(is);
 						dps += (double) adddps;
@@ -754,27 +835,34 @@ public class Damage implements Listener {
 						int adddex = Damage.getElem(is, "DEX");
 						dps += (double) Math.round(adddex * 0.012);
 					}
+
 					++n4;
 				}
+
 				if (vit > 0.0 && wep.getType().name().contains("_SWORD")) {
 					double divide = vit / 5000.0;
 					double pre = (double) dmg * divide;
 					dmg = (int) ((double) dmg + pre);
 				}
+
 				if (str > 0.0 && wep.getType().name().contains("_AXE")) {
 					double divide = str / 4500.0;
 					double pre = (double) dmg * divide;
 					dmg = (int) ((double) dmg + pre);
 				}
+
 				if (dps > 0.0) {
 					double divide = dps / 100.0;
 					double pre = (double) dmg * divide;
 					dmg = (int) ((double) dmg + pre);
 				}
+
 				for (String line2 : lore) {
 					ArrayList<String> toggles;
+
 					if (!line2.contains("LIFE STEAL"))
 						continue;
+
 					if (e.getEntityType().equals(EntityType.ARMOR_STAND))
 						continue;
 
@@ -782,35 +870,43 @@ public class Damage implements Listener {
 					double base = Damage.getPercent(wep, "LIFE STEAL");
 					double pcnt = base / 100.0;
 					int life = 1;
+
 					if ((int) (pcnt * (double) dmg) > 0) {
 						life = (int) (pcnt * (double) dmg);
 					}
+
 					if (p.getHealth() < p.getMaxHealth() - (double) life) {
 						p.setHealth(p.getHealth() + (double) life);
 						toggles = Toggles.getToggles(p.getUniqueId());
-						if (!toggles.contains("Debug"))
-							continue;
-						p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + "            +" + ChatColor.GREEN
-								+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
-								+ (int) p.getHealth() + "/" + (int) p.getMaxHealth() + "HP]");
-						continue;
+
+						if (toggles.contains("Debug")) {
+							p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + "            +" + ChatColor.GREEN
+									+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
+									+ (int) p.getHealth() + "/" + (int) p.getMaxHealth() + "HP]");
+						}
 					}
+
 					if (p.getHealth() < p.getMaxHealth() - (double) life)
 						continue;
+
 					p.setHealth(p.getMaxHealth());
 					toggles = Toggles.getToggles(p.getUniqueId());
-					if (!toggles.contains("Debug"))
-						continue;
-					p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + " " + "           +" + ChatColor.GREEN
-							+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
-							+ (int) p.getMaxHealth() + "/" + (int) p.getMaxHealth() + "HP]");
+
+					if (toggles.contains("Debug")) {
+						p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + " " + "           +" + ChatColor.GREEN
+								+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
+								+ (int) p.getMaxHealth() + "/" + (int) p.getMaxHealth() + "HP]");
+					}
 				}
+
 				e.setDamage((double) dmg);
 				return;
 			}
+
 			e.setDamage(1.0);
 		}
 	}
+
 
 	private boolean areSame(Player shooter, Player entity) {
 		return shooter.getUniqueId().equals(entity.getUniqueId());
@@ -818,6 +914,10 @@ public class Damage implements Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onArmor(EntityDamageByEntityEvent e) {
+		if(e.getDamager() instanceof Projectile && e.getDamager().getType() == EntityType.FIREWORK){
+			e.setDamage(0.0);
+			e.setCancelled(true);
+		}
 		Entity damagerentity = e.getDamager();
 		Player damager;
 		if (damagerentity instanceof Player) {
@@ -992,87 +1092,98 @@ public class Damage implements Listener {
 							+ ChatColor.RED + "-> " + ChatColor.RESET + name + " [" + health + "HP]");
 				}
 			}
-		} catch (Exception es) {
-			System.out.println("onDebug");
+		} catch (Exception ignored) {
 		}
 	}
 
-	private final long knockbackDelay = 500; // Delay in milliseconds
-	private final float playerKnockbackMultiplier = 0.54f;
-	private final float playerSpadeKnockbackMultiplier = 0.9f;
-	private final float nonPlayerKnockbackMultiplier = 0.5f;
-	private final double verticalKnockback = 0.25;
-	private final double SpadeVerticalKnockback = 0.4;
-
-	// You can remove this if you're not using the 'kb' map for anything else.
-	// private final Map<UUID, Long> kb = new HashMap<>();
+	private final float playerKnockbackMultiplier = 0.32f;
+	private final float playerSpadeKnockbackMultiplier = 0.7f;
+	private final float spadeKnockbackMultiplier = 0.85f;
+	private final float nonPlayerKnockbackMultiplier = 0.30f;
+	private final double verticalKnockback = 0.15;
+	private final double spadeVerticalKnockback = 0.3;
+	private final long accelerationDurationMillis = 200;
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onKnockback(EntityDamageByEntityEvent event) {
-		try {
-			if (event.isCancelled() || !(event.getEntity() instanceof LivingEntity) || !(event.getDamager() instanceof LivingEntity)) {
-				return;
-			}
-
-			LivingEntity damagedEntity = (LivingEntity) event.getEntity();
-			LivingEntity damagerEntity = (LivingEntity) event.getDamager();
-
-			damagedEntity.setNoDamageTicks(0);
-
-			if (!(damagedEntity instanceof Player)) {
-				applyKnockback(damagedEntity, damagerEntity, nonPlayerKnockbackMultiplier, verticalKnockback);
-				return;
-			}
-
-			Player damagedPlayer = (Player) damagedEntity;
-
-			Vector knockbackVector = damagedPlayer.getLocation().toVector().subtract(damagerEntity.getLocation().toVector());
-			if (knockbackVector.length() > 0.0) {
-				knockbackVector.normalize();
-			}
-
-			if (damagerEntity instanceof Player) {
-				Player damagerPlayer = (Player) damagerEntity;
-
-				if (damagerPlayer.getInventory().getItemInMainHand() != null
-						&& damagerPlayer.getInventory().getItemInMainHand().getType().name().contains("_SPADE")) {
-					applyKnockback(damagedPlayer, knockbackVector, playerSpadeKnockbackMultiplier, SpadeVerticalKnockback);
-				} else {
-					applyKnockback(damagedPlayer, knockbackVector, playerKnockbackMultiplier, verticalKnockback);
-				}
-			} else {
-				applyKnockback(damagedPlayer, knockbackVector, nonPlayerKnockbackMultiplier, verticalKnockback);
-			}
-
-			// If you're not using the 'kb' map for anything else, you can remove this.
-			// kb.put(damagedPlayer.getUniqueId(), System.currentTimeMillis());
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
+	public void onDamage(EntityDamageByEntityEvent event) {
+		if (event.isCancelled()) {
+			return;
 		}
+
+		Entity damagedEntity = event.getEntity();
+		if (!(damagedEntity instanceof LivingEntity)) {
+			return;
+		}
+
+		Entity damagerEntity = event.getDamager();
+		if (!(damagerEntity instanceof LivingEntity)) {
+			return;
+		}
+
+		LivingEntity damagedLivingEntity = (LivingEntity) damagedEntity;
+		LivingEntity damagerLivingEntity = (LivingEntity) damagerEntity;
+
+		applyKnockback(damagedLivingEntity, damagerLivingEntity);
 	}
 
-	private void applyKnockback(Player player, Vector knockbackVector, float horizontalMultiplier, double verticalMultiplier) {
-		Vector velocity = knockbackVector.multiply(horizontalMultiplier);
-		double vert = verticalMultiplier;
-
-		if(!player.isOnGround()) vert /= 2;
-		velocity.setY(vert);
-		player.setVelocity(velocity);
-	}
-
-	private void applyKnockback(LivingEntity entity, LivingEntity damager, float horizontalMultiplier, double verticalMultiplier) {
-		Vector knockbackVector = entity.getLocation().toVector().subtract(damager.getLocation().toVector());
-		if (knockbackVector.length() > 0.0) {
+	private void applyKnockback(LivingEntity damagedEntity, LivingEntity damagerEntity) {
+		Vector knockbackVector = damagedEntity.getLocation().toVector().subtract(damagerEntity.getLocation().toVector());
+		if (knockbackVector.lengthSquared() > 0.0) {
 			knockbackVector.normalize();
 		}
 
-		Vector velocity = knockbackVector.multiply(horizontalMultiplier);
-		double vert = verticalMultiplier;
-		if(!entity.isOnGround()) vert /= 2;
-		velocity.setY(vert);
-		entity.setVelocity(velocity);
+		double horizontalMultiplier;
+		double verticalMultiplier;
+		boolean polearm = false;
+
+		if (damagerEntity instanceof Player) {
+			Player damagerPlayer = (Player) damagerEntity;
+			if (damagerPlayer.getInventory().getItemInMainHand().getType().name().contains("_SPADE")) {
+				if(!(damagedEntity instanceof Player)) polearm = true;
+				horizontalMultiplier = playerSpadeKnockbackMultiplier;
+				verticalMultiplier = spadeVerticalKnockback;
+			} else {
+				horizontalMultiplier = playerKnockbackMultiplier;
+				verticalMultiplier = verticalKnockback;
+			}
+		}else{
+			horizontalMultiplier = nonPlayerKnockbackMultiplier;
+			verticalMultiplier = verticalKnockback;
+		}
+
+		applyKnockback(damagedEntity, knockbackVector, polearm, horizontalMultiplier, verticalMultiplier);
 	}
+
+	private void applyKnockback(LivingEntity entity, Vector knockbackVector, boolean polearm, double horizontalMultiplier, double verticalMultiplier) {
+		double speed = Math.sqrt(entity.getVelocity().getX() * entity.getVelocity().getX() + entity.getVelocity().getZ() * entity.getVelocity().getZ());
+		double maxSpeed = polearm ? 1 : 0.45; // Adjust this value as needed
+
+		horizontalMultiplier *= (1.0 + speed * 0.2);
+		verticalMultiplier *= !entity.isOnGround() ? (1.0 + speed * 0.145) : (1.0 + speed * 0.2);
+		Vector velocity = knockbackVector.multiply(horizontalMultiplier).setY(verticalMultiplier);
+		if (velocity.lengthSquared() > maxSpeed * maxSpeed) {
+			velocity.normalize().multiply(maxSpeed);
+		}
+
+
+
+		// Apply smooth acceleration
+		Vector currentVelocity = entity.getVelocity();
+		Vector targetVelocity = velocity;
+		//Vector interpolatedVelocity = interpolateVelocity(currentVelocity, targetVelocity, accelerationDurationMillis);
+		entity.setVelocity(targetVelocity);
+	}
+
+	private Vector interpolateVelocity(Vector currentVelocity, Vector targetVelocity, long durationMillis) {
+		double t = Math.min(1.0, (double) durationMillis / 1000.0); // Convert duration to seconds
+		double x = currentVelocity.getX() + (targetVelocity.getX() - currentVelocity.getX()) * t;
+		double y = currentVelocity.getY() + (targetVelocity.getY() - currentVelocity.getY()) * t;
+		double z = currentVelocity.getZ() + (targetVelocity.getZ() - currentVelocity.getZ()) * t;
+		return new Vector(x, y, z);
+	}
+
+
+
 
 
 	@EventHandler(priority = EventPriority.HIGH)
@@ -1105,8 +1216,8 @@ public class Damage implements Listener {
 						LivingEntity n = (LivingEntity) near;
 						le.setNoDamageTicks(0);
 						n.setNoDamageTicks(0);
-						if (Energy.nodamage.containsKey(p.getName())) {
-							Energy.nodamage.remove(p.getName());
+						if (Energy.noDamage.containsKey(p.getName())) {
+							Energy.noDamage.remove(p.getName());
 						}
 						Energy.removeEnergy(p, 2);
 						this.p_arm.add(p.getName());
@@ -1115,8 +1226,7 @@ public class Damage implements Listener {
 					}
 				}
 			}
-		} catch (Exception ex) {
-			System.out.println("onPolearmAOE");
+		} catch (Exception ignored) {
 		}
 	}
 

@@ -24,6 +24,7 @@ import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
@@ -67,7 +68,6 @@ public class Listeners implements Listener {
 	ConcurrentHashMap<String, Long> update = new ConcurrentHashMap<String, Long>();
 	public static ConcurrentHashMap<String, Long> combat = new ConcurrentHashMap<String, Long>();
 	public static ConcurrentHashMap<UUID, Long> mobd = new ConcurrentHashMap<UUID, Long>();
-	public static ArrayList<Player> previo = new ArrayList<Player>();
 	ConcurrentHashMap<UUID, Long> firedmg = new ConcurrentHashMap<UUID, Long>();
 
 	public static boolean isInCombat(Player p) {
@@ -79,7 +79,19 @@ public class Listeners implements Listener {
 		}
 	}
 
+	public static int combatSeconds(Player p) {
+		if (isInCombat(p)) {
+			long combatStartTime = combat.get(p.getName());
+			long currentTime = System.currentTimeMillis();
+			long remainingTime = combatStartTime + 10000 - currentTime;
+			int remainingSeconds = (int) (remainingTime / 1000);
+			return Math.max(remainingSeconds, 0);
+		} else {
+			return 0;
+		}
+	}
 	public static void hpCheck(Player p) {
+		if (p.isDead()) return;
 		if (p.isOp() && !ToggleGMCommand.togglegm.contains(p.getName())) {
 			return;
 		}
@@ -112,44 +124,54 @@ public class Listeners implements Listener {
 
 	public void onEnable() {
 		PracticeServer.log.info("[Listeners] has been enabled.");
-		Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-		new BukkitRunnable() {
+		Bukkit.getPluginManager().registerEvents(this, PracticeServer.plugin);
 
+		new BukkitRunnable() {
+			@Override
 			public void run() {
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					p.setFoodLevel(20);
-					p.setSaturation(20.0f);
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					player.setFoodLevel(20);
+					player.setSaturation(20.0f);
 				}
 			}
 		}.runTaskTimerAsynchronously(PracticeServer.plugin, 200, 100);
+
 		new BukkitRunnable() {
-
+			@Override
 			public void run() {
-				for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-					if (VanishCommand.vanished.contains(p.getName())) {
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					if(Listeners.isInCombat(player) && (!ActionBar.getTaskMap().containsKey(player.getUniqueId()))) {
+						ActionBar.sendActionBar(player, " ", 1);
+					}
+					if (VanishCommand.vanished.contains(player.getName())) {
 						continue;
 					}
-					Random r = new Random();
-					float y = r.nextFloat() - 0.2F;
-					float x = r.nextFloat() - 0.2F;
-					float z = r.nextFloat() - 0.2F;
 
-					if (!ModerationMechanics.isDonator(p) || !Toggles.getToggles(p.getUniqueId()).contains("Trail"))
+					Random random = new Random();
+					float y = random.nextFloat() - 0.2F;
+					float x = random.nextFloat() - 0.2F;
+					float z = random.nextFloat() - 0.2F;
+
+					if (!ModerationMechanics.isDonator(player) ||
+							!Toggles.getToggles(player.getUniqueId()).contains("Trail")) {
 						continue;
-					if (ModerationMechanics.getRank(p) == RankEnum.SUB) {
+					}
+
+					RankEnum rank = ModerationMechanics.getRank(player);
+					Location playerLocation = player.getLocation().clone();
+
+					if (rank == RankEnum.SUB) {
 						Particles.VILLAGER_HAPPY.display(0.125f, 0.125f, 0.125f, 0.02f, 10,
-								p.getLocation().clone().add(x, y, z), 20.0);
-					}
-					if (ModerationMechanics.getRank(p) == RankEnum.SUB1) {
-						Particles.FLAME.display(0.0f, 0.0f, 0.0f, 0.02f, 10, p.getLocation().clone().add(x, y, z), 20.0);
-					}
-					if (ModerationMechanics.getRank(p) == RankEnum.SUPPORTER
-							|| ModerationMechanics.getRank(p) == RankEnum.SUB3) {
+								playerLocation.add(x, y, z), 20.0);
+					} else if (rank == RankEnum.SUB1) {
+						Particles.FLAME.display(0.0f, 0.0f, 0.0f, 0.02f, 10,
+								playerLocation.add(x, y, z), 20.0);
+					} else if (rank == RankEnum.SUPPORTER || rank == RankEnum.SUB3) {
 						double phi = 0;
 						phi = phi + Math.PI / 8;
 						double x1, y1, z1;
 
-						Location location1 = p.getLocation();
+						Location location1 = playerLocation.clone();
 						for (double t = 0; t <= 2 * Math.PI; t = t + Math.PI / 16) {
 							for (double i = 0; i <= 1; i = i + 1) {
 								x1 = 0.4 * (2 * Math.PI - t) * 0.5 * Math.cos(t + phi + i * Math.PI);
@@ -159,21 +181,21 @@ public class Listeners implements Listener {
 								Particles.REDSTONE.display(0, 0, 0, 0, 1, location1, 20.0);
 								location1.subtract(x1, y1, z1);
 							}
-
 						}
 
 						if (phi > 10 * Math.PI) {
 							this.cancel();
 						}
-					}
-
-					if (ModerationMechanics.getRank(p) == RankEnum.SUB2) {
-						Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 1.0f, 10, p.getLocation().clone().add(x, y, z), 20.0);
+					} else if (rank == RankEnum.SUB2) {
+						Particles.SPELL_WITCH.display(0.0f, 0.0f, 0.0f, 1.0f, 10,
+								playerLocation.add(x, y, z), 20.0);
 					}
 				}
 			}
-		}.runTaskTimerAsynchronously(PracticeServer.plugin, 0, 3);
+		}.runTaskTimerAsynchronously(PracticeServer.plugin, 0, 10);
 	}
+
+
 
 	public void onDisable() {
 		PracticeServer.log.info("[Listeners] has been disabled.");
@@ -209,33 +231,19 @@ public class Listeners implements Listener {
 			if (event.getCurrentItem().getItemMeta().getDisplayName().contains("Spectral")
 					&& !nbtAccessor.hasKey("fixedgear")) {
 				switch (event.getCurrentItem().getType()) {
-				case DIAMOND_HELMET:
-				case DIAMOND_CHESTPLATE:
-				case DIAMOND_LEGGINGS:
-				case DIAMOND_BOOTS:
-					event.getWhoClicked().getInventory().addItem(EliteDrops.createCustomEliteDrop("spectralKnight"));
-					break;
-				default:
-					return;
+					case DIAMOND_HELMET:
+					case DIAMOND_CHESTPLATE:
+					case DIAMOND_LEGGINGS:
+					case DIAMOND_BOOTS:
+						event.getWhoClicked().getInventory().addItem(EliteDrops.createCustomEliteDrop("spectralKnight"));
+						break;
+					default:
+						return;
 				}
 			}
 		}
 	}
 
-	@EventHandler
-	public void onExit(VehicleExitEvent event) {
-		try {
-            Location location = event.getVehicle().getLocation();
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    event.getExited().teleport(location);
-                }
-            }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 4L);
-        }catch(Exception e){
-		    System.out.println("Listeners.java:249 AAC btw haHAA");
-        }
-	}
 
 	@EventHandler
 	public void onInteract(PlayerInteractEvent e) {
@@ -248,16 +256,6 @@ public class Listeners implements Listener {
 		}
 	}
 
-	@EventHandler
-	public void FuckCazza(InventoryClickEvent e) {// Cazza is a snake
-		if (e.getInventory().getName().equals("Bank Chest (1/1)")) {
-			HumanEntity p = e.getWhoClicked();
-			if (!p.isOp() && !Alignments.isSafeZone(p.getLocation())) {
-				p.closeInventory();
-				p.closeInventory();
-			}
-		}
-	}
 
 	public static boolean isWeapon(ItemStack itemStack) {
 		return itemStack.getType().name().contains("_AXE") || itemStack.getType().name().contains("_SWORD")
@@ -272,19 +270,22 @@ public class Listeners implements Listener {
 					ChatColor.RED + "The server is in the middle of deploying a patch. Please join in a few seconds.");
 		}
 	}
+
 	@EventHandler
 	public void on(EntityCombustEvent event) {
 		if (event.getEntityType() == EntityType.DROPPED_ITEM) {
 			event.setCancelled(true);
 		}
 	}
+
 	@EventHandler
 	public void on(EntityDamageEvent event) {
 		if (event.getEntityType() == EntityType.DROPPED_ITEM) {
 			event.setCancelled(true);
 		}
 	}
-	public static ItemStack donorPick(){
+
+	public static ItemStack donorPick() {
 		ItemStack P = new ItemStack(Material.DIAMOND_PICKAXE);
 		ItemMeta pickmeta = P.getItemMeta();
 		pickmeta.setDisplayName(ChatColor.BLUE + "Donator Pickaxe");
@@ -305,28 +306,19 @@ public class Listeners implements Listener {
 	}
 
 
-	@EventHandler
-	public void onEntityDamage(EntityDamageEvent event) {
-		Entity entity = event.getEntity();
-		if (event.getCause() == EntityDamageEvent.DamageCause.HOT_FLOOR && entity instanceof Player) {
-			Player player = (Player) entity;
-			Block damager = player.getLocation().getBlock();
-			if (damager.getType() == Material.MAGMA) {
-				event.setCancelled(true);
-			}
-		}
-	}
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void on(ServerListPingEvent event) {
 		try {
-			event.setMotd(ChatColor.translateAlternateColorCodes('&', "                    &3&lMYSTARIA&r\n            &7&oA Minecraft MMORPG/Looter"));
-		}catch (Exception e) {
+			event.setMotd(ChatColor.translateAlternateColorCodes('&', "                    &3&lMYSTARIA&r\n            &7&oA Minecraft MMORPG + Races"));
+		} catch (Exception e) {
 
 		}
 	}
+
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 
+		e.setJoinMessage(ChatColor.AQUA + "[+] " + ChatColor.GRAY + e.getPlayer().getName());
 		Player player = e.getPlayer();
 		if (API.getPlayerRegistry().request(player) == null)
 			new PlayerEntity(player.getUniqueId());
@@ -335,51 +327,42 @@ public class Listeners implements Listener {
 				.setBaseValue(1024.0D); /* Fixes 1.9+ Combat */
 
 		/* Initiates the player Login by setting the basic Data */
-		player.setLevel(100);
-		player.setExp(1.0f);
 		player.setHealthScale(20.0);
 		player.setHealthScaled(true);
-		player.getInventory().setHeldItemSlot(0);
 
 		/* Used to make the Clink sound on login */
 		if (player.getInventory().getItem(0) != null && isWeapon(player.getInventory().getItem(0))) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.5f);
 		}
-		/* Message of the Day goes here */
-		IntStream.range(0, 20).forEach(number -> player.sendMessage(" "));
+		Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
+			/* Message of the Day goes here */
+			IntStream.range(0, 30).forEach(number -> player.sendMessage(" "));
 
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.BOLD + "Mystaria Patch " + PracticeServer.getInstance().getDescription().getVersion());
-		player.sendMessage("");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" + ChatColor.ITALIC + "This server is still in early development, expect bugs.");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" + ChatColor.ITALIC + "(New Map Coming in 1-2 Weeks)");
-		player.sendMessage("");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" +  "Voting Links");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" + ChatColor.ITALIC + "http://bit.ly/3j5hdLb");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" + ChatColor.ITALIC + "https://bit.ly/3kHRaKd");
-		StringUtil.sendCenteredMessage(player,
-				ChatColor.GRAY + "" + ChatColor.ITALIC + "http://bit.ly/407DSXE");
+			StringUtil.sendCenteredMessage(player,
+					ChatColor.BOLD + "Mystaria Patch " + PracticeServer.getInstance().getDescription().getVersion());
+			player.sendMessage("");
+			StringUtil.sendCenteredMessage(player,
+					ChatColor.GRAY + "" + ChatColor.ITALIC + "This server is still in development, expect bugs.");
+			StringUtil.sendCenteredMessage(player,
+					ChatColor.GRAY + "" + ChatColor.ITALIC + "** Race Mode Beta Added **");
+			player.sendMessage("");
 
-		e.setJoinMessage(ChatColor.AQUA + "[+] " + ChatColor.GRAY + player.getName());
-		hpCheck(player); /*
-							 * Updates the players HP by getting gear and
-							 * setting HP.
-							 */
-		if (player.isOp()) {
-			if(!ToggleGMCommand.togglegm.contains(player.getName())) ActionBar.sendActionBar(player, "&bYou are in GM Mode", 5);
-			player.sendMessage(ChatColor.BLUE + "You are currently not vanished! Please use /psvanish to vanish.");
-			player.setMaxHealth(10000);
-			player.setHealth(10000);
-		}
-		Toggles.enablePM(
-				player); /* Enables the players PM toggle for some reason */
-		Toggles.toggles.get(player.getUniqueId()).add("Debug");
-		Toggles.toggles.get(player.getUniqueId()).add("Glow Drops");
+			if (!player.isDead()) hpCheck(player); /*
+			 * Updates the players HP by getting gear and
+			 * setting HP.
+			 */
+			if (player.isOp() && !player.isDead()) {
+				if (!ToggleGMCommand.togglegm.contains(player.getName()))
+					ActionBar.sendActionBar(player, "&bYou are in GM Mode", 5);
+				player.sendMessage(ChatColor.BLUE + "You are currently not vanished! Please use /psvanish to vanish.");
+				player.setMaxHealth(10000);
+				player.setHealth(10000);
+			}
+			Toggles.enablePM(
+					player); /* Enables the players PM toggle for some reason */
+			Toggles.toggles.get(player.getUniqueId()).add("Debug");
+			Toggles.toggles.get(player.getUniqueId()).add("Glow Drops");
+		}, 10L);
 	}
 
 	@EventHandler
@@ -387,10 +370,10 @@ public class Listeners implements Listener {
 		if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
 			if (event.getPlayer().getItemInHand() == null
 					|| event.getPlayer().getItemInHand().getType().equals(Material.AIR)) {
-				if (event.getClickedBlock().getType().equals(Material.FURNACE)) {
+				if (event.getClickedBlock().getType().equals(Material.FURNACE) || event.getClickedBlock().getType().equals(Material.TORCH)) {
 					event.getPlayer().sendMessage(ChatColor.RED
-							+ "This furnace can be used to cook fish! Right click this furnace while holding raw fish to cook it.");
-                    event.setCancelled(true);
+							+ "This can be used to cook fish! Right click this furnace while holding raw fish to cook it.");
+					event.setCancelled(true);
 				}
 
 			}
@@ -468,31 +451,27 @@ public class Listeners implements Listener {
 				if (hp > 0) {
 					p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1.0f, 1.0f);
 					p.getInventory().setItemInMainHand(null);
+					PlayerInventory inv = p.getInventory();
+					int slot = inv.getHeldItemSlot();
+					for (int i = 36; i > -1; i--) {
+						if (inv.getItem(i) != null && inv.getItem(i).getType() == Material.POTION) {
+							inv.setItem(slot, inv.getItem(i));
+							inv.setItem(i, null);
+							break;
+						}
+					}
 					if (p.getHealth() + (double) hp > p.getMaxHealth()) {
-						p.sendMessage("               " + ChatColor.GREEN + ChatColor.BOLD + "+" + ChatColor.GREEN + hp
+						p.sendMessage(" " + ChatColor.GREEN + ChatColor.BOLD + "+" + ChatColor.GREEN + hp
 								+ ChatColor.BOLD + " HP" + ChatColor.GRAY + " [" + (int) p.getMaxHealth() + "/"
 								+ (int) p.getMaxHealth() + "HP]");
 						p.setHealth(p.getMaxHealth());
 					} else {
-						p.sendMessage("               " + ChatColor.GREEN + ChatColor.BOLD + "+" + ChatColor.GREEN + hp
+						p.sendMessage(" " + ChatColor.GREEN + ChatColor.BOLD + "+" + ChatColor.GREEN + hp
 								+ ChatColor.BOLD + " HP" + ChatColor.GRAY + " [" + (int) (p.getHealth() + (double) hp)
 								+ "/" + (int) p.getMaxHealth() + "HP]");
 						p.setHealth(p.getHealth() + (double) hp);
 					}
 				}
-				PlayerInventory inv = p.getInventory();
-				int slot = inv.getHeldItemSlot();
-				new BukkitRunnable() {
-					public void run() {
-						for (int i = 36; i > -1; i--) {
-							if (inv.getItem(i) != null && inv.getItem(i).getType() == Material.POTION) {
-								inv.setItem(slot, inv.getItem(i));
-								inv.setItem(i, null);
-								break;
-							}
-						}
-					}
-				}.runTaskLater(PracticeServer.plugin, 10);
 			}
 		}
 	}
@@ -668,9 +647,9 @@ public class Listeners implements Listener {
 		Player p = e.getPlayer();
 		if (p.getInventory().getItemInMainHand() != null
 				&& (p.getInventory().getItemInMainHand().getType().name().contains("HELMET")
-						|| p.getInventory().getItemInMainHand().getType().name().contains("CHESTPLATE")
-						|| p.getInventory().getItemInMainHand().getType().name().contains("LEGGINGS")
-						|| p.getInventory().getItemInMainHand().getType().name().contains("BOOTS"))
+				|| p.getInventory().getItemInMainHand().getType().name().contains("CHESTPLATE")
+				|| p.getInventory().getItemInMainHand().getType().name().contains("LEGGINGS")
+				|| p.getInventory().getItemInMainHand().getType().name().contains("BOOTS"))
 				&& (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
 			e.setCancelled(true);
 			p.updateInventory();
@@ -740,32 +719,22 @@ public class Listeners implements Listener {
 	}
 
 	@EventHandler
-	public void onLoginShiny(PlayerJoinEvent e) {
-		ItemStack is;
-		Player p = e.getPlayer();
-		ItemStack[] arritemStack = p.getInventory().getContents();
-		int n = arritemStack.length;
-		int n2 = 0;
-		while (n2 < n) {
-			is = arritemStack[n2];
-			if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasDisplayName()
-					&& Enchants.getPlus(is) > 3) {
-				is.addUnsafeEnchantment(Enchants.glow, 1);
+	public void onLoginShiny(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+
+		checkAndApplyGlowEnchant(player.getInventory().getContents());
+		checkAndApplyGlowEnchant(player.getInventory().getArmorContents());
+	}
+
+	private void checkAndApplyGlowEnchant(ItemStack[] items) {
+		for (ItemStack item : items) {
+			if (item != null && item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+					&& Enchants.getPlus(item) > 3) {
+				item.addUnsafeEnchantment(Enchants.glow, 1);
 			}
-			++n2;
-		}
-		arritemStack = p.getInventory().getArmorContents();
-		n = arritemStack.length;
-		n2 = 0;
-		while (n2 < n) {
-			is = arritemStack[n2];
-			if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasDisplayName()
-					&& Enchants.getPlus(is) > 3) {
-				is.addUnsafeEnchantment(Enchants.glow, 1);
-			}
-			++n2;
 		}
 	}
+
 
 	@EventHandler
 	public void onOpenShinyShiny(InventoryOpenEvent e) {
@@ -819,140 +788,166 @@ public class Listeners implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
-	public void onDamagePercent(EntityDamageEvent e) {
-		if (e.getEntity() instanceof LivingEntity) {
-			if (e.getDamage() <= 0.0) {
-				return;
-			}
-			if (DeployCommand.patchlockdown) {
-				e.setCancelled(true);
-				return;
-			}
-			LivingEntity p = (LivingEntity) e.getEntity();
-			if (e.getCause().equals(DamageCause.FIRE) || e.getCause().equals(DamageCause.LAVA)
-					|| e.getCause().equals(DamageCause.FIRE_TICK)) {
-				if (!this.firedmg.containsKey(p.getUniqueId()) || this.firedmg.containsKey(p.getUniqueId())
-						&& System.currentTimeMillis() - this.firedmg.get(p.getUniqueId()) > 500) {
-					this.firedmg.put(p.getUniqueId(), System.currentTimeMillis());
-					double multiplier = 0.01;
-					if (e.getCause().equals(DamageCause.FIRE) || e.getCause().equals(DamageCause.LAVA)) {
-						multiplier = 0.03;
-					}
-					if (p.getMaxHealth() * multiplier < 1.0) {
-						e.setDamage(1.0);
-					} else {
-						e.setDamage(p.getMaxHealth() * multiplier);
-					}
-				} else {
-					e.setDamage(0.0);
-					e.setCancelled(true);
-				}
-			} else if (e.getCause().equals(DamageCause.POISON)) {
-				if (p.getMaxHealth() * 0.01 >= p.getHealth()) {
-					e.setDamage(p.getHealth() - 1.0);
-				} else if (p.getMaxHealth() * 0.01 < 1.0) {
-					e.setDamage(1.0);
-				} else {
-					e.setDamage(p.getMaxHealth() * 0.01);
-				}
-			} else if (e.getCause().equals(DamageCause.DROWNING)) {
-				if (p.getMaxHealth() * 0.04 < 1.0) {
-					e.setDamage(1.0);
-				} else {
-					e.setDamage(p.getMaxHealth() * 0.04);
-				}
-			} else if (e.getCause().equals(DamageCause.WITHER)) {
-				e.setCancelled(true);
-				e.setDamage(0.0);
-				if (p.hasPotionEffect(PotionEffectType.WITHER)) {
-					p.removePotionEffect(PotionEffectType.WITHER);
-				}
-			} else if (e.getCause().equals(DamageCause.SUFFOCATION)) {
-				e.setDamage(0.0);
-				e.setCancelled(true);
-				Location loc = p.getLocation();
-				while ((loc.getBlock().getType() != Material.AIR
-						|| loc.add(0.0, 1.0, 0.0).getBlock().getType() != Material.AIR) && loc.getY() < 255.0) {
-					loc.add(0.0, 1.0, 0.0);
-				}
-				p.teleport(loc);
-			} else if (e.getCause().equals(DamageCause.VOID)) {
-				e.setDamage(0.0);
-				e.setCancelled(true);
-				if (p instanceof Player) {
-					Player pl = (Player) p;
-					if (Alignments.chaotic.containsKey(pl.getName())) {
-						p.teleport(TeleportBooks.generateRandomSpawnPoint(pl.getName()));
-					} else {
-						p.teleport(TeleportBooks.stonePeaks);
-					}
-				}
-			} else if (e.getCause().equals(DamageCause.FALL)) {
-				if (e.getDamage() * p.getMaxHealth() * 0.02 >= p.getHealth()) {
-					e.setDamage(p.getHealth() - 1.0);
-				} else if (e.getDamage() * p.getMaxHealth() * 0.02 < 1.0) {
-					e.setDamage(1.0);
-				} else {
-					e.setDamage(e.getDamage() * p.getMaxHealth() * 0.02);
-				}
-			}
-			if (e.getDamage() > p.getHealth() && Duels.duelers.containsKey(p)) {
-				Duels.duelers.get(p).exitDuel(false, false);
-			}
+	public void onDamagePercent(EntityDamageEvent event) {
+		if (!(event.getEntity() instanceof LivingEntity)) {
+			return;
+		}
+
+		LivingEntity entity = (LivingEntity) event.getEntity();
+		double maxHealth = entity.getMaxHealth();
+		double damage = event.getDamage();
+		DamageCause cause = event.getCause();
+
+		if (damage <= 0.0) {
+			return;
+		}
+
+		if (DeployCommand.patchlockdown) {
+			event.setCancelled(true);
+			return;
+		}
+
+		if (cause.equals(DamageCause.FIRE) || cause.equals(DamageCause.LAVA) || cause.equals(DamageCause.FIRE_TICK)) {
+			handleFireDamage(event, entity, maxHealth);
+		} else if (cause.equals(DamageCause.POISON)) {
+			handlePoisonDamage(event, entity, maxHealth);
+		} else if (cause.equals(DamageCause.DROWNING)) {
+			handleDrowningDamage(event, entity, maxHealth);
+		} else if (cause.equals(DamageCause.WITHER)) {
+			handleWitherDamage(event, entity);
+		} else if (cause.equals(DamageCause.VOID)) {
+			handleVoidDamage(event, entity);
+		} else if (cause.equals(DamageCause.FALL)) {
+			handleFallDamage(event, entity, maxHealth);
+		}
+
+		if (event.getDamage() > entity.getHealth() && Duels.duelers.containsKey(entity)) {
+			Duels.duelers.get(entity).exitDuel(false, false);
 		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
-	public void onPlayerDeath(PlayerDeathEvent e) {
-		Player p = e.getEntity();
-		p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
-		e.setDroppedExp(0);
-		e.setDeathMessage(null);
-		Alignments.tagged.remove(p.getName());
-		combat.remove(p.getName());
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Player player = event.getEntity();
+		player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0f, 1.0f);
+		event.setDroppedExp(0);
+		event.setDeathMessage(null);
+		Alignments.tagged.remove(player.getName());
+		combat.remove(player.getName());
 	}
 
-
-
 	@EventHandler
-	public void onInventoryClick(InventoryClickEvent e) {
+	public void onInventoryClick(InventoryClickEvent event) {
 		if (DeployCommand.patchlockdown) {
-			e.setCancelled(true);
+			event.setCancelled(true);
 			return;
 		}
-		Player p = (Player) e.getWhoClicked();
-		if (e.getSlotType() == InventoryType.SlotType.ARMOR && (e.isLeftClick() || e.isRightClick() || e.isShiftClick())
-				&& (Items.isArmor(e.getCurrentItem()) && Items.isArmor(e.getCursor())
-						|| Items.isArmor(e.getCurrentItem())
-								&& (e.getCursor() == null || e.getCursor().getType() == Material.AIR)
-						|| (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR)
-								&& Items.isArmor(e.getCursor()))) {
-			p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-		}
-		if (e.getInventory().getHolder() == p) {
-			if (e.isShiftClick() && e.getCurrentItem().getType().name().contains("_HELMET")
-					&& p.getInventory().getHelmet() == null) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-			}
-			if (e.isShiftClick() && e.getCurrentItem().getType().name().contains("_CHESTPLATE")
-					&& p.getInventory().getChestplate() == null) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-			}
-			if (e.isShiftClick() && e.getCurrentItem().getType().name().contains("_LEGGINGS")
-					&& p.getInventory().getLeggings() == null) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-			}
-			if (e.isShiftClick() && e.getCurrentItem().getType().name().contains("_BOOTS")
-					&& p.getInventory().getBoots() == null) {
-				p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-			}
-		}
-		new BukkitRunnable() {
 
+		Player player = (Player) event.getWhoClicked();
+		ItemStack currentItem = event.getCurrentItem();
+		ItemStack cursorItem = event.getCursor();
+
+		if (event.getSlotType() == InventoryType.SlotType.ARMOR &&
+				(event.isLeftClick() || event.isRightClick() || event.isShiftClick()) &&
+				((Items.isArmor(currentItem) && Items.isArmor(cursorItem)) ||
+						(Items.isArmor(currentItem) && (cursorItem == null || cursorItem.getType() == Material.AIR)) ||
+						((currentItem == null || currentItem.getType() == Material.AIR) && Items.isArmor(cursorItem)))) {
+			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+		}
+
+		if (event.getInventory().getHolder() == player) {
+			if (event.isShiftClick() && currentItem.getType().name().contains("_HELMET") && player.getInventory().getHelmet() == null) {
+				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			}
+			if (event.isShiftClick() && currentItem.getType().name().contains("_CHESTPLATE") && player.getInventory().getChestplate() == null) {
+				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			}
+			if (event.isShiftClick() && currentItem.getType().name().contains("_LEGGINGS") && player.getInventory().getLeggings() == null) {
+				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			}
+			if (event.isShiftClick() && currentItem.getType().name().contains("_BOOTS") && player.getInventory().getBoots() == null) {
+				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+			}
+		}
+
+		new BukkitRunnable() {
 			public void run() {
-				Listeners.hpCheck(p);
+				Listeners.hpCheck(player);
 			}
 		}.runTaskLaterAsynchronously(PracticeServer.plugin, 1);
+	}
+
+	// Helper methods for handling different damage causes
+	private void handleFireDamage(EntityDamageEvent event, LivingEntity entity, double maxHealth) {
+		UUID entityUUID = entity.getUniqueId();
+
+		if (!firedmg.containsKey(entityUUID) || (System.currentTimeMillis() - firedmg.get(entityUUID) > 500)) {
+			firedmg.put(entityUUID, System.currentTimeMillis());
+			double multiplier = (event.getCause().equals(DamageCause.FIRE) || event.getCause().equals(DamageCause.LAVA)) ? 0.03 : 0.01;
+			double damage = Math.max(maxHealth * multiplier, 1.0);
+			event.setDamage(damage);
+		} else {
+			event.setDamage(0.0);
+			event.setCancelled(true);
+		}
+	}
+
+	private void handlePoisonDamage(EntityDamageEvent event, LivingEntity entity, double maxHealth) {
+		double multiplier = 0.01;
+		double damage;
+
+		if (maxHealth * multiplier >= entity.getHealth()) {
+			damage = entity.getHealth() - 1.0;
+		} else if (maxHealth * multiplier < 1.0) {
+			damage = 1.0;
+		} else {
+			damage = maxHealth * multiplier;
+		}
+
+		event.setDamage(damage);
+	}
+
+	private void handleDrowningDamage(EntityDamageEvent event, LivingEntity entity, double maxHealth) {
+		double multiplier = 0.04;
+		double damage = (maxHealth * multiplier < 1.0) ? 1.0 : maxHealth * multiplier;
+		event.setDamage(damage);
+	}
+
+	private void handleWitherDamage(EntityDamageEvent event, LivingEntity entity) {
+		event.setCancelled(true);
+		event.setDamage(0.0);
+		if (entity.hasPotionEffect(PotionEffectType.WITHER)) {
+			entity.removePotionEffect(PotionEffectType.WITHER);
+		}
+	}
+
+	private void handleVoidDamage(EntityDamageEvent event, LivingEntity entity) {
+		event.setDamage(0.0);
+		event.setCancelled(true);
+
+		if (entity instanceof Player) {
+			Player player = (Player) entity;
+			if (Alignments.chaotic.containsKey(player.getName())) {
+				player.teleport(TeleportBooks.generateRandomSpawnPoint(player.getName()));
+			} else {
+				// player.teleport(TeleportBooks.stonePeaks);
+			}
+		}
+	}
+
+	private void handleFallDamage(EntityDamageEvent event, LivingEntity entity, double maxHealth) {
+		double multiplier = event.getDamage() * maxHealth * 0.02;
+		double damage;
+
+		if (multiplier >= entity.getHealth()) {
+			damage = entity.getHealth() - 1.0;
+		} else if (multiplier < 1.0) {
+			damage = 1.0;
+		} else {
+			damage = multiplier;
+		}
+
+		event.setDamage(damage);
 	}
 
 	@EventHandler
@@ -1007,19 +1002,23 @@ public class Listeners implements Listener {
 	}
 
 	public static GlowAPI.Color groupOf(ItemStack itemStack) {
-
-		for (String string : itemStack.getItemMeta().getLore()) {
-			if (string.contains("Common")) {
-				return GlowAPI.Color.WHITE;
-			} else if (string.contains("Uncommon")) {
-				return GlowAPI.Color.GREEN;
-			} else if (string.contains("Rare")) {
-				return GlowAPI.Color.AQUA;
-			} else if (string.contains("Unique")) {
-				return GlowAPI.Color.YELLOW;
+		ItemMeta itemMeta = itemStack.getItemMeta();
+		if (itemMeta != null) {
+			List<String> lore = itemMeta.getLore();
+			if (lore != null) {
+				for (String string : lore) {
+					if (string.contains("Common")) {
+						return GlowAPI.Color.WHITE;
+					} else if (string.contains("Uncommon")) {
+						return GlowAPI.Color.GREEN;
+					} else if (string.contains("Rare")) {
+						return GlowAPI.Color.AQUA;
+					} else if (string.contains("Unique")) {
+						return GlowAPI.Color.YELLOW;
+					}
+				}
 			}
 		}
-
 		return null;
 	}
 
@@ -1032,87 +1031,65 @@ public class Listeners implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void onQuitLog(PlayerQuitEvent e) {
-		Player p = e.getPlayer();
-		if ((!Alignments.isSafeZone(p.getLocation()) && Alignments.tagged.containsKey(p.getName())
-				&& System.currentTimeMillis() - Alignments.tagged.get(p.getName()) < 10000)
-				|| !Alignments.isSafeZone(p.getLocation()) && combat.containsKey(p.getName())
-						&& System.currentTimeMillis() - combat.get(p.getName()) < 10000) {
-			Alignments.logout = true;
-			p.setHealth(0.0);
-			if (Alignments.chaotic.containsKey(p.getName()) || (Alignments.neutral.containsKey(p.getName()))) {
-				for (Player player : p.getWorld().getPlayers()) {
-					player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1.0F, 1.0F);
-				}
-			}
-		}
-	}
 
 	@EventHandler
 	public void onHealthRegen(EntityRegainHealthEvent e) {
 		e.setCancelled(true);
 	}
 
-	public static void Kit(Player p) {
-		ItemStack S;
-		if(!Toggles.getToggleStatus(p,"Disable Kit")){
-			PlayerInventory i = p.getInventory();
+	public static void Kit(Player player) {
+		if (!Toggles.getToggleStatus(player, "Disable Kit")) {
+			PlayerInventory inventory = player.getInventory();
 			Random random = new Random();
 			int min = random.nextInt(2) + 4;
 			int max = random.nextInt(2) + 8;
-			int wep = random.nextInt(2) + 1;
-			if (wep == 1)
-			{
-				ItemStack s = new ItemStack(Material.WOOD_SWORD);
-				ItemMeta smeta = s.getItemMeta();
-				smeta.setDisplayName(ChatColor.WHITE.toString() +
-						"Training Sword");
-				List<String> slore = new ArrayList<String>();
-				slore.add(ChatColor.RED + "DMG: " + min + " - " +
-						max);
-				slore.add(ChatColor.GRAY + "Untradeable");
-				smeta.setLore(slore);
-				s.setItemMeta(smeta);
-				i.addItem(new ItemStack[] { s });
+			int weaponType = random.nextInt(2) + 1;
+
+			ItemStack weapon;
+			String weaponName;
+			if (weaponType == 1) {
+				weapon = new ItemStack(Material.WOOD_SWORD);
+				weaponName = "Training Sword";
+			} else {
+				weapon = new ItemStack(Material.WOOD_AXE);
+				weaponName = "Training Hatchet";
 			}
-			if (wep == 2)
-			{
-				ItemStack s = new ItemStack(Material.WOOD_AXE);
-				ItemMeta smeta = s.getItemMeta();
-				smeta.setDisplayName(ChatColor.WHITE.toString() +
-						"Training Hatchet");
-				List<String> slore = new ArrayList<String>();
-				slore.add(ChatColor.RED.toString() + "DMG: " + min + " - " +
-						max);
-				slore.add(ChatColor.GRAY.toString() + "Untradeable");
-				smeta.setLore(slore);
-				s.setItemMeta(smeta);
-				i.addItem(new ItemStack[] { s });
-			}
+
+			ItemMeta weaponMeta = weapon.getItemMeta();
+			weaponMeta.setDisplayName(ChatColor.WHITE + weaponName);
+			List<String> weaponLore = new ArrayList<>();
+			weaponLore.add(ChatColor.RED + "DMG: " + min + " - " + max);
+			weaponLore.add(ChatColor.GRAY + "Untradeable");
+			weaponMeta.setLore(weaponLore);
+			weapon.setItemMeta(weaponMeta);
+			inventory.addItem(weapon);
 		}
 
-        p.getInventory().addItem(Horses.mount(Horses.horseTier.get(p), false));
-		p.getInventory().addItem(Hearthstone.hearthstone());
-		p.getInventory().addItem(Journal.journal());
-		p.setMaxHealth(50.0);
-		p.setHealth(50.0);
-		p.setHealthScale(20.0);
-		p.setHealthScaled(true);
+		if (Horses.horseTier.containsKey(player)) {
+			player.getInventory().addItem(Horses.createMount(Horses.horseTier.get(player), false));
+		} else if (PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) {
+			player.getInventory().addItem(Horses.createMount(3, false).clone());
+			Horses.horseTier.put(player, 3);
+		}
+
+		player.setMaxHealth(50.0);
+		player.setHealth(50.0);
+		player.setHealthScale(20.0);
+		player.setHealthScaled(true);
 	}
 
 	@EventHandler
-	public void onhit(EntityDamageEvent e) {
-		if (!(e.getEntity() instanceof LivingEntity))
+	public void onHit(EntityDamageEvent event) {
+		if (!(event.getEntity() instanceof LivingEntity)) {
 			return;
-		LivingEntity l = (LivingEntity) e.getEntity();
-		if (Mobs.isFrozenBoss(l) || Mobs.isGolemBoss(l)) {
-			e.setCancelled(true);
-			e.getEntity().setVelocity(new Vector());
-			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), new Runnable() {
-				public void run() {
-					e.getEntity().setVelocity(new Vector());
-				}
+		}
+
+		LivingEntity entity = (LivingEntity) event.getEntity();
+		if (Mobs.isFrozenBoss(entity) || Mobs.isGolemBoss(entity)) {
+			event.setCancelled(true);
+			entity.setVelocity(new Vector());
+			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
+				entity.setVelocity(new Vector());
 			}, 1L);
 		}
 	}
@@ -1124,11 +1101,12 @@ public class Listeners implements Listener {
 		potionMeta.setDisplayName(ChatColor.GREEN + "Health Potion");
 		potionMeta.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.AQUA + "75HP",
 				ChatColor.GRAY + "Untradeable"));
+
 		for (ItemFlag itemFlag : ItemFlag.values()) {
 			potionMeta.addItemFlags(itemFlag);
 		}
+
 		itemStack.setItemMeta(potionMeta);
 		return itemStack;
 	}
-
 }

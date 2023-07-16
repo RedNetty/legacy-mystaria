@@ -35,13 +35,11 @@ import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,14 +63,13 @@ public class Logout implements Listener {
                             logging.remove(p.getName());
                             loggingloc.remove(p.getName());
 
-                            if (Alignments.tagged.containsKey(p.getName())) {
-                                Alignments.tagged.remove(p.getName());
-                            }
+                            Alignments.tagged.remove(p.getName());
                             if (Listeners.combat.containsKey(p.getName())) {
+                                Listeners.combat.remove(p.getName());
                                 Alignments.tagged.remove(p.getName());
                             }
                             p.saveData();
-                            p.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+                            p.kickPlayer(ChatColor.GREEN.toString() + "You have safely logged out." + "\n\n" + ChatColor.GRAY + "Your player data has been synced.");
                             ServerUtil.sendToServer(p.getName(), "lobby");
                             continue;
                         }
@@ -87,18 +84,15 @@ public class Logout implements Listener {
     }
 
     public void onDisable(boolean patch) {
-    }
-
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onDisable(PluginDisableEvent event) {
         Bukkit.getOnlinePlayers().forEach(player -> {
             SQLMain.updatePersistentStats(player);
             SQLMain.updatePlayerStats(player);
-            player.kickPlayer(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+            player.kickPlayer(ChatColor.GREEN.toString() + "You have safely logged out." + "\n\n" + ChatColor.GRAY + "Your player data has been synced.");
         });
         PracticeServer.log.info("[Logout] has been disabled.");
     }
+
+
     @EventHandler
     public void onCancelDamager(EntityDamageByEntityEvent e) {
         Player p;

@@ -6,6 +6,7 @@ import me.retrorealms.practiceserver.enums.chat.ChatTag;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.StaticConfig;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -28,6 +29,8 @@ public class ModerationMechanics implements Listener {
     private static HashMap<UUID, PermissionAttachment> perms = new HashMap<UUID, PermissionAttachment>();
 
     public static RankEnum getRank(Player player) {
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE && player.isOp()) return RankEnum.GM;
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return RankEnum.DEFAULT;
         return rankHashMap.get(player.getUniqueId());
     }
 
@@ -37,6 +40,8 @@ public class ModerationMechanics implements Listener {
     }
 
     public static boolean isStaff(Player player) {
+        if(player.isOp()) return true;
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return false;
         RankEnum rankEnum = getRank(player);
         switch (rankEnum) {
             case QUALITY:
@@ -52,6 +57,7 @@ public class ModerationMechanics implements Listener {
     }
 
     public static boolean isDonator(Player player) {
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return false;
         RankEnum rankEnum = getRank(player);
         switch (rankEnum) {
             case SUB:

@@ -9,6 +9,7 @@ import me.retrorealms.practiceserver.mechanics.guilds.listeners.JoinListener;
 import me.retrorealms.practiceserver.mechanics.guilds.listeners.QuitListener;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -89,6 +90,7 @@ public final class GuildMechanics {
     }
 
     public boolean isInSameGuild(Player shooter, Player entity) {
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return false;
         GuildPlayer guildPlayer = GuildPlayers.getInstance().get(shooter.getUniqueId());
         GuildPlayer guildPlayer1 = GuildPlayers.getInstance().get(entity.getUniqueId());
         return ((guildPlayer.getGuildName() != null) && (guildPlayer1.getGuildName() != null)) && ((guildPlayer.getGuildName() != "") && (guildPlayer1.getGuildName() != "")) && (guildPlayer.getGuildName().equals(guildPlayer1.getGuildName()));

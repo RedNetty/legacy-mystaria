@@ -10,6 +10,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 public class BukkitSerialization {
@@ -154,8 +155,9 @@ public class BukkitSerialization {
 
             dataInput.close();
             return items;
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Unable to decode class type.", e);
+        } catch (ClassNotFoundException | EOFException e) {
+            System.out.println("gay");
+            return null;
         }
     }
 }

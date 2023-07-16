@@ -32,7 +32,7 @@ public class Nametag implements Listener {
     public static ItemStack item_ownership_tag;
 
     static {
-        item_ownership_tag = Items.signNewCustomItem(Material.ENCHANTED_BOOK, String.valueOf(ChatColor.GOLD.toString()) + "Item Name Tag", String.valueOf(ChatColor.GOLD.toString()) + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC + "Apply to any weapon or armor piece" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "to give it a custom display name." + "," + ChatColor.GRAY + "Permanent Untradeable");
+        item_ownership_tag = Items.signNewCustomItem(Material.ENCHANTED_BOOK, String.valueOf(ChatColor.GOLD.toString()) + "Item Name Tag", String.valueOf(ChatColor.GOLD.toString()) + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC + "Apply to any weapon or armor piece" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "to give it a custom display name.");
     }
 
     public void onEnable() {
@@ -105,6 +105,15 @@ public class Nametag implements Listener {
                 return ChatColor.BLUE;
             default:
                 return ChatColor.WHITE;
+        }
+    }
+    public static String getRarityString(final int tier) {
+        switch (tier) {
+            case 1:
+            default:return ChatColor.GRAY + ChatColor.ITALIC.toString() + "Common";
+            case 2: return ChatColor.GREEN + ChatColor.ITALIC.toString()+ "Uncommon";
+            case 3: return ChatColor.AQUA + ChatColor.ITALIC.toString()+ "Rare";
+            case 4: return ChatColor.YELLOW + ChatColor.ITALIC.toString()+ "Unique";
         }
     }
 

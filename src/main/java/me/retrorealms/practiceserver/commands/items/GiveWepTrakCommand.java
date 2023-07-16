@@ -29,7 +29,6 @@ public class GiveWepTrakCommand implements CommandExecutor {
             lore.add(ChatColor.GOLD + "Uses: " + ChatColor.GRAY + "1");
             lore.add(ChatColor.GRAY + "" + ChatColor.ITALIC + "Apply to any weapon to start tracking");
             lore.add(ChatColor.GRAY + "" + ChatColor.ITALIC + "stats as you use it.");
-            lore.add(ChatColor.GRAY + "Permanent Untradeable");
             itemMeta.setLore(lore);
             tracker.setItemMeta(itemMeta);
             if(args.length > 1){

@@ -56,7 +56,6 @@ public class SkeletonDungeon implements Listener {
             dungeonPlayers.add(new DungeonPlayer(player));
         });
 
-        System.out.println("Skeleton Dungeon loaded..");
 
         Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
             dungeonPlayers.forEach(dungeonPlayer -> {

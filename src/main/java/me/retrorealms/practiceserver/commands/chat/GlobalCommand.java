@@ -46,19 +46,11 @@ public class GlobalCommand implements CommandExecutor {
             }
             ItemStack iteminHand = player.getInventory().getItemInMainHand();
             for (Player randomPlayer : Bukkit.getOnlinePlayers()) {
-                String playerPrefix = ChatMechanics.getDisplayNameFor(player, randomPlayer);
-                String name = "";
-                GuildPlayer guildPlayer = GuildPlayers.getInstance().get(player.getUniqueId());
-                if (guildPlayer.isInGuild()) {
-                    name = ChatColor.WHITE + "[" + GuildManager.getInstance().get(guildPlayer.getGuildName()).getTag() + "] " + String.valueOf(ChatMechanics.getTag(player) + playerPrefix);
-                } else {
-                    name = String.valueOf(ChatMechanics.getTag(player) + playerPrefix);
-                }
 
                 if (fullMessage.toLowerCase().contains("@i@") && player.getInventory().getItemInMainHand() != null && player.getInventory().getItemInMainHand().getType() != Material.AIR) {
-                    ChatMechanics.sendShowStringGlobal(player, iteminHand, globalPrefix + name, fullMessage, randomPlayer);
+                    ChatMechanics.sendShowString(player, iteminHand, globalPrefix + ChatMechanics.fullDisplayName(player), fullMessage, randomPlayer);
                 } else {
-                    randomPlayer.sendMessage(globalPrefix + name + ": " + ChatColor.WHITE + fullMessage);
+                    randomPlayer.sendMessage(globalPrefix + ChatMechanics.fullDisplayName(player) + ": " + ChatColor.WHITE + fullMessage);
                 }
             }
         } catch (Exception e) {

@@ -14,7 +14,7 @@ public class FakeRollCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender instanceof Player) {
             Player p = (Player) sender;
-            if(!ModerationMechanics.isStaff(p)) return false;
+            if (!ModerationMechanics.isStaff(p)) return false;
             if (args.length < 2 || args.length > 2) {
                 p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "Incorrect Syntax." + ChatColor.GRAY + " /fakeroll <1 - 10000> <1 - 10000>");
             } else if (args.length == 2) {

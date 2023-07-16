@@ -57,8 +57,8 @@ public class MessageCommand implements CommandExecutor {
                         ++i;
                     }
                     if (message.contains("@i@") && p.getInventory().getItemInMainHand() != null && p.getInventory().getItemInMainHand().getType() != Material.AIR) {
-                        ChatMechanics.sendShowString(p, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM ", message, reciever);
-                        ChatMechanics.sendShowString(reciever, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "TO ", message, p);
+                        ChatMechanics.sendShowString(reciever, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM " + p.getName(), message, reciever);
+                        ChatMechanics.sendShowString(p, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "TO " + reciever.getName(), message, p);
                     } else {
 
                         if (Toggles.hasPMEnabled(reciever)) {

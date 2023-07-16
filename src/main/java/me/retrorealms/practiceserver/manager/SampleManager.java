@@ -7,11 +7,9 @@ public class SampleManager extends Manager {
 
     @Override
     public void onEnable() {
-        System.out.println("Red is gay");
     }
 
     @Override
     public void onDisable() {
-        System.out.println("Red is really gay");
     }
 }

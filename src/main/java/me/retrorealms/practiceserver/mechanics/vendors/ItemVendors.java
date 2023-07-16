@@ -30,9 +30,12 @@ package me.retrorealms.practiceserver.mechanics.vendors;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import me.retrorealms.practiceserver.PracticeServer;
+import me.retrorealms.practiceserver.commands.misc.LeaderboardCommand;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGUI;
+import me.retrorealms.practiceserver.mechanics.loot.contract.ContractHandler;
+import me.retrorealms.practiceserver.mechanics.loot.contract.ContractMenu;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
@@ -41,6 +44,7 @@ import me.retrorealms.practiceserver.mechanics.profession.Fishing;
 import me.retrorealms.practiceserver.mechanics.profession.Mining;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import net.citizensnpcs.api.event.NPCRemoveEvent;
 import net.citizensnpcs.api.event.NPCSpawnEvent;
 import net.citizensnpcs.api.npc.NPC;
@@ -272,6 +276,7 @@ public class ItemVendors
             hologram.delete();
         }
     }
+
     @EventHandler
     public void onNPCSpawn(NPCSpawnEvent e) {
         NPC npc = e.getNPC();
@@ -300,6 +305,9 @@ public class ItemVendors
             case "Upgrade Vendor":
                 hologramString = ChatColor.YELLOW + ChatColor.ITALIC.toString() + "Permanent Upgrades";
                 break;
+            case "Chronicler":
+                hologramString = ChatColor.LIGHT_PURPLE + ChatColor.ITALIC.toString() + "Leaderboards Menu";
+                break;
             default:
                 hologramString = ChatColor.GRAY + ChatColor.ITALIC.toString() + "NPC";
                 break;
@@ -307,6 +315,7 @@ public class ItemVendors
         Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), hologramLocation);
         hologram.appendTextLine(hologramString);
     }
+
     @EventHandler
     public void onBankClick(PlayerInteractEntityEvent e) {
         if (DeployCommand.patchlockdown) {
@@ -314,7 +323,7 @@ public class ItemVendors
             return;
         }
 
-        if(e.getRightClicked() instanceof HumanEntity) {
+        if (e.getRightClicked() instanceof HumanEntity) {
             HumanEntity clickedEntity = (HumanEntity) e.getRightClicked();
             if (!isNPC(clickedEntity)) {
                 return;
@@ -327,11 +336,20 @@ public class ItemVendors
             String npcName = clickedEntity.getName();
             Player player = e.getPlayer();
             Inventory inventory = null;
+            if(npcName.equalsIgnoreCase("Task Master")) {
+                player.playSound(clickedEntity.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 10, 10);
+                ContractMenu.openContractMenu(player);
+                return;
+            }
             switch (npcName) {
+                case "Chronicler":
+                    PracticeServer.getLeaderboard().openCategoryMenu(player);
+                    break;
                 case "Banker":
                     player.sendMessage(ChatColor.GRAY + "Banker: " + ChatColor.WHITE + "Use these bank chests to store your precious items.");
                     break;
                 case "Medic":
+                    if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.SHRINK) break;
                     player.sendMessage(ChatColor.GREEN + "You are all healed up, get in there!");
                     player.setHealth(player.getMaxHealth());
                     player.playSound(clickedEntity.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 10, 10);
@@ -414,13 +432,15 @@ public class ItemVendors
         inv.addItem(Speedfish.fish(5, true).clone());
         return inv;
     }
+
     private Inventory openBookVendorInventory(Player player) {
         Inventory inv = Bukkit.getServer().createInventory(null, 18, "Book Vendor");
-        inv.addItem(TeleportBooks.deadpeaks_book(true).clone());
-        inv.addItem(TeleportBooks.tripoli_book(true).clone());
+        inv.addItem(TeleportBooks.deadpeaksBook(true).clone());
+        inv.addItem(TeleportBooks.tripoliBook(true).clone());
         inv.addItem(TeleportBooks.avalonBook(true).clone());
         return inv;
     }
+
     private Inventory openUpgradeVendorInventory(Player player) {
         Inventory inv = Bukkit.getServer().createInventory(null, 18, "Upgrade Vendor");
         PersistentPlayer pp = PersistentPlayers.persistentPlayers.get(player.getUniqueId());
@@ -463,6 +483,7 @@ public class ItemVendors
 
 
     private void handleInventoryClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
         ItemStack item = event.getCurrentItem();
         if (item == null) {
             return;
@@ -475,7 +496,6 @@ public class ItemVendors
 
         List<String> lore = meta.getLore();
 
-        lore.remove(lore.size() - 1);
         if (lore == null) {
             return;
         }
@@ -492,7 +512,10 @@ public class ItemVendors
             player.closeInventory();
             return;
         }
+        lore.remove(lore.size() - 1);
 
+        meta.setLore(lore);
+        item.setItemMeta(meta);
         buyingitem.put(player.getName(), item);
         buyingprice.put(player.getName(), price);
         player.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
@@ -507,7 +530,7 @@ public class ItemVendors
         for (String str : lore) {
             if (str.contains("Price:")) {
                 String priceString = str.substring(str.indexOf(":") + 2).replaceFirst("[^\\d]+", "");
-                priceString = priceString.substring(0, priceString.length()-1);
+                priceString = priceString.substring(0, priceString.length() - 1);
                 return Integer.parseInt(priceString);
             }
         }

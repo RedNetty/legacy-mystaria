@@ -17,9 +17,9 @@ import me.retrorealms.practiceserver.mechanics.player.*;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
+import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,17 +28,21 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
 public class SQLMain implements Listener {
+    private static final RaceMinigame raceMinigame = PracticeServer.getRaceMinigame();
     public static Connection con;
 
     public static void updateGuild(UUID uuid, String guildName) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         try (PreparedStatement pstmt = con.prepareStatement("UPDATE PlayerData SET GuildName = ? WHERE UUID = ?")) {
             pstmt.setString(1, guildName);
             pstmt.setString(2, uuid.toString());
@@ -48,59 +52,80 @@ public class SQLMain implements Listener {
         }
     }
 
-    public static void updateRespawnData(Player player, List<ItemStack> items) {
+    public static void updateRespawnData(Player p, List<ItemStack> items) {
+        if (raceMinigame.getGameState() == MinigameState.SHRINK) return;
+        if (PracticeServer.DATABASE) {
+            updatePlayerStats(p);
+            int i = 0;
+            ItemStack[] itemArray = new ItemStack[items.size() + 1];
+            for (ItemStack item : items) {
+                itemArray[i] = item;
+                i++;
+            }
+            try {
+                String finalItems = BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0]));
+                System.out.println(finalItems);
+                String query = "UPDATE PlayerData SET RespawnData = ? WHERE UUID = ?";
+                PreparedStatement pstmt = con.prepareStatement(query);
+                pstmt.setString(1, finalItems);
+                pstmt.setString(2, p.getUniqueId().toString());
+                if (finalItems != null && finalItems.length() > 10) pstmt.executeUpdate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void loadRespawnData(Player player) {
+        if (raceMinigame.getGameState() == MinigameState.SHRINK) return;
         if (!PracticeServer.DATABASE) {
             return;
         }
+        List<ItemStack> itemList = getPlayerData("PlayerData", "RespawnData", player);
+        if (itemList == null) return;
 
-        updatePlayerStats(player);
+        player.getInventory().clear();
+        itemList.removeAll(Collections.singleton(null));
+        for (ItemStack itemStack : itemList) {
+            player.getInventory().addItem(itemStack);
 
-        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
-            pstmt.setString(1, player.getUniqueId().toString());
-            ResultSet resultSet = pstmt.executeQuery();
-            if (resultSet.next()) {
-                // Player record already exists, perform update
-                try (PreparedStatement updateStmt = con.prepareStatement("UPDATE PlayerData SET RespawnData = ? WHERE UUID = ?")) {
-                    updateStmt.setString(1, BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0])));
-                    updateStmt.setString(2, player.getUniqueId().toString());
-                    updateStmt.executeUpdate();
-                }
-            } else {
-                // Player record doesn't exist, perform insert
-                try (PreparedStatement insertStmt = con.prepareStatement("INSERT INTO PlayerData (UUID, RespawnData) VALUES (?, ?)")) {
-                    insertStmt.setString(1, player.getUniqueId().toString());
-                    insertStmt.setString(2, BukkitSerialization.itemStackArrayToBase64(items.toArray(new ItemStack[0])));
-                    insertStmt.executeUpdate();
-                }
-            }
+        }
+
+    }
+    private static void savePlayerDataOnce(Player player) {
+        UUID uuid = player.getUniqueId();
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username) VALUES (?, ?)")) {
+            pstmt.setString(1, uuid.toString());
+            pstmt.setString(2, player.getName());
+            pstmt.executeUpdate();
+            PracticeServer.log.info("[RetroDB] Saved Player Data for " + player.getName() + " (Initial Save)");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void loadRespawnData(Player player) {
-        if (!PracticeServer.DATABASE) {
-            return;
-        }
-
-        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
-            pstmt.setString(1, player.getUniqueId().toString());
-            ResultSet resultSet = pstmt.executeQuery();
-            if (resultSet.next()) {
-                ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(resultSet.getString("RespawnData"));
-                List<ItemStack> itemList = Arrays.asList(items);
-                itemList.removeAll(Collections.singleton(null));
-                for (ItemStack itemStack : itemList) {
-                    player.getInventory().addItem(itemStack);
+    private static boolean playerDataExists(UUID uuid) {
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) AS count FROM PlayerData WHERE UUID = ?")) {
+            pstmt.setString(1, uuid.toString());
+            try (ResultSet resultSet = pstmt.executeQuery()) {
+                if (resultSet.next()) {
+                    int count = resultSet.getInt("count");
+                    return count > 0;
                 }
             }
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
-
-
     public static boolean updatePlayerStats(Player player) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) {
+            // Allow saving at least once if game state is not NONE
+            if (!playerDataExists(player.getUniqueId())) {
+                savePlayerDataOnce(player);
+            }
+            return false;
+        }
         if (!PracticeServer.DATABASE) {
             return false;
         }
@@ -108,36 +133,7 @@ public class SQLMain implements Listener {
         UUID uuid = player.getUniqueId();
         String[] pinv = BukkitSerialization.playerInventoryToBase64(player.getInventory());
         GuildPlayers gp = GuildPlayers.getInstance();
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " +
-                "Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, HorseTier, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, " +
-                "T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (UUID) DO UPDATE SET " +
-                "Username = excluded.Username, " +
-                "XCoord = excluded.XCoord, " +
-                "YCoord = excluded.YCoord, " +
-                "ZCoord = excluded.ZCoord, " +
-                "Yaw = excluded.Yaw, " +
-                "Pitch = excluded.Pitch, " +
-                "Inventory = excluded.Inventory, " +
-                "Armor = excluded.Armor, " +
-                "MaxHP = excluded.MaxHP, " +
-                "Gems = excluded.Gems, " +
-                "GuildName = excluded.GuildName, " +
-                "Alignment = excluded.Alignment, " +
-                "AlignTime = excluded.AlignTime, " +
-                "HorseTier = excluded.HorseTier, " +
-                "T1Kills = excluded.T1Kills, " +
-                "T2Kills = excluded.T2Kills, " +
-                "T3Kills = excluded.T3Kills, " +
-                "T4Kills = excluded.T4Kills, " +
-                "T5Kills = excluded.T5Kills, " +
-                "T6Kills = excluded.T6Kills, " +
-                "Deaths = excluded.Deaths, " +
-                "PlayerKills = excluded.PlayerKills, " +
-                "OreMined = excluded.OreMined, " +
-                "ChestsOpened = excluded.ChestsOpened, " +
-                "RespawnData = excluded.RespawnData")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " + "Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, HorseTier, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, " + "T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " + "ON CONFLICT (UUID) DO UPDATE SET " + "Username = excluded.Username, " + "XCoord = excluded.XCoord, " + "YCoord = excluded.YCoord, " + "ZCoord = excluded.ZCoord, " + "Yaw = excluded.Yaw, " + "Pitch = excluded.Pitch, " + "Inventory = excluded.Inventory, " + "Armor = excluded.Armor, " + "MaxHP = excluded.MaxHP, " + "Gems = excluded.Gems, " + "GuildName = excluded.GuildName, " + "Alignment = excluded.Alignment, " + "AlignTime = excluded.AlignTime, " + "HorseTier = excluded.HorseTier, " + "T1Kills = excluded.T1Kills, " + "T2Kills = excluded.T2Kills, " + "T3Kills = excluded.T3Kills, " + "T4Kills = excluded.T4Kills, " + "T5Kills = excluded.T5Kills, " + "T6Kills = excluded.T6Kills, " + "Deaths = excluded.Deaths, " + "PlayerKills = excluded.PlayerKills, " + "OreMined = excluded.OreMined, " + "ChestsOpened = excluded.ChestsOpened, " + "RespawnData = excluded.RespawnData")) {
 
             Location loc = player.getLocation();
             pstmt.setString(1, uuid.toString());
@@ -165,8 +161,19 @@ public class SQLMain implements Listener {
             pstmt.setInt(23, gp.get(uuid).getPlayerKills());
             pstmt.setInt(24, gp.get(uuid).getOreMined());
             pstmt.setInt(25, gp.get(uuid).getLootChestsOpen());
-            pstmt.setString(26, "");
 
+            if (!player.isDead()) {
+                pstmt.setString(26, "");
+            } else {
+                try (Statement selectStmt = con.createStatement(); ResultSet resultSet = selectStmt.executeQuery("SELECT RespawnData FROM PlayerData WHERE UUID = '" + uuid + "'")) {
+                    if (resultSet.next()) {
+                        String existingRespawnData = resultSet.getString("RespawnData");
+                        pstmt.setString(26, existingRespawnData);
+                    } else {
+                        pstmt.setString(26, "");
+                    }
+                }
+            }
             pstmt.executeUpdate();
             PracticeServer.log.info("[RetroDB] Saved Player Data for " + player.getName());
             return true;
@@ -177,6 +184,7 @@ public class SQLMain implements Listener {
     }
 
     public static boolean updatePersistentStats(Player player) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return false;
         if (!PracticeServer.DATABASE) {
             return false;
         }
@@ -193,47 +201,9 @@ public class SQLMain implements Listener {
         }
 
         String rank = RankEnum.DEFAULT.toString();
-        try {
-            rank = RankEnum.enumToString(ModerationMechanics.getRank(player));
-        } catch (NoClassDefFoundError ignored) {
-        }
+        rank = RankEnum.enumToString(ModerationMechanics.getRank(player));
 
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PersistentData (UUID, Username, PlayerRank, Buddies, PVPToggle, " +
-                "ChaoToggle, FFToggle, DebugToggle, HologramToggle, LVLHPToggle, GlowToggle, PMToggle, TradingToggle, GemsToggle, " +
-                "TrailToggle, DropToggle, KitToggle, Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, OrbRolls, Luck, Reaper, " +
-                "KitWeapon, KitHelm, KitChest, KitLegs, KitBoots) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON CONFLICT (UUID) DO UPDATE SET " +
-                "Username = excluded.Username, " +
-                "PlayerRank = excluded.PlayerRank, " +
-                "Buddies = excluded.Buddies, " +
-                "PVPToggle = excluded.PVPToggle, " +
-                "ChaoToggle = excluded.ChaoToggle, " +
-                "FFToggle = excluded.FFToggle, " +
-                "DebugToggle = excluded.DebugToggle, " +
-                "HologramToggle = excluded.HologramToggle, " +
-                "LVLHPToggle = excluded.LVLHPToggle, " +
-                "GlowToggle = excluded.GlowToggle, " +
-                "PMToggle = excluded.PMToggle, " +
-                "TradingToggle = excluded.TradingToggle, " +
-                "GemsToggle = excluded.GemsToggle, " +
-                "TrailToggle = excluded.TrailToggle, " +
-                "DropToggle = excluded.DropToggle, " +
-                "KitToggle = excluded.KitToggle, " +
-                "Tokens = excluded.Tokens, " +
-                "Mount = excluded.Mount, " +
-                "BankPages = excluded.BankPages, " +
-                "Pickaxe = excluded.Pickaxe, " +
-                "Farmer = excluded.Farmer, " +
-                "LastStand = excluded.LastStand, " +
-                "OrbRolls = excluded.OrbRolls, " +
-                "Luck = excluded.Luck, " +
-                "Reaper = excluded.Reaper, " +
-                "KitWeapon = excluded.KitWeapon, " +
-                "KitHelm = excluded.KitHelm, " +
-                "KitChest = excluded.KitChest, " +
-                "KitLegs = excluded.KitLegs, " +
-                "KitBoots = excluded.KitBoots")) {
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PersistentData (UUID, Username, PlayerRank, Buddies, PVPToggle, " + "ChaoToggle, FFToggle, DebugToggle, HologramToggle, LVLHPToggle, GlowToggle, PMToggle, TradingToggle, GemsToggle, " + "TrailToggle, DropToggle, KitToggle, Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, OrbRolls, Luck, Reaper, " + "KitWeapon, KitHelm, KitChest, KitLegs, KitBoots) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " + "ON CONFLICT (UUID) DO UPDATE SET " + "Username = excluded.Username, " + "PlayerRank = excluded.PlayerRank, " + "Buddies = excluded.Buddies, " + "PVPToggle = excluded.PVPToggle, " + "ChaoToggle = excluded.ChaoToggle, " + "FFToggle = excluded.FFToggle, " + "DebugToggle = excluded.DebugToggle, " + "HologramToggle = excluded.HologramToggle, " + "LVLHPToggle = excluded.LVLHPToggle, " + "GlowToggle = excluded.GlowToggle, " + "PMToggle = excluded.PMToggle, " + "TradingToggle = excluded.TradingToggle, " + "GemsToggle = excluded.GemsToggle, " + "TrailToggle = excluded.TrailToggle, " + "DropToggle = excluded.DropToggle, " + "KitToggle = excluded.KitToggle, " + "Tokens = excluded.Tokens, " + "Mount = excluded.Mount, " + "BankPages = excluded.BankPages, " + "Pickaxe = excluded.Pickaxe, " + "Farmer = excluded.Farmer, " + "LastStand = excluded.LastStand, " + "OrbRolls = excluded.OrbRolls, " + "Luck = excluded.Luck, " + "Reaper = excluded.Reaper, " + "KitWeapon = excluded.KitWeapon, " + "KitHelm = excluded.KitHelm, " + "KitChest = excluded.KitChest, " + "KitLegs = excluded.KitLegs, " + "KitBoots = excluded.KitBoots")) {
 
 
             pstmt.setString(1, uuid.toString());
@@ -277,7 +247,32 @@ public class SQLMain implements Listener {
         }
     }
 
-    public static ResultSet getPlayerData(String table, String columns, Player player) {
+
+    public static List<ItemStack> getPlayerData(String table, String columns, Player player) {
+        if (raceMinigame.getGameState() == MinigameState.SHRINK) return null;
+        if (!PracticeServer.DATABASE) {
+            return null;
+        }
+
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT " + columns + " FROM " + table + " WHERE UUID = ?")) {
+            pstmt.setString(1, player.getUniqueId().toString());
+            List<ItemStack> itemList = new ArrayList<>();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(rs.getString("RespawnData"));
+                    itemList = Arrays.asList(items);
+                    itemList.removeAll(Collections.singleton(null));
+                }
+            }
+            return itemList;
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static ResultSet getPlayerSet(String table, String columns, Player player) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return null;
         if (!PracticeServer.DATABASE) {
             return null;
         }
@@ -290,7 +285,6 @@ public class SQLMain implements Listener {
             return null;
         }
     }
-
 
     public static void saveGuild(Guild guild) {
         if (PracticeServer.DATABASE) {
@@ -309,8 +303,7 @@ public class SQLMain implements Listener {
             }
             members = members.substring(0, Math.max(members.length() - 1, 0));
             officers = officers.substring(0, Math.max(officers.length() - 1, 0)); //getting rid of last space
-            String stats = "INSERT INTO Guilds (GuildName, GuildTag, GuildMOTD, Owner, Officers, Members)" +
-                    "VALUES (?, ?, ?, ?, ?, ?)";
+            String stats = "INSERT INTO Guilds (GuildName, GuildTag, GuildMOTD, Owner, Officers, Members)" + "VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = con.prepareStatement(stats)) {
                 pstmt.setString(1, guild.getName());
                 pstmt.setString(2, guild.getTag());
@@ -328,6 +321,7 @@ public class SQLMain implements Listener {
 
 
     public static void loadGuilds() {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         try (ResultSet rs = con.createStatement().executeQuery("SELECT * FROM Guilds")) {
             while (rs.next()) {
                 Guild guild = new Guild(rs.getString("GuildName"));
@@ -349,8 +343,8 @@ public class SQLMain implements Listener {
     }
 
 
-
     public static void deleteGuild(Guild guild) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM Guilds WHERE GuildName = ?")) {
             pstmt.setString(1, guild.getName());
             pstmt.executeUpdate();
@@ -360,6 +354,7 @@ public class SQLMain implements Listener {
     }
 
     public static void saveBank(Inventory inv, UUID uuid, int page) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         if (PracticeServer.DATABASE) {
             String table = getTableName(page);
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
@@ -393,6 +388,7 @@ public class SQLMain implements Listener {
     }
 
     public static void saveGuildBank(Inventory inv, Guild guild) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         if (PracticeServer.DATABASE) {
             String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
             String query = "SELECT * FROM GuildBanks WHERE GuildName = ?";
@@ -428,8 +424,7 @@ public class SQLMain implements Listener {
 
 
     public static Inventory getBank(UUID uuid, int page) {
-        if (page < 1 || page > 5)
-            return null;
+        if (page < 1 || page > 5) return null;
         String table = getTableName(page);
         PersistentPlayer pp = PersistentPlayers.get(uuid);
         Inventory inv = Bukkit.createInventory(null, Banks.banksize, "Bank Chest (" + page + "/" + pp.bankpages + ")");
@@ -467,6 +462,7 @@ public class SQLMain implements Listener {
     }
 
     public static Inventory getGuildBank(Player p, Guild guild) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return null;
         Inventory inv = Bukkit.createInventory(null, GuildBank.guildBankSize, "Guild Bank Chest (1/1)");
         try {
             PreparedStatement stmt1 = con.prepareStatement("UPDATE GuildBanks SET OccupiedBy = ?, Mutex = 1 WHERE GuildName = ? AND Mutex = 0");
@@ -517,9 +513,7 @@ public class SQLMain implements Listener {
                 p.kickPlayer(ChatColor.GREEN + "Cloning " + target);
                 new AsyncTask(() -> {
                     try {
-                        PreparedStatement stmt2 = con.prepareStatement(
-                                "INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) "
-                                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        PreparedStatement stmt2 = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         stmt2.setString(1, p.getUniqueId().toString());
                         stmt2.setString(2, p.getName());
                         stmt2.setInt(3, rs.getInt("XCoord"));
@@ -559,6 +553,7 @@ public class SQLMain implements Listener {
     }
 
     public static ResultSet getPlayerData(String table, String columns) {
+        if (raceMinigame.getGameState() == MinigameState.SHRINK) return null;
         if (PracticeServer.DATABASE) {
             try {
                 return con.createStatement().executeQuery("SELECT " + columns + " FROM " + table);
@@ -611,8 +606,10 @@ public class SQLMain implements Listener {
                 e.printStackTrace();
             }
 
-            loadPersistentData();
-            loadGems();
+            if (raceMinigame.getGameState() == MinigameState.NONE) {
+                loadPersistentData();
+                loadGems();
+            }
         }
     }
 
@@ -628,10 +625,37 @@ public class SQLMain implements Listener {
         }
     }
 
-    @EventHandler
+    private List<ItemStack> getPlayerInventory(Player player) {
+        List<ItemStack> inventory = new ArrayList<>();
+
+        PlayerInventory playerInventory = player.getInventory();
+        ItemStack[] contents = playerInventory.getContents();
+
+        for (ItemStack item : contents) {
+            if (item != null && !item.getType().equals(Material.AIR)) {
+                inventory.add(item.clone());
+            }
+        }
+
+        return inventory;
+    }
+
+    @EventHandler()
     void onLogout(PlayerQuitEvent e) {
-        updatePlayerStats(e.getPlayer());
         updatePersistentStats(e.getPlayer());
+        Player p = e.getPlayer();
+        List<ItemStack> inventory = getPlayerInventory(p);
+        if ((!Alignments.isSafeZone(p.getLocation()) && Alignments.tagged.containsKey(p.getName()) && System.currentTimeMillis() - Alignments.tagged.get(p.getName()) < 10000) || !Alignments.isSafeZone(p.getLocation()) && Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) < 10000) {
+            Alignments.logout = true;
+            p.setHealth(0.0);
+            if (Alignments.chaotic.containsKey(p.getName()) || (Alignments.neutral.containsKey(p.getName()))) {
+                for (Player player : p.getWorld().getPlayers()) {
+                    player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1.0F, 1.0F);
+                }
+            }
+        } else {
+            updatePlayerStats(e.getPlayer());
+        }
     }
 
     @EventHandler
@@ -640,17 +664,9 @@ public class SQLMain implements Listener {
         updatePersistentStats(e.getPlayer());
     }
 
-    @EventHandler
-    void onPlayerJoin(PlayerJoinEvent e) {
-        if (!PracticeServer.DATABASE) {
-            return;
-        }
 
-        Player player = e.getPlayer();
-        try (
-                PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PersistentData WHERE Username = ?");
-                PreparedStatement stmt2 = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")
-        ) {
+    public void loadData(Player player) {
+        try (PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PersistentData WHERE Username = ?"); PreparedStatement stmt2 = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
             stmt1.setString(1, player.getName());
             stmt2.setString(1, player.getUniqueId().toString());
             ResultSet rs1 = stmt1.executeQuery();
@@ -662,6 +678,16 @@ public class SQLMain implements Listener {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @EventHandler
+    void onPlayerJoin(PlayerJoinEvent e) {
+        if (!PracticeServer.DATABASE) {
+            return;
+        }
+
+        Player player = e.getPlayer();
+        loadData(player);
     }
 
     private void handlePersistentData(Player player, ResultSet rs) throws SQLException {
@@ -682,6 +708,7 @@ public class SQLMain implements Listener {
     }
 
     private void handlePlayerData(Player player, ResultSet rs) throws SQLException, IOException {
+        if (raceMinigame.getGameState() != MinigameState.NONE) return;
         if (rs.next()) {
             String guildName = rs.getString("GuildName");
             int playerKills = rs.getInt("PlayerKills");
@@ -694,8 +721,7 @@ public class SQLMain implements Listener {
             int lootChestsOpen = rs.getInt("ChestsOpened");
             int deaths = rs.getInt("Deaths");
             int oreMined = rs.getInt("OreMined");
-            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), guildName, playerKills, t1Kills,
-                    t2Kills, t3Kills, t4Kills, t5Kills, t6Kills, lootChestsOpen, oreMined, deaths, 0));
+            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), guildName, playerKills, t1Kills, t2Kills, t3Kills, t4Kills, t5Kills, t6Kills, lootChestsOpen, oreMined, deaths, 0));
             int horsetier = rs.getInt("HorseTier");
             if (horsetier > Horses.horseTier.get(player)) {
                 Horses.horseTier.put(player, horsetier);
@@ -718,12 +744,14 @@ public class SQLMain implements Listener {
             double zcoord = rs.getFloat("ZCoord");
             float yaw = rs.getFloat("Yaw");
             float pitch = rs.getFloat("Pitch");
-            player.teleport(new Location(player.getWorld(), xcoord, ycoord, zcoord, yaw, pitch));
+            if (!player.isDead()) player.teleport(new Location(player.getWorld(), xcoord, ycoord, zcoord, yaw, pitch));
         } else {
-            GuildPlayers.add(
-                    new GuildPlayer(player.getUniqueId(), player.getName(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-            player.getInventory().clear();
-            Listeners.Kit(player);
+            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+            if (raceMinigame.getGameState() == MinigameState.NONE) {
+                player.getInventory().clear();
+                Listeners.Kit(player);
+                player.teleport(TeleportBooks.stonePeaks);
+
             try {
                 new BukkitRunnable() {
                     public void run() {
@@ -735,15 +763,15 @@ public class SQLMain implements Listener {
             } catch (Exception ex) {
                 // Handle the exception appropriately, e.g., log it
             }
-            player.teleport(TeleportBooks.stonePeaks);
+            }
+
+
         }
     }
 
     public void getTogglesFromSQL(UUID uuid, ResultSet rs) throws SQLException {
         ArrayList<String> toggles = new ArrayList<>();
-        String[] toggleColumns = {"LVLHPToggle", "PVPToggle", "ChaoToggle", "FFToggle",
-                "DebugToggle", "HologramToggle", "GlowToggle", "PMToggle",
-                "TradingToggle", "GemsToggle", "TrailToggle", "DropToggle", "KitToggle"};
+        String[] toggleColumns = {"LVLHPToggle", "PVPToggle", "ChaoToggle", "FFToggle", "DebugToggle", "HologramToggle", "GlowToggle", "PMToggle", "TradingToggle", "GemsToggle", "TrailToggle", "DropToggle", "KitToggle"};
 
         for (String column : toggleColumns) {
             if (rs.getBoolean(column)) {
@@ -799,8 +827,7 @@ public class SQLMain implements Listener {
                     Toggles.toggles.put(uuid, toggle);
                     ArrayList<String> buddies = new ArrayList<>();
                     for (String s : rs.getString("Buddies").split(",")) {
-                        if (s.length() > 30)
-                            buddies.add(s);
+                        if (s.length() > 30) buddies.add(s);
                     }
                     Buddies.buddies.put(rs.getString("Username"), buddies);
                     Integer tokens = rs.getInt("Tokens");
@@ -819,12 +846,9 @@ public class SQLMain implements Listener {
                     int kitboots = rs.getInt("KitBoots");
                     if (tokens == null || kitweapon < 1) {
                         if (!PersistentPlayers.persistentPlayers.containsKey(uuid))
-                            PersistentPlayers.put(uuid,
-                                    new PersistentPlayer(50, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0));
+                            PersistentPlayers.put(uuid, new PersistentPlayer(50, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0));
                     } else {
-                        PersistentPlayers.put(uuid,
-                                new PersistentPlayer(tokens, mount, pickaxe, farmer, laststand, bankpages, orbrolls,
-                                        luck, reaper, kitweapon, kithelm, kitchest, kitlegs, kitboots));
+                        PersistentPlayers.put(uuid, new PersistentPlayer(tokens, mount, pickaxe, farmer, laststand, bankpages, orbrolls, luck, reaper, kitweapon, kithelm, kitchest, kitlegs, kitboots));
                     }
                 }
             } catch (SQLException e) {
@@ -833,7 +857,7 @@ public class SQLMain implements Listener {
         }
     }
 
-    void loadGems() {
+    public static void loadGems() {
         if (PracticeServer.DATABASE) {
             ResultSet rs = SQLMain.getPlayerData("PlayerData", "UUID, Gems");
             try {

@@ -20,7 +20,7 @@ public class MarketCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String s, String[] args) {
 
-        if(true) return false;
+        if (true) return false;
         if (!(sender instanceof Player))
             return true;
         Player p = (Player) sender;
@@ -29,7 +29,7 @@ public class MarketCommand implements CommandExecutor {
             if (Alignments.chaotic.containsKey(p.getName())) {
                 p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " do this while chaotic!");
             } else {
-                p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Opening Market...");
+                p.sendMessage(ChatColor.RED + String.valueOf(ChatColor.BOLD) + "Opening Market...");
                 Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
                     PracticeServer.getManagerHandler().getGlobalMarket().openChoiceGUI(p);
                 }, 40);

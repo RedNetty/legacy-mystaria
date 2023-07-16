@@ -6,6 +6,7 @@ loadbefore:
   [Essentials, BungeeTabListPlus]
 softdepend: ['BungeeTabListPlus']
 commands:
+  racegame:
   setrates:
   droprates:
   food:

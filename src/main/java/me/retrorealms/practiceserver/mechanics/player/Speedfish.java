@@ -150,7 +150,7 @@ public class Speedfish
         Player p = e.getPlayer();
         if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (p.getInventory().getItemInMainHand().getType() == Material.COOKED_FISH || p.getInventory().getItemInMainHand().hasItemMeta() && p.getInventory().getItemInMainHand().getItemMeta().hasDisplayName() && p.getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains("Cooked") && p.getInventory().getItemInMainHand().getItemMeta().hasLore()) {
-                if (e.hasBlock() && (e.getClickedBlock().getType() == Material.FURNACE || e.getClickedBlock().getType() == Material.BURNING_FURNACE || e.getClickedBlock().getWorld().getBlockAt(e.getClickedBlock().getLocation().clone().add(0.0, 1.0, 0.0)).getType() == Material.FIRE || e.getClickedBlock().getWorld().getBlockAt(e.getClickedBlock().getLocation().clone().add(0.0, 1.0, 0.0)).getType() == Material.STATIONARY_LAVA)) {
+                if (e.hasBlock() && (e.getClickedBlock().getType() == Material.FURNACE || e.getClickedBlock().getType().equals(Material.TORCH) || e.getClickedBlock().getType() == Material.BURNING_FURNACE || e.getClickedBlock().getWorld().getBlockAt(e.getClickedBlock().getLocation().clone().add(0.0, 1.0, 0.0)).getType() == Material.FIRE || e.getClickedBlock().getWorld().getBlockAt(e.getClickedBlock().getLocation().clone().add(0.0, 1.0, 0.0)).getType() == Material.STATIONARY_LAVA)) {
                     return;
                 }
                 if (p.hasPotionEffect(PotionEffectType.SPEED)) {

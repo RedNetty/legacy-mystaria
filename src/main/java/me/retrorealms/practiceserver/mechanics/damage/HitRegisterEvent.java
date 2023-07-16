@@ -1,35 +1,43 @@
 package me.retrorealms.practiceserver.mechanics.damage;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 
-public class HitRegisterEvent extends Event {
+public class HitRegisterEvent extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private Player player;
-    private Entity entity;
+    private LivingEntity entity;
+    private double damage;
+    private boolean isCancelled;
 
-    public HitRegisterEvent(Player player, Entity entity) {
+    public HitRegisterEvent(Player player, LivingEntity entity, double damage) {
         this.player = player;
         this.entity = entity;
+        this.damage = damage;
+        this.isCancelled = false;
     }
 
-    public Player getPlayer() {
+    public void setDamage(double damage) {
+        this.damage = damage;
+        new EntityDamageByEntityEvent(player, entity, EntityDamageEvent.DamageCause.ENTITY_ATTACK, damage);
+    }
+
+    public double getDamage() {
+        return damage;
+    }
+
+    public Player getDamager() {
         return player;
     }
 
-    public Entity getEntity() {
+    public LivingEntity getEntity() {
         return entity;
     }
 
@@ -40,5 +48,15 @@ public class HitRegisterEvent extends Event {
 
     public static HandlerList getHandlerList() {
         return handlers;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return isCancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        this.isCancelled = cancel;
     }
 }

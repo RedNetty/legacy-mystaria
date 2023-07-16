@@ -40,22 +40,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class Horses
-        implements Listener {
-    public static HashMap<String, Integer> mounting = new HashMap<String, Integer>();
-    public static HashMap<Player, Integer> horseTier = new HashMap<>();
-    static HashMap<String, Integer> horsetier = new HashMap<String, Integer>();
-    static HashMap<String, Location> mountingloc = new HashMap<String, Location>();
-    static HashMap<UUID, Location> currentLoc = new HashMap<UUID, Location>();
-    static HashMap<String, ItemStack> buyingitem = new HashMap<String, ItemStack>();
-    static HashMap<String, Integer> buyingprice = new HashMap<String, Integer>();
+public class Horses implements Listener {
+    public static final HashMap<String, Integer> mounting = new HashMap<>();
+    public static final HashMap<Player, Integer> horseTier = new HashMap<>();
+    public static final HashMap<String, Integer> horseTierByPlayer = new HashMap<>();
+    public static final HashMap<String, Location> mountingLocations = new HashMap<>();
+    public static final HashMap<UUID, Location> currentLoc = new HashMap<>();
+    public static final HashMap<String, ItemStack> buyingItem = new HashMap<>();
+    public static final HashMap<String, Integer> buyingPrice = new HashMap<>();
 
-    public static ItemStack mount(int tier, boolean inshop) {
-        ItemStack is = new ItemStack(Material.SADDLE);
-        ItemMeta im = is.getItemMeta();
+    public static ItemStack createMount(int tier, boolean inShop) {
+        ItemStack itemStack = new ItemStack(Material.SADDLE);
+        ItemMeta itemMeta = itemStack.getItemMeta();
         String name = ChatColor.GREEN + "Old Horse Mount";
         String req = "";
-        ArrayList<String> lore = new ArrayList<String>();
+        ArrayList<String> lore = new ArrayList<>();
         String line = "An old brown starter horse.";
         int speed = 115;
         int jump = 0;
@@ -67,16 +66,14 @@ public class Horses
             speed = 130;
             jump = 105;
             price = 1500;
-        }
-        if (tier == 4) {
+        } else if (tier == 4) {
             name = ChatColor.LIGHT_PURPLE + "Knight's Horse Mount";
             req = ChatColor.AQUA + "Traveler's Horse Mount";
             line = "A fast well-bred horse.";
             speed = 140;
             jump = 110;
             price = 2500;
-        }
-        if (tier == 5) {
+        } else if (tier == 5) {
             name = ChatColor.YELLOW + "War Stallion Mount";
             req = ChatColor.LIGHT_PURPLE + "Knight's Horse Mount";
             line = "A trusty powerful steed.";
@@ -84,114 +81,114 @@ public class Horses
             jump = 120;
             price = 4000;
         }
-        im.setDisplayName(name);
+        itemMeta.setDisplayName(name);
         lore.add(ChatColor.RED + "Speed: " + speed + "%");
         if (jump > 0) {
             lore.add(ChatColor.RED + "Jump: " + jump + "%");
         }
-        if (req != "" && inshop) {
+        if (!req.isEmpty() && inShop) {
             lore.add(ChatColor.RED.toString() + ChatColor.BOLD + "REQ: " + req);
         }
         lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + line);
         lore.add(ChatColor.GRAY + "Permanent Untradeable");
-        if (inshop) {
+        if (inShop) {
             lore.add(ChatColor.GREEN + "Price: " + ChatColor.WHITE + price + "g");
         }
-        im.setLore(lore);
-        is.setItemMeta(im);
-        if (tier < 2) return new ItemStack(Material.AIR);
-        return is;
+        itemMeta.setLore(lore);
+        itemStack.setItemMeta(itemMeta);
+        if (tier < 2) {
+            return new ItemStack(Material.AIR);
+        }
+        return itemStack;
     }
 
-    public static int getMountTier(ItemStack is) {
-        if (is != null && is.getType() == Material.SADDLE && is.getItemMeta().hasDisplayName()) {
-            String name = is.getItemMeta().getDisplayName();
+    public static void clearHorses() {
+        horseTierByPlayer.clear();
+        horseTier.clear();
+    }
+
+    public static int getMountTier(ItemStack itemStack) {
+        if (itemStack != null && itemStack.getType() == Material.SADDLE && itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+            String name = itemStack.getItemMeta().getDisplayName();
             if (name.contains(ChatColor.GREEN.toString())) {
                 return 2;
-            }
-            if (name.contains(ChatColor.AQUA.toString())) {
+            } else if (name.contains(ChatColor.AQUA.toString())) {
                 return 3;
-            }
-            if (name.contains(ChatColor.LIGHT_PURPLE.toString())) {
+            } else if (name.contains(ChatColor.LIGHT_PURPLE.toString())) {
                 return 4;
-            }
-            if (name.contains(ChatColor.YELLOW.toString())) {
+            } else if (name.contains(ChatColor.YELLOW.toString())) {
                 return 5;
             }
         }
         return 0;
     }
 
-    public static Horse horse(Player p, int tier) {
+    public static Horse createHorse(Player player, int tier) {
         double speed = 0.30;
         double jump = 0.75;
         if (tier == 3) {
             speed = 0.42;
             jump = 0.85;
-        }
-        if (tier == 4) {
+        } else if (tier == 4) {
             speed = 0.48;
             jump = 0.95;
-        }
-        if (tier == 5) {
+        } else if (tier == 5) {
             speed = 0.55;
             jump = 1.05;
         }
         EntityType horseType = EntityType.HORSE;
-        Horse h = (Horse) p.getWorld().spawnEntity(p.getLocation(), horseType);
-        new CreatureSpawnEvent(h, CreatureSpawnEvent.SpawnReason.CUSTOM);
-        h.setAdult();
-        h.setTamed(true);
-        h.setOwner(p);
-        h.setColor(Horse.Color.BLACK);
-        h.setAgeLock(true);
-        h.setStyle(Horse.Style.NONE);
-        h.setDomestication(100);
-        h.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-        if (tier == 3)
-            h.getInventory().setArmor(new ItemStack(Material.IRON_BARDING));
-        if (tier == 4)
-            h.getInventory().setArmor(new ItemStack(Material.DIAMOND_BARDING));
-
-        if (tier == 5)
-            h.getInventory().setArmor(new ItemStack(Material.GOLD_BARDING));
-
-        h.setMaxHealth(20.0);
-        h.setHealth(20.0);
-        h.setJumpStrength(jump);
-        ((CraftLivingEntity) h).getHandle().getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(speed);
-        h.setPassenger(p);
-
-        return h;
+        Horse horse = (Horse) player.getWorld().spawnEntity(player.getLocation(), horseType);
+        new CreatureSpawnEvent(horse, CreatureSpawnEvent.SpawnReason.CUSTOM);
+        horse.setAdult();
+        horse.setTamed(true);
+        horse.setOwner(player);
+        horse.setColor(Horse.Color.BLACK);
+        horse.setAgeLock(true);
+        horse.setStyle(Horse.Style.NONE);
+        horse.setDomestication(100);
+        horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+        if (tier == 3) {
+            horse.getInventory().setArmor(new ItemStack(Material.IRON_BARDING));
+        } else if (tier == 4) {
+            horse.getInventory().setArmor(new ItemStack(Material.DIAMOND_BARDING));
+        } else if (tier == 5) {
+            horse.getInventory().setArmor(new ItemStack(Material.GOLD_BARDING));
+        }
+        horse.setMaxHealth(20.0);
+        horse.setHealth(20.0);
+        horse.setJumpStrength(jump);
+        ((CraftLivingEntity) horse).getHandle().getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(speed);
+        horse.setPassenger(player);
+        return horse;
     }
 
     public void onEnable() {
         PracticeServer.log.info("[Horses] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         new BukkitRunnable() {
-
             public void run() {
-                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                for (Player player : Bukkit.getServer().getOnlinePlayers()) {
                     try {
-                        if (!p.isOnline() || !Horses.mounting.containsKey(p.getName())) continue;
-                        Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 0.15, 0.0), 20.0);
-                        if (Horses.mounting.get(p.getName()) == 0) {
-                            Particles.CRIT.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
-                            Horses.mounting.remove(p.getName());
-                            Horses.mountingloc.remove(p.getName());
-                            Horses.horse(p, Horses.horsetier.get(p.getName()));
+                        if (!player.isOnline() || !mounting.containsKey(player.getName())) {
                             continue;
                         }
-                        if (Horses.mounting.get(p.getName()) == 6) {
-                            String name = Horses.mount(Horses.horsetier.get(p.getName()), false).getItemMeta().getDisplayName();
-                            p.sendMessage(ChatColor.BOLD + "SUMMONING " + name + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
-                            Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
+                        Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, player.getLocation().clone().add(0.0, 0.15, 0.0), 20.0);
+                        int mountTime = mounting.get(player.getName());
+                        if (mountTime == 0) {
+                            Particles.CRIT.display(0.0f, 0.0f, 0.0f, 0.5f, 80, player.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
+                            mounting.remove(player.getName());
+                            mountingLocations.remove(player.getName());
+                            createHorse(player, horseTierByPlayer.get(player.getName()));
                             continue;
+                        } else if (mountTime == 6) {
+                            String name = createMount(horseTierByPlayer.get(player.getName()), false).getItemMeta().getDisplayName();
+                            player.sendMessage(ChatColor.BOLD + "SUMMONING " + name + ChatColor.WHITE + " ... " + mountTime + "s");
+                        } else {
+                            player.sendMessage(ChatColor.BOLD + "SUMMONING" + ChatColor.WHITE + " ... " + mountTime + "s");
                         }
-                        p.sendMessage(ChatColor.BOLD + "SUMMONING" + ChatColor.WHITE + " ... " + Horses.mounting.get(p.getName()) + "s");
-                        Horses.mounting.put(p.getName(), Horses.mounting.get(p.getName()) - 1);
+                        mounting.put(player.getName(), mountTime - 1);
                     } catch (Exception e) {
-
+                        // Handle exception
                     }
                 }
             }
@@ -206,296 +203,271 @@ public class Horses
     public void onVehicleMove(VehicleMoveEvent event) {
         if (event.getVehicle() instanceof Horse) {
             Horse horse = (Horse) event.getVehicle();
-            currentLoc.remove(horse.getUniqueId());
             currentLoc.put(horse.getUniqueId(), horse.getLocation());
         }
     }
 
     @EventHandler
-    public void onAnimalTamerClick(PlayerInteractEntityEvent e) {
-        if (e.getRightClicked() instanceof Player && e.getRightClicked().hasMetadata("NPC")) {
-            Player at = (Player) e.getRightClicked();
-            Player p = e.getPlayer();
-            if (at.getName().equalsIgnoreCase("animal tamer")) {
-                Inventory inv = Bukkit.createInventory(null, 9, "Animal Tamer");
-                inv.addItem(Horses.mount(2, true));
-                inv.addItem(Horses.mount(3, true));
-                inv.addItem(Horses.mount(4, true));
-                inv.addItem(Horses.mount(5, true));
-                p.openInventory(inv);
-                p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+    public void onAnimalTamerClick(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked() instanceof Player && event.getRightClicked().hasMetadata("NPC")) {
+            Player animalTamer = (Player) event.getRightClicked();
+            Player player = event.getPlayer();
+            if (animalTamer.getName().equalsIgnoreCase("animal tamer")) {
+                Inventory inventory = Bukkit.createInventory(null, 9, "Animal Tamer");
+                inventory.addItem(createMount(2, true));
+                inventory.addItem(createMount(3, true));
+                inventory.addItem(createMount(4, true));
+                inventory.addItem(createMount(5, true));
+                player.openInventory(inventory);
+                player.playSound(player.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
             }
         }
     }
 
     @EventHandler
-    public void onBuyHorse(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        if (p.getOpenInventory().getTopInventory().getTitle().contains("Animal Tamer")) {
-            List<?> lore;
-            e.setCancelled(true);
-            if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.SADDLE && e.getCurrentItem().getItemMeta().hasLore() && ((String) (lore = e.getCurrentItem().getItemMeta().getLore()).get(lore.size() - 1)).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    int currtier = 0;
-                    if (Horses.horseTier.containsKey(p)) {
-                        currtier = Horses.horseTier.get(p);
+    public void onBuyHorse(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (inventory.getTitle().contains("Animal Tamer")) {
+            event.setCancelled(true);
+            ItemStack currentItem = event.getCurrentItem();
+            if (currentItem != null && currentItem.getType() == Material.SADDLE && currentItem.hasItemMeta() && currentItem.getItemMeta().hasLore()) {
+                List<String> lore = currentItem.getItemMeta().getLore();
+                if (lore.get(lore.size() - 1).contains("Price:")) {
+                    int price = ItemVendors.getPriceFromLore(currentItem);
+                    if (Money.hasEnoughGems(player, price)) {
+                        int currentTier = horseTier.containsKey(player) ? horseTier.get(player) : 0;
+                        int newTier = getMountTier(currentItem);
+                        if (currentTier == 0) {
+                            currentTier = 1;
+                        }
+                        if (newTier == currentTier + 1) {
+                            player.sendMessage(ChatColor.GRAY + "The '" + currentItem.getItemMeta().getDisplayName() + ChatColor.GRAY + "' costs " + ChatColor.GREEN + ChatColor.BOLD + price + " GEM(s)" + ChatColor.GRAY + ".");
+                            player.sendMessage(ChatColor.GRAY + "This item is non-refundable. type " + ChatColor.GREEN + ChatColor.BOLD + "Y" + ChatColor.GRAY + " to confirm.");
+                            buyingItem.put(player.getName(), createMount(newTier, false));
+                            buyingPrice.put(player.getName(), price);
+                            player.closeInventory();
+                        }
+                    } else {
+                        player.sendMessage(ChatColor.RED + "You do not have enough gems to purchase this mount.");
+                        player.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
+                        player.closeInventory();
                     }
-                    int newtier = Horses.getMountTier(e.getCurrentItem());
-                    if (currtier == 0) {
-                        currtier = 1;
-                    }
-                    if (newtier == currtier + 1) {
-                        p.sendMessage(ChatColor.GRAY + "The '" + e.getCurrentItem().getItemMeta().getDisplayName() + ChatColor.GRAY + "' costs " + ChatColor.GREEN + ChatColor.BOLD + price + " GEM(s)" + ChatColor.GRAY + ".");
-                        p.sendMessage(ChatColor.GRAY + "This item is non-refundable. type " + ChatColor.GREEN + ChatColor.BOLD + "Y" + ChatColor.GRAY + " to confirm.");
-                        buyingitem.put(p.getName(), Horses.mount(newtier, false));
-                        buyingprice.put(p.getName(), price);
-                        p.closeInventory();
-                    }
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do not have enough gems to purchase this mount.");
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
                 }
             }
         }
     }
 
     @EventHandler
-    public void onInvClick(InventoryClickEvent e) {
-        if (e.getWhoClicked().getOpenInventory().getTopInventory().getTitle().contains("Horse")) {
-            e.setCancelled(true);
+    public void onInvClick(InventoryClickEvent event) {
+        if (event.getWhoClicked().getOpenInventory().getTopInventory().getTitle().contains("Horse")) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onJoinMount(PlayerRespawnEvent event) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), new Runnable() {
-            @Override
-            public void run() {
-                Player p = event.getPlayer();
-                if (PracticeServer.DATABASE) {
-                    try {
-                        ResultSet rs = SQLMain.getPlayerData("PlayerData", "HorseTier", p);
-                        int tier;
-                        if (rs.next()) {
-                            tier = rs.getInt("HorseTier");
-                        } else {
-                            tier = 0;
-                        }
-                        if (!event.getPlayer().getInventory().contains(Material.SADDLE)) {
-                            event.getPlayer().getInventory().addItem(mount(tier, false));
-                        }
-                    } catch (Exception e) {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
+            Player player = event.getPlayer();
+            if (PracticeServer.DATABASE) {
+                try {
+                    ResultSet resultSet = SQLMain.getPlayerSet("PlayerData", "HorseTier", player);
+                    int tier = resultSet.next() ? resultSet.getInt("HorseTier") : 0;
+                    if (!player.getInventory().contains(Material.SADDLE)) {
+                        player.getInventory().addItem(createMount(tier, false));
                     }
-                } else {
-                    if (nonStaticConfig.get().getInt(event.getPlayer().getUniqueId() + ".Info.Horse Tier") >= 1) {
-                        if (!event.getPlayer().getInventory().contains(Material.SADDLE)) {
-                            int tier = nonStaticConfig.get().getInt(event.getPlayer().getUniqueId() + ".Info.Horse Tier");
-                            event.getPlayer().getInventory().addItem(mount(tier, false));
-                        }
+                } catch (Exception e) {
+                    // Handle exception
+                }
+            } else {
+                if (nonStaticConfig.get().getInt(player.getUniqueId() + ".Info.Horse Tier") >= 1) {
+                    if (!player.getInventory().contains(Material.SADDLE)) {
+                        int tier = nonStaticConfig.get().getInt(player.getUniqueId() + ".Info.Horse Tier");
+                        player.getInventory().addItem(createMount(tier, false));
                     }
                 }
             }
         }, 50);
     }
 
-
     @EventHandler(priority = EventPriority.LOW)
-    public void onDamage(EntityDamageEvent e) {
-        if (e.getDamage() <= 0.0) {
+    public void onDamage(EntityDamageEvent event) {
+        if (event.getDamage() <= 0.0) {
             return;
         }
-        if (e.getEntity() instanceof Player) {
-            Player p = (Player) e.getEntity();
-            if (e.getCause() == EntityDamageEvent.DamageCause.FALL || e.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION
-                    || e.getCause() == EntityDamageEvent.DamageCause.CONTACT || e.getCause() == EntityDamageEvent.DamageCause.FALLING_BLOCK ||
-                    e.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL || e.getCause() == EntityDamageEvent.DamageCause.CUSTOM || e.getCause() == EntityDamageEvent.DamageCause.DROWNING
-                    || e.getCause() == EntityDamageEvent.DamageCause.DROWNING) {
-                if (p.isInsideVehicle() && p.getVehicle().getType() == EntityType.HORSE) {
-                    e.setDamage(0.0);
-                    e.setCancelled(true);
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (event.getCause() == EntityDamageEvent.DamageCause.FALL || event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION
+                    || event.getCause() == EntityDamageEvent.DamageCause.CONTACT || event.getCause() == EntityDamageEvent.DamageCause.FALLING_BLOCK ||
+                    event.getCause() == EntityDamageEvent.DamageCause.FLY_INTO_WALL || event.getCause() == EntityDamageEvent.DamageCause.CUSTOM || event.getCause() == EntityDamageEvent.DamageCause.DROWNING
+                    || event.getCause() == EntityDamageEvent.DamageCause.DROWNING) {
+                if (player.isInsideVehicle() && player.getVehicle().getType() == EntityType.HORSE) {
+                    event.setDamage(0.0);
+                    event.setCancelled(true);
                 }
-            } else if (p.isInsideVehicle() && p.getVehicle().getType() == EntityType.HORSE) {
-                p.getVehicle().remove();
-                p.teleport(p.getVehicle().getLocation().clone().add(0.0, 1.0, 0.0));
+            } else if (player.isInsideVehicle() && player.getVehicle().getType() == EntityType.HORSE) {
+                player.getVehicle().remove();
+                player.teleport(player.getVehicle().getLocation().clone().add(0.0, 1.0, 0.0));
             }
         }
-        if (e.getEntity() instanceof Horse) {
-            Horse h = (Horse) e.getEntity();
-            if (e.getCause() != EntityDamageEvent.DamageCause.FALL && e.getCause() != EntityDamageEvent.DamageCause.SUFFOCATION) {
-                EntityDamageByEntityEvent evt;
-                Entity p = h.getPassenger();
-                if (e instanceof EntityDamageByEntityEvent && (evt = (EntityDamageByEntityEvent) e).getDamager() instanceof Player && p instanceof Player) {
-                    Player d = (Player) evt.getDamager();
-                    ArrayList<String> toggles = Toggles.getToggles(d.getUniqueId());
-                    ArrayList<String> buddies = Buddies.getBuddies(d.getName());
-                    if (buddies.contains(p.getName().toLowerCase()) && !toggles.contains("Friendly Fire")) {
-                        e.setDamage(0.0);
-                        e.setCancelled(true);
+        if (event.getEntity() instanceof Horse) {
+            Horse horse = (Horse) event.getEntity();
+            if (event.getCause() != EntityDamageEvent.DamageCause.FALL && event.getCause() != EntityDamageEvent.DamageCause.SUFFOCATION) {
+                EntityDamageByEntityEvent entityDamageByEntityEvent;
+                Entity entity = horse.getPassenger();
+                if (event instanceof EntityDamageByEntityEvent && (entityDamageByEntityEvent = (EntityDamageByEntityEvent) event).getDamager() instanceof Player && entity instanceof Player) {
+                    Player damager = (Player) entityDamageByEntityEvent.getDamager();
+                    ArrayList<String> toggles = Toggles.getToggles(damager.getUniqueId());
+                    ArrayList<String> buddies = Buddies.getBuddies(damager.getName());
+                    if (buddies.contains(entity.getName().toLowerCase()) && !toggles.contains("Friendly Fire")) {
+                        event.setDamage(0.0);
+                        event.setCancelled(true);
                         return;
                     }
                     if (toggles.contains("Anti PVP")) {
-                        e.setDamage(0.0);
-                        e.setCancelled(true);
+                        event.setDamage(0.0);
+                        event.setCancelled(true);
                         return;
                     }
-                    if (!Alignments.neutral.containsKey(p.getName()) && !Alignments.chaotic.containsKey(p.getName()) && toggles.contains("Chaotic")) {
-                        e.setDamage(0.0);
-                        e.setCancelled(true);
+                    if (!Alignments.neutral.containsKey(entity.getName()) && !Alignments.chaotic.containsKey(entity.getName()) && toggles.contains("Chaotic")) {
+                        event.setDamage(0.0);
+                        event.setCancelled(true);
                         return;
                     }
                 }
-                h.remove();
-                if (p != null) {
-                    p.teleport(h.getLocation().clone().add(0.0, 2.0, 0.0));
+                horse.remove();
+                if (entity != null) {
+                    entity.teleport(horse.getLocation().clone().add(0.0, 2.0, 0.0));
                 }
             }
-            e.setDamage(0.0);
-            e.setCancelled(true);
+            event.setDamage(0.0);
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onDamager(EntityDamageByEntityEvent e) {
-        Player p;
-        if (e.getDamage() <= 0.0) {
+    public void onDamager(EntityDamageByEntityEvent event) {
+        Player player;
+        if (event.getDamage() <= 0.0) {
             return;
         }
-        if (e.getDamager() instanceof Player && (p = (Player) e.getDamager()).getVehicle() != null && p.getVehicle().getType() == EntityType.HORSE) {
+        if (event.getDamager() instanceof Player && (player = (Player) event.getDamager()).getVehicle() != null && player.getVehicle().getType() == EntityType.HORSE) {
             Location location;
-            if (currentLoc.containsKey(p.getVehicle().getUniqueId())) {
-                location = currentLoc.get(p.getVehicle().getUniqueId());
+            if (currentLoc.containsKey(player.getVehicle().getUniqueId())) {
+                location = currentLoc.get(player.getVehicle().getUniqueId());
             } else {
-                location = p.getVehicle().getLocation();
+                location = player.getVehicle().getLocation();
             }
-            currentLoc.remove(p.getVehicle().getUniqueId());
-            p.teleport(location.add(0.0, 1.0, 0.0));
-            if (p.getVehicle() != null) p.getVehicle().remove();
+            currentLoc.remove(player.getVehicle().getUniqueId());
+            player.teleport(location.add(0.0, 1.0, 0.0));
+            if (player.getVehicle() != null) {
+                player.getVehicle().remove();
+            }
         }
     }
 
     @EventHandler
-    public void onDismount(VehicleExitEvent e) {
-        if (e.getExited() instanceof Player && e.getVehicle() instanceof Horse) {
-            Player p = (Player) e.getExited();
+    public void onDismount(VehicleExitEvent event) {
+        if (event.getExited() instanceof Player && event.getVehicle() instanceof Horse) {
+            Player player = (Player) event.getExited();
             Location location;
-            if (currentLoc.containsKey(e.getVehicle().getUniqueId())) {
-                location = currentLoc.get(e.getVehicle().getUniqueId());
+            if (currentLoc.containsKey(event.getVehicle().getUniqueId())) {
+                location = currentLoc.get(event.getVehicle().getUniqueId());
             } else {
-                location = e.getVehicle().getLocation();
+                location = event.getVehicle().getLocation();
             }
-            currentLoc.remove(e.getVehicle().getUniqueId());
-            e.getVehicle().remove();
-
+            currentLoc.remove(event.getVehicle().getUniqueId());
+            event.getVehicle().remove();
         }
     }
 
     @EventHandler
     public void onMountedPlayerChunkChange(PlayerMoveEvent event) {
-        Player p = event.getPlayer();
-        if (p.getVehicle() == null) return;
-
+        Player player = event.getPlayer();
+        if (player.getVehicle() == null) {
+            return;
+        }
         if (!event.getFrom().getChunk().equals(event.getTo().getChunk())) {
             Bukkit.getScheduler().runTaskAsynchronously(PracticeServer.getInstance(), () -> {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    PacketPlayOutMount packetPlayOutMount = new PacketPlayOutMount(((CraftEntity) p).getHandle());
-                    ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packetPlayOutMount);
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    PacketPlayOutMount packetPlayOutMount = new PacketPlayOutMount(((CraftEntity) player).getHandle());
+                    ((CraftPlayer) onlinePlayer).getHandle().playerConnection.sendPacket(packetPlayOutMount);
                 }
             });
         }
     }
 
     @EventHandler
-    public void onMountSummon(PlayerInteractEvent e) {
-        Player p = e.getPlayer();
-        if (!(e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK || p.getInventory().getItemInMainHand() == null || Horses.getMountTier(p.getInventory().getItemInMainHand()) <= 0 || p.getVehicle() != null || mounting.containsKey(p.getName()) || Duels.duelers.containsKey(p))) {
+    public void onMountSummon(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (!(event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK || player.getInventory().getItemInMainHand() == null || getMountTier(player.getInventory().getItemInMainHand()) <= 0 || player.getVehicle() != null || mounting.containsKey(player.getName()) || Duels.duelers.containsKey(player))) {
             int mountTime = 6;
-            if (TabMenu.getAlignment(p).toLowerCase().contains("chaotic")) mountTime = 8;
-            if (Alignments.isSafeZone(p.getLocation())) {
-                mountingloc.put(p.getName(), p.getLocation());
-                horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
-                Horses.horse(p, Horses.getMountTier(p.getInventory().getItemInMainHand()));
+            if (TabMenu.getAlignment(player).toLowerCase().contains("chaotic")) {
+                mountTime = 8;
+            }
+            if (Alignments.isSafeZone(player.getLocation())) {
+                mountingLocations.put(player.getName(), player.getLocation());
+                horseTierByPlayer.put(player.getName(), getMountTier(player.getInventory().getItemInMainHand()));
+                createHorse(player, getMountTier(player.getInventory().getItemInMainHand()));
             } else {
-                mounting.put(p.getName(), mountTime);
-                mountingloc.put(p.getName(), p.getLocation());
-                horsetier.put(p.getName(), Horses.getMountTier(p.getInventory().getItemInMainHand()));
+                mounting.put(player.getName(), mountTime);
+                mountingLocations.put(player.getName(), player.getLocation());
+                horseTierByPlayer.put(player.getName(), getMountTier(player.getInventory().getItemInMainHand()));
             }
         }
     }
 
     @EventHandler
-    public void onCancelDamager(EntityDamageByEntityEvent e) {
-        Player p;
-        if (e.getDamager() instanceof Player && e.getEntity() instanceof LivingEntity && mounting.containsKey((p = (Player) e.getDamager()).getName())) {
-            mounting.remove(p.getName());
-            mountingloc.remove(p.getName());
-            p.sendMessage(ChatColor.RED + "Mount Summon - " + ChatColor.BOLD + "CANCELLED");
+    public void onCancelDamager(EntityDamageByEntityEvent event) {
+        Player player;
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof LivingEntity && mounting.containsKey((player = (Player) event.getDamager()).getName())) {
+            mounting.remove(player.getName());
+            mountingLocations.remove(player.getName());
+            player.sendMessage(ChatColor.RED + "Mount Summon - " + ChatColor.BOLD + "CANCELLED");
         }
     }
 
     @EventHandler
-    public void onCancelDamage(EntityDamageEvent e) {
-        Player p;
-        if (e.getDamage() <= 0.0) {
+    public void onCancelDamage(EntityDamageEvent event) {
+        Player player;
+        if (event.getDamage() <= 0.0) {
             return;
         }
-        if (e.getEntity() instanceof Player && mounting.containsKey((p = (Player) e.getEntity()).getName())) {
-            mounting.remove(p.getName());
-            mountingloc.remove(p.getName());
-            p.sendMessage(ChatColor.RED + "Mount Summon - " + ChatColor.BOLD + "CANCELLED");
+        if (event.getEntity() instanceof Player && mounting.containsKey((player = (Player) event.getEntity()).getName())) {
+            mounting.remove(player.getName());
+            mountingLocations.remove(player.getName());
+            player.sendMessage(ChatColor.RED + "Mount Summon - " + ChatColor.BOLD + "CANCELLED");
         }
     }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent e) {
-        Player p = e.getPlayer();
-        if (mounting.containsKey(p.getName())) {
-            mounting.remove(p.getName());
-            mountingloc.remove(p.getName());
-        }
-        if (p.getVehicle() != null && p.getVehicle().getType() == EntityType.HORSE) {
-            p.teleport(p.getVehicle().getLocation().clone().add(0.0, 1.0, 0.0));
-            p.getVehicle().remove();
-        }
-    }
-
-    @EventHandler
-    public void onTeleport(PlayerTeleportEvent e) {
-        Player p = e.getPlayer();
-        if (mounting.containsKey(p.getName())) {
-            mounting.remove(p.getName());
-            mountingloc.remove(p.getName());
-        }
-        Entity vehicle = p.getVehicle();
-        if (vehicle != null && vehicle instanceof Horse) {
-            currentLoc.remove(vehicle.getUniqueId());
-        }
-        p.eject();
-    }
-
     @EventHandler
     public void onCancelMove(PlayerMoveEvent e) {
         Player p = e.getPlayer();
-        if (mounting.containsKey(p.getName()) && (mountingloc.get(p.getName())).distanceSquared(e.getTo()) >= 2.0) {
+        if (mounting.containsKey(p.getName()) && (mountingLocations.get(p.getName())).distanceSquared(e.getTo()) >= 2.0) {
             mounting.remove(p.getName());
             p.sendMessage(ChatColor.RED + "Mount Summon - " + ChatColor.BOLD + "CANCELLED");
         }
     }
-
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        if (mounting.containsKey(player.getName())) {
+            mounting.remove(player.getName());
+            mountingLocations.remove(player.getName());
+        }
+    }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPromptChat(AsyncPlayerChatEvent e) {
         Player p = e.getPlayer();
-        if (buyingitem.containsKey(p.getName()) && buyingprice.containsKey(p.getName())) {
+        if (buyingItem.containsKey(p.getName()) && buyingPrice.containsKey(p.getName())) {
             e.setCancelled(true);
-            int price = buyingprice.get(p.getName());
-            ItemStack is = buyingitem.get(p.getName());
+            int price = buyingPrice.get(p.getName());
+            ItemStack is = buyingItem.get(p.getName());
             if (e.getMessage().equalsIgnoreCase("y")) {
                 if (!Money.hasEnoughGems(p, price)) {
                     p.sendMessage(ChatColor.RED + "You do not have enough gems to purchase this mount.");
                     p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    buyingprice.remove(p.getName());
-                    buyingitem.remove(p.getName());
+                    buyingPrice.remove(p.getName());
+                    buyingItem.remove(p.getName());
                     return;
                 }
                 if (p.getInventory().contains(Material.SADDLE)) {
@@ -515,14 +487,13 @@ public class Horses
                 p.sendMessage(ChatColor.RED + "-" + price + ChatColor.BOLD + "G");
                 p.sendMessage(ChatColor.GREEN + "Transaction successful.");
                 p.sendMessage(ChatColor.GRAY + "You are now the proud owner of a mount -- " + ChatColor.UNDERLINE + "to summon your new mount, simply right click with the saddle in your player's hand.");
-                buyingprice.remove(p.getName());
-                buyingitem.remove(p.getName());
+                buyingPrice.remove(p.getName());
+                buyingItem.remove(p.getName());
             } else {
                 p.sendMessage(ChatColor.RED + "Purchase - " + ChatColor.BOLD + "CANCELLED");
-                buyingprice.remove(p.getName());
-                buyingitem.remove(p.getName());
+                buyingPrice.remove(p.getName());
+                buyingItem.remove(p.getName());
             }
         }
     }
 }
-

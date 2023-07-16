@@ -280,7 +280,7 @@ Caused by: java.lang.ClassNotFoundException: com.boydti.fawe.object.FaweCommand
 [11:09:50] [Server thread/INFO]: [PracticeServer] [Hearthstone] has been enabled.
 [11:09:50] [Server thread/INFO]: [PracticeServer] [Altars] has been enabled.
 [11:09:50] [Server thread/INFO]: [PracticeServer] [Drop Priority] has been enabled.
-[11:09:50] [Server thread/INFO]: [PracticeServer] [Horses] has been enabled.
+[11:09:50] [Server thread/INFO]: [PracticeServer] [racegames] has been enabled.
 [11:09:50] [Server thread/INFO]: [PracticeServer] [ItemVendors] has been enabled.
 [11:09:50] [Server thread/INFO]: [PracticeServer] Forcefield 
 [11:09:50] [Server thread/INFO]: [PracticeServer] [PracticeServer] donations Enabled

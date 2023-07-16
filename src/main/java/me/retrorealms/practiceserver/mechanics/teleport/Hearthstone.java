@@ -89,19 +89,24 @@ public class Hearthstone
         }
     }
 
+    public static void castHearth(Player p) {
+        if (Alignments.chaotic.containsKey(p.getName())) {
+            p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " do this while chaotic!");
+        }else if(Duels.duelers.containsKey(p)) {
+            return;
+        }else {
+            p.sendMessage(ChatColor.BOLD + "TELEPORTING" + ChatColor.WHITE + " - " + ChatColor.AQUA + "Stone-peaks Manor" + ChatColor.WHITE + " ... " + 10 + "s");
+            casting.put(p.getName(), 10);
+            castingloc.put(p.getName(), p.getLocation());
+        }
+
+    }
     @EventHandler
     public void onRightClick(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         if (!(e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK || p.getInventory().getItemInMainHand() == null || !p.getInventory().getItemInMainHand().equals(Hearthstone.hearthstone()) || casting.containsKey(p.getName()) || Horses.mounting.containsKey(p.getName()) && !Duels.duelers.containsKey(p))) {
-            if (Alignments.chaotic.containsKey(p.getName())) {
-                p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " do this while chaotic!");
-            }else if(Duels.duelers.containsKey(p)) {
-                return;
-            }else {
-                p.sendMessage(ChatColor.BOLD + "TELEPORTING" + ChatColor.WHITE + " - " + ChatColor.AQUA + "Deadpeaks Mountain Camp" + ChatColor.WHITE + " ... " + 10 + "s");
-                casting.put(p.getName(), 10);
-                castingloc.put(p.getName(), p.getLocation());
-            }
+
+            castHearth(p);
         }
     }
 

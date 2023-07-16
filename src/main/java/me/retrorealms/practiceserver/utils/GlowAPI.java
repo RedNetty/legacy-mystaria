@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import me.retrorealms.practiceserver.mechanics.player.Toggles;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Team;
@@ -20,6 +21,8 @@ public class GlowAPI {
     public static void setGlowing(Entity entity, org.inventivetalent.glow.GlowAPI.Color color) {
         for(Player player : Bukkit.getOnlinePlayers()) {
             if (Toggles.hasGlowOnDrops(player)) {
+                if(color == org.inventivetalent.glow.GlowAPI.Color.AQUA) player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+                if(color == org.inventivetalent.glow.GlowAPI.Color.YELLOW) player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
                 org.inventivetalent.glow.GlowAPI.setGlowing(entity, color, player);
             }
         }

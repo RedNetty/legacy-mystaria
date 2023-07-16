@@ -29,7 +29,7 @@
         public static ItemStack pickaxe_tracker_item;
 
         static {
-            pickaxe_tracker_item = Items.signNewCustomItem(Material.NETHER_STAR, String.valueOf(ChatColor.GOLD.toString()) + "Pickaxe Stat Tracker", String.valueOf(ChatColor.GOLD + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY + ChatColor.ITALIC + "Apply to any pickaxe to start tracking"  + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "stats as you use it." + "," + ChatColor.GRAY + "Permanent Untradeable"));
+            pickaxe_tracker_item = Items.signNewCustomItem(Material.NETHER_STAR, String.valueOf(ChatColor.GOLD.toString()) + "Pickaxe Stat Tracker", String.valueOf(ChatColor.GOLD + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY + ChatColor.ITALIC + "Apply to any pickaxe to start tracking"  + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "stats as you use it." ));
         }
 
         public void onEnable() {

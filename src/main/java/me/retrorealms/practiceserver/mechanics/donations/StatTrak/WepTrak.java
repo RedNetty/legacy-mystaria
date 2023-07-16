@@ -30,7 +30,7 @@
         public static ItemStack weapon_tracker_item;
 
         static {
-            weapon_tracker_item = Items.signNewCustomItem(Material.NETHER_STAR, String.valueOf(ChatColor.GOLD.toString()) + "Weapon Stat Tracker", String.valueOf(ChatColor.GOLD + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY + ChatColor.ITALIC + "Apply to any weapon to start tracking" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "stats as you use it." + "," + ChatColor.GRAY + "Permanent Untradeable"));
+            weapon_tracker_item = Items.signNewCustomItem(Material.NETHER_STAR, String.valueOf(ChatColor.GOLD.toString()) + "Weapon Stat Tracker", String.valueOf(ChatColor.GOLD + "Uses: " + ChatColor.GRAY + "1" + "," + ChatColor.GRAY + ChatColor.ITALIC + "Apply to any weapon to start tracking" + "," + ChatColor.GRAY.toString() + ChatColor.ITALIC.toString() + "stats as you use it."));
         }
 
         public void onEnable() {

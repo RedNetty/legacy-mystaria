@@ -532,6 +532,7 @@ public class Trading implements Listener {
             trader.updateInventory();
             new BukkitRunnable() {
                 public void run() {
+                    if(trader !=null)
                     trader.removeMetadata("no_trade", PracticeServer.plugin);
                     tradie.removeMetadata("no_trade", PracticeServer.plugin);
                 }

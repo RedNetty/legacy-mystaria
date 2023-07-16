@@ -349,16 +349,17 @@ public class Frostwing extends WorldBoss implements Listener {
                 }
             }
         });
-        int ran = ThreadLocalRandom.current().nextInt(1, 4);
+        int ran = ThreadLocalRandom.current().nextInt(1, 6);
         switch (ran) {
             case 1:
-                iceBlockBarrageAttack(livingEntity, 10, ThreadLocalRandom.current().nextInt(2500, 3000), 30, 25);
+                iceBlockBarrageAttack(livingEntity, 10, ThreadLocalRandom.current().nextInt(1500, 2000), 25, 25);
                 break;
             case 2:
+            default:
                 icyGroundAttack(livingEntity.getLocation(), 9, ThreadLocalRandom.current().nextInt(300, 370), ThreadLocalRandom.current().nextInt(4, 5), 35, 5);
                 break;
             case 3:
-                summonMinionsAttack(livingEntity.getLocation(), ThreadLocalRandom.current().nextInt(6, 7));
+                summonMinionsAttack(livingEntity.getLocation(), ThreadLocalRandom.current().nextInt(2, 5));
                 break;
 
         }
@@ -438,7 +439,7 @@ public class Frostwing extends WorldBoss implements Listener {
             double angle = 2 * Math.PI * i / numberOfMinions;
             double x = Math.cos(angle) * 3;
             double z = Math.sin(angle) * 3;
-            int elite = ThreadLocalRandom.current().nextInt(1, 4);
+            int elite = ThreadLocalRandom.current().nextInt(1, 7);
 
             boolean isElite = elite == 1 ? true : false;
             Location minionLocation = bossLoc.clone().add(x, 1, z);

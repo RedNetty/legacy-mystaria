@@ -2,6 +2,8 @@ package me.retrorealms.practiceserver.mechanics.party;
 
 import lombok.Getter;
 import me.retrorealms.practiceserver.PracticeServer;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
+import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -13,60 +15,45 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Parties implements Listener {
     @Getter
-    public static ConcurrentHashMap<Player, ArrayList<Player>> parties;
-    public static ConcurrentHashMap<Player, Player> invite;
-    public static ConcurrentHashMap<Player, Long> invitetime;
+    public static ConcurrentHashMap<Player, ArrayList<Player>> parties = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Player, Player> invite = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Player, Long> invitetime = new ConcurrentHashMap<>();
+    private static final RaceMinigame race = PracticeServer.getRaceMinigame();
     public static int maxSize = 8;
 
-    static {
-        Parties.parties = new ConcurrentHashMap<Player, ArrayList<Player>>();
-        Parties.invite = new ConcurrentHashMap<Player, Player>();
-        Parties.invitetime = new ConcurrentHashMap<Player, Long>();
-    }
-
     public static boolean isPartyLeader(final Player p) {
-        return Parties.parties.containsKey(p);
+        return parties.containsKey(p);
     }
 
     public static Player getPartyLeader(final Player p){
-        for(Player member : getEntirePartyOf(p)){
-            if(isPartyLeader(member)) return member;
-        }
-        return p; // shouldnt happen
+        return getEntirePartyOf(p).stream()
+                .filter(Parties::isPartyLeader)
+                .findFirst()
+                .orElse(p); // shouldnt happen
     }
 
-    @SuppressWarnings("deprecation")
     public static void refreshScoreboard(final Player p) {
+        maxSize = race.getGameState() != MinigameState.NONE ? race.getMaxTeamSize() : 8;
+
         if (isInParty(p)) {
-            final ArrayList<Player> mem = Parties.parties.get(getParty(p));
+            final List<Player> mem = parties.get(getParty(p));
             final Scoreboard sb = Scoreboards.getBoard(p);
-            if (sb.getObjective(DisplaySlot.SIDEBAR) != null) {
-                final Objective o = sb.getObjective(DisplaySlot.SIDEBAR);
+            final Objective o = sb.getObjective(DisplaySlot.SIDEBAR);
 
+            if (o != null) {
                 mem.forEach(pl -> {
-
-                    if (Parties.parties.containsKey(pl)) {
-                        String name = ChatColor.BOLD + pl.getName();
-                        if (name.length() > 16) {
-                            name = name.substring(0, 16);
-                        }
-                        o.getScore(name).setScore((int) pl.getHealth());
-                        o.getScore(name).setScore((int) pl.getHealth());
-                    } else {
-                        String name = pl.getName();
-                        if (name.length() > 16) {
-                            name = name.substring(0, 16);
-                        }
-                        o.getScore(name).setScore((int) pl.getHealth());
+                    String name = (parties.containsKey(pl) ? ChatColor.BOLD : "") + pl.getName();
+                    if (name.length() > 16) {
+                        name = name.substring(0, 16);
                     }
+                    o.getScore(name).setScore((int) pl.getHealth());
                 });
+
                 p.setScoreboard(sb);
                 Scoreboards.boards.put(p, sb);
             } else {
@@ -75,58 +62,49 @@ public class Parties implements Listener {
         }
     }
 
+
     public static ArrayList<Player> getEntirePartyOf(Player player) {
-        if (isPartyLeader(player)) return parties.get(player);
-
-        List<Player>[] partyList;
-
-        for (ArrayList<Player> partyValues : parties.values())
-            if (partyValues.contains(player))
-                return partyValues;
-
-        return null;
+        return parties.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(player) || entry.getValue().contains(player))
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
     }
 
-    @SuppressWarnings("deprecation")
     public static void updateScoreboard(final Player p) {
+        final Scoreboard sb = Scoreboards.getBoard(p);
+        final Objective o = sb.getObjective(DisplaySlot.SIDEBAR);
+        if (o != null) {
+            o.unregister();
+        }
+
         if (isInParty(p)) {
-            final ArrayList<Player> mem = Parties.parties.get(getParty(p));
-            final Scoreboard sb = Scoreboards.getBoard(p);
-            if (sb.getObjective(DisplaySlot.SIDEBAR) != null) {
-                sb.getObjective(DisplaySlot.SIDEBAR).unregister();
-            }
-            final Objective o = sb.registerNewObjective("party_data", "dummy");
-            o.setDisplayName(new StringBuilder().append(ChatColor.AQUA).append(ChatColor.BOLD).append("Party").toString());
-            o.setDisplaySlot(DisplaySlot.SIDEBAR);
-            for (final Player pl : mem) {
-                if (Parties.parties.containsKey(pl)) {
-                    String name = ChatColor.BOLD + pl.getName();
-                    if (name.length() > 16) {
-                        name = name.substring(0, 16);
-                    }
-                    o.getScore(name).setScore((int) pl.getHealth());
-                } else {
-                    String name = pl.getName();
-                    if (name.length() > 16) {
-                        name = name.substring(0, 16);
-                    }
-                    o.getScore(name).setScore((int) pl.getHealth());
+            final List<Player> mem = parties.get(getParty(p));
+            final Objective newObjective = sb.registerNewObjective("party_data", "dummy");
+            newObjective.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Party");
+            newObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+            mem.forEach(pl -> {
+                String name = (parties.containsKey(pl) ? ChatColor.BOLD : "") + pl.getName();
+                if (name.length() > 16) {
+                    name = name.substring(0, 16);
                 }
-            }
-            //   p.setScoreboard(sb);
+                newObjective.getScore(name).setScore((int) pl.getHealth());
+            });
+
             Scoreboards.boards.put(p, sb);
-        } else {
-            final Scoreboard sb2 = Scoreboards.getBoard(p);
-            if (sb2.getObjective(DisplaySlot.SIDEBAR) != null) {
-                sb2.getObjective(DisplaySlot.SIDEBAR).unregister();
-            }
         }
     }
 
     public static void createParty(final Player p) {
-        Parties.parties.put(p, new ArrayList<Player>(Arrays.asList(p)));
+        if(race.getGameState() == MinigameState.SHRINK) {
+            p.sendMessage("Race has already started, try again next round.");
+            return;
+        }
+        Parties.parties.put(p, new ArrayList<>(Collections.singletonList(p)));
         updateScoreboard(p);
     }
+
 
     public static void addPlayer(final Player added, final Player leader) {
         if (Parties.parties.containsKey(leader)) {
@@ -172,6 +150,8 @@ public class Parties implements Listener {
                     }
                 }
             }
+
+            if(race.getGameState() == MinigameState.SHRINK) race.eliminatePlayer(p);
             updateScoreboard(p);
         }
     }
@@ -192,6 +172,16 @@ public class Parties implements Listener {
             }
         }
         return false;
+    }
+
+    public static void giveEveryoneParty() {
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            if(!isInParty(player)) createParty(player);
+        });
+    }
+
+    public static void clearParties() {
+        parties.clear();
     }
 
     public static Player getParty(final Player p) {
@@ -291,7 +281,7 @@ public class Parties implements Listener {
     @EventHandler
     public void onPlayerQuit(final PlayerQuitEvent e) {
         final Player p = e.getPlayer();
-        ArrayList<Player> entirePartyOf = getEntirePartyOf(p);
+        List<Player> entirePartyOf = getEntirePartyOf(p);
         if (entirePartyOf == null) {
             return;
         }

@@ -280,8 +280,9 @@ public class Mobdrops implements Listener {
                     if (!MobHandler.isCustomNamedElite(s) && elite) {
                         final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
                         if (s instanceof Skeleton) {
-                            if (s.hasMetadata("type") && s.getMetadata("type").get(0).asString().equals("witherskeleton"))
+                            if (s.getEquipment().getHelmet() == null || s.getEquipment().getHelmet().getType() == Material.SKULL_ITEM) {
                                 drops.add(Drops.createDrop(Mobs.getMobTier(s), 5));
+                            }
                         }
                         ItemStack[] armorContents;
                         for (int j = 0; j < 2; j++) {
@@ -380,34 +381,34 @@ public class Mobdrops implements Listener {
         if (tier == 1) {
             scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
-                return TeleportBooks.deadpeaks_book(false);
+                return TeleportBooks.deadpeaksBook(false);
             }
             if (scrolltype == 1) {
-                return TeleportBooks.tripoli_book(false);
+                return TeleportBooks.tripoliBook(false);
             }
         }
         if (tier == 2) {
             scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
-                return TeleportBooks.deadpeaks_book(false);
+                return TeleportBooks.deadpeaksBook(false);
             }
             if (scrolltype == 1) {
-                return TeleportBooks.tripoli_book(false);
+                return TeleportBooks.tripoliBook(false);
             }
         }
         if (tier == 3) {
             scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
-                return TeleportBooks.deadpeaks_book(false);
+                return TeleportBooks.deadpeaksBook(false);
             }
             if (scrolltype == 1) {
-                return TeleportBooks.tripoli_book(false);
+                return TeleportBooks.tripoliBook(false);
             }
         }
         if (tier == 4) {
             scrolltype = ThreadLocalRandom.current().nextInt(2);
             if (scrolltype == 0) {
-                return TeleportBooks.deadpeaks_book(false);
+                return TeleportBooks.deadpeaksBook(false);
             }
             if (scrolltype == 1) {
                 return TeleportBooks.avalonBook(false);
@@ -419,9 +420,9 @@ public class Mobdrops implements Listener {
                 return TeleportBooks.avalonBook(false);
             }
             if (scrolltype == 1) {
-                return TeleportBooks.tripoli_book(false);
+                return TeleportBooks.tripoliBook(false);
             }
         }
-        return TeleportBooks.deadpeaks_book(false);
+        return TeleportBooks.deadpeaksBook(false);
     }
 }

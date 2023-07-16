@@ -49,9 +49,9 @@ public class DuelInstance {
             p.teleport(Duels.team1Spots.get(arena));
             p.teleport(Duels.team1Spots.get(arena));
             p.setHealth(p.getMaxHealth());
-            TeleportBooks.casting_loc.remove(p.getName());
-            TeleportBooks.casting_time.remove(p.getName());
-            TeleportBooks.teleporting_loc.remove(p.getName());
+            TeleportBooks.castingLoc.remove(p.getName());
+            TeleportBooks.castingTime.remove(p.getName());
+            TeleportBooks.teleportingLoc.remove(p.getName());
             Hearthstone.casting.remove(p.getName());
             Hearthstone.castingloc.remove(p.getName());
             Horses.mounting.remove(p.getName());
@@ -62,9 +62,9 @@ public class DuelInstance {
             p.teleport(Duels.team2Spots.get(arena));
             p.teleport(Duels.team2Spots.get(arena));
             p.setHealth(p.getMaxHealth());
-            TeleportBooks.casting_loc.remove(p.getName());
-            TeleportBooks.casting_time.remove(p.getName());
-            TeleportBooks.teleporting_loc.remove(p.getName());
+            TeleportBooks.castingLoc.remove(p.getName());
+            TeleportBooks.castingTime.remove(p.getName());
+            TeleportBooks.teleportingLoc.remove(p.getName());
             Hearthstone.casting.remove(p.getName());
             Hearthstone.castingloc.remove(p.getName());
             Horses.mounting.remove(p.getName());

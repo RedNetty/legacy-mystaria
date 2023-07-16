@@ -8,6 +8,7 @@ import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.nonStaticConfig;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -35,6 +36,7 @@ public class Banks implements Listener {
     public static HashMap<Player, UUID> banksee = new HashMap<>();
     public static List<String> withdraw = new ArrayList<String>();
     public static final int banksize = 54;
+    public static HashMap<Player, Inventory> tempBanks = new HashMap<>();
 
     public void onEnable() {
         PracticeServer.log.info("[Banks] has been enabled.");
@@ -143,15 +145,19 @@ public class Banks implements Listener {
         }
     }
 
+    public static void resetTempBanks() {
+        tempBanks = new HashMap<>();
+    }
     public static Inventory getBank(Player p, int page) {
         UUID name = p.getUniqueId();
         if (banksee.containsKey(p)) {
             name = banksee.get(p);
         }
-        if (PracticeServer.DATABASE) {
+        if (PracticeServer.DATABASE && PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
             return SQLMain.getBank(name, page);
         }
-        File file;
+        if(tempBanks.containsKey(p)) return tempBanks.get(p);
+/*        File file;
         if (!(file = new File(PracticeServer.plugin.getDataFolder() + "/banks", String.valueOf(name) + ".yml")).exists()) {
             try {
                 file.createNewFile();
@@ -164,16 +170,10 @@ public class Banks implements Listener {
             config.load(file);
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
+        }*/
         Inventory inv = Bukkit.createInventory(null, banksize, "Bank Chest (1/1)");
-        int i = 0;
-        while (i < inv.getSize()) {
-            if (config.contains("" + i)) {
-                inv.setItem(i, config.getItemStack("" + i));
-            }
-            ++i;
-        }
-        return inv;
+        if(!tempBanks.containsKey(p)) tempBanks.put(p, inv);
+        return tempBanks.get(p);
     }
 
     public static ItemStack getGemBankItem(Player player) {

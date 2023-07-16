@@ -95,7 +95,7 @@ public class CreateDrop {
         double dpsmax = tier*(1D+(tier/1.7D));
         double dpsmin = dpsmax / 1.5D;
 
-        int nrghp = ThreadLocalRandom.current().nextInt(3);
+        int nrghp = ThreadLocalRandom.current().nextInt(4);
         int nrg = tier;
         int hps = 0;
         if(nrghp > 0) {

@@ -33,6 +33,10 @@ public class Economy implements Listener {
         currentBalance.put(event.getPlayer().getUniqueId(), balance);
     }
 
+    public static void clearEconomy() {
+        currentBalance = new HashMap<>();
+    }
+
     public void saveAllBalance() {
         if(PracticeServer.DATABASE) return;
         for (UUID id : currentBalance.keySet()) {

@@ -15,11 +15,9 @@ public class LogoutCommand implements CommandExecutor {
             Player p = (Player) sender;
             if (cmd.getName().equalsIgnoreCase("logout") && !Logout.logging.containsKey(p.getName())) {
                 if (Alignments.isSafeZone(p.getLocation())) {
-                    if (Alignments.tagged.containsKey(p.getName())) {
-                        Alignments.tagged.remove(p.getName());
-                    }
+                    Alignments.tagged.remove(p.getName());
                     p.saveData();
-                    p.sendMessage(String.valueOf(ChatColor.GREEN.toString()) + "You have safely logged out." + "\n\n" + ChatColor.GRAY.toString() + "Your player data has been synced.");
+                    p.sendMessage(ChatColor.GREEN.toString() + "You have safely logged out." + "\n\n" + ChatColor.GRAY + "Your player data has been synced.");
                 } else if (Alignments.tagged.containsKey(p.getName()) && System.currentTimeMillis() - Alignments.tagged.get(p.getName()) < 10000) {
                     p.sendMessage(ChatColor.RED + "You will be " + ChatColor.BOLD + "LOGGED OUT" + ChatColor.RED + " of the game world shortly.");
                     Logout.logging.put(p.getName(), 10);

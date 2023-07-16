@@ -1,34 +1,3 @@
-/*
- * Decompiled with CFR 0_118.
- * 
- * Could not load the following classes:
- *  org.bukkit.Bukkit
- *  org.bukkit.Location
- *  org.bukkit.Material
- *  org.bukkit.Sound
- *  org.bukkit.entity.Entity
- *  org.bukkit.entity.LivingEntity
- *  org.bukkit.entity.Player
- *  org.bukkit.event.Event
- *  org.bukkit.event.Event$Result
- *  org.bukkit.event.EventHandler
- *  org.bukkit.event.EventPriority
- *  org.bukkit.event.Listener
- *  org.bukkit.event.block.Action
- *  org.bukkit.event.entity.EntityDamageByEntityEvent
- *  org.bukkit.event.player.PlayerInteractEvent
- *  org.bukkit.inventory.ItemStack
- *  org.bukkit.inventory.PlayerInventory
- *  org.bukkit.inventory.meta.ItemMeta
- *  org.bukkit.metadata.FixedMetadataValue
- *  org.bukkit.metadata.MetadataValue
- *  org.bukkit.plugin.Plugin
- *  org.bukkit.plugin.PluginManager
- *  org.bukkit.potion.PotionEffect
- *  org.bukkit.potion.PotionEffectType
- *  org.bukkit.scheduler.BukkitRunnable
- *  org.bukkit.scheduler.BukkitTask
- */
 package me.retrorealms.practiceserver.mechanics.player;
 
 import me.retrorealms.practiceserver.PracticeServer;
@@ -54,72 +23,94 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Energy
-        implements Listener {
-    public static ConcurrentHashMap<String, Long> nodamage = new ConcurrentHashMap<String, Long>();
-    public static ConcurrentHashMap<String, Long> cd = new ConcurrentHashMap<String, Long>();
+public class Energy implements Listener {
+    private static final int ENERGY_UPDATE_INTERVAL = 1;
+    private static final int ENERGY_REDUCTION_INTERVAL = 4;
+    private static final int MAX_ENERGY = 100;
+
+    private static final float BASE_ENERGY_INCREASE = 100.0f;
+    private static final float ENERGY_PER_ARMOR_PIECE = 5.0f;
+    private static final float ENERGY_INCREASE_PER_INTEL = 0.01f;
+    private static final int ENERGY_REDUCTION_AMOUNT = 85;
+    private static final float ENERGY_REDUCTION_MULTIPLIER = 4.0f;
+    private static final int ENERGY_REDUCTION_THRESHOLD = 0;
+    private static final long ENERGY_REDUCTION_DELAY = 2000L;
+    private static final int ENERGY_REDUCTION_POTION_DURATION = 40;
+    private static final int ENERGY_REDUCTION_POTION_AMPLIFIER = 5;
+
+    public static ConcurrentHashMap<String, Long> noDamage;
+    public static ConcurrentHashMap<String, Long> cooldown;
+
+    public Energy() {
+        noDamage = new ConcurrentHashMap<>();
+        cooldown = new ConcurrentHashMap<>();
+    }
 
     public void onEnable() {
         PracticeServer.log.info("[Energy] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        new BukkitRunnable() {
 
+        // Update player energy every tick
+        new BukkitRunnable() {
+            @Override
             public void run() {
-                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                    PlayerInventory i = p.getInventory();
-                    float amt = 100.0f;
-                    ItemStack[] arritemStack = i.getArmorContents();
-                    int n = arritemStack.length;
-                    int n2 = 0;
-                     while (n2 < n) {
-                        ItemStack is = arritemStack[n2];
-                        if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
-                            int added = Damage.getEnergy(is);
-                            int intel = 0;
-                            int addedint = Damage.getElem(is, "INT");
-                            if ((intel += addedint) > 0) {
-                                added = (int) ((long) added + Math.round((double) intel * 0.009));
+                for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+                    PlayerInventory inventory = player.getInventory();
+                    float energy = BASE_ENERGY_INCREASE;
+
+                    for (ItemStack armorPiece : inventory.getArmorContents()) {
+                        if (armorPiece != null && armorPiece.getType() != Material.AIR && armorPiece.hasItemMeta() && armorPiece.getItemMeta().hasLore()) {
+                            int addedEnergy = Damage.getEnergy(armorPiece);
+                            int addedIntel = Damage.getElem(armorPiece, "INT");
+
+                            if (addedIntel > 0) {
+                                addedEnergy += Math.round(addedIntel * ENERGY_INCREASE_PER_INTEL);
                             }
-                            amt += (float) (added * 5);
-                        }
-                        ++n2;
-                    }
-                    if (Energy.getEnergy(p) < 100.0f && (!Energy.cd.containsKey(p.getName()) || Energy.cd.containsKey(p.getName()) && System.currentTimeMillis() - Energy.cd.get(p.getName()) > 2000)) {
-                        Energy.setEnergy(p, Energy.getEnergy(p) + amt / 100.0f);
-                    }
-                    if (Energy.getEnergy(p) > 0.0f) continue;
-                    p.setSprinting(false);
-                }
-            }
-        }.runTaskTimerAsynchronously(PracticeServer.plugin, 0, 1);
-        new BukkitRunnable() {
 
-            public void run() {
-                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
-                    if (!p.isSprinting() || Alignments.isSafeZone(p.getLocation())) {
-                        	
-                    	continue;
-                    } else if (ToggleEnergyCommand.energytoggled.contains(p.getName())){
-                    	continue;
+                            energy += addedEnergy * ENERGY_PER_ARMOR_PIECE;
+                        }
                     }
-                    float amt = 100.0f;
-                    amt += 85.0f;
-                    amt *= 4.0f;
-                    if (Energy.getEnergy(p) > 0.0f) {
-                        Energy.setEnergy(p, Energy.getEnergy(p) - amt / 100.0f);
+
+                    if (getEnergy(player) < MAX_ENERGY && (!cooldown.containsKey(player.getName()) || System.currentTimeMillis() - cooldown.get(player.getName()) > ENERGY_REDUCTION_DELAY)) {
+                        setEnergy(player, getEnergy(player) + energy / MAX_ENERGY);
                     }
-                    if (Energy.getEnergy(p) > 0.0f) continue;
-                    Energy.setEnergy(p, 0.0f);
-                    Energy.cd.put(p.getName(), System.currentTimeMillis());
-                    slowDig(p);
+
+                    if (getEnergy(player) <= ENERGY_REDUCTION_THRESHOLD) {
+                        player.setSprinting(false);
+                    }
                 }
             }
-        }.runTaskTimerAsynchronously(PracticeServer.plugin, 4, 4);
+        }.runTaskTimerAsynchronously(PracticeServer.plugin, 0, ENERGY_UPDATE_INTERVAL);
+
+        // Reduce player energy when sprinting
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+                    if (!player.isSprinting() || Alignments.isSafeZone(player.getLocation()) || ToggleEnergyCommand.energytoggled.contains(player.getName())) {
+                        continue;
+                    }
+
+                    float energyReduction = BASE_ENERGY_INCREASE + ENERGY_REDUCTION_AMOUNT;
+                    energyReduction *= ENERGY_REDUCTION_MULTIPLIER;
+
+                    if (getEnergy(player) > ENERGY_REDUCTION_THRESHOLD) {
+                        setEnergy(player, getEnergy(player) - energyReduction / MAX_ENERGY);
+                    }
+
+                    if (getEnergy(player) <= ENERGY_REDUCTION_THRESHOLD) {
+                        setEnergy(player, ENERGY_REDUCTION_THRESHOLD);
+                        cooldown.put(player.getName(), System.currentTimeMillis());
+                        slowDig(player);
+                    }
+                }
+            }
+        }.runTaskTimerAsynchronously(PracticeServer.plugin, 4, ENERGY_REDUCTION_INTERVAL);
     }
 
     public void slowDig(Player player) {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(PracticeServer.plugin, () -> {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 40, 5), true);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, ENERGY_REDUCTION_POTION_DURATION, ENERGY_REDUCTION_POTION_AMPLIFIER), true);
             player.setSprinting(false);
         });
     }
@@ -128,126 +119,139 @@ public class Energy
         PracticeServer.log.info("[Energy] has been disabled.");
     }
 
-    public static float getEnergy(Player p) {
-        float energy = 0.0f;
-        energy = p.getExp() * 100.0f;
-        return energy;
+    public static float getEnergy(Player player) {
+        return player.getExp() * MAX_ENERGY;
     }
 
-    public static void setEnergy(Player p, float energy) {
-        if (energy > 100.0f) {
-            energy = 100.0f;
+    public static void setEnergy(Player player, float energy) {
+        if (energy > MAX_ENERGY) {
+            energy = MAX_ENERGY;
         }
-        if(energy / 100.0f < 0) {
-            p.setExp(0);
-        }else {
-            p.setExp((energy / 100.0f));
+
+        if (energy / MAX_ENERGY < ENERGY_REDUCTION_THRESHOLD) {
+            player.setExp(0);
+        } else {
+            player.setExp(energy / MAX_ENERGY);
         }
-        p.setLevel((int) energy);
+
+        player.setLevel((int) energy);
     }
 
-    public static void removeEnergy(Player p, int amt) {
-        if (Alignments.isSafeZone(p.getLocation()) || p.getGameMode() == GameMode.CREATIVE) {
+    public static void removeEnergy(Player player, int amount) {
+        if (Alignments.isSafeZone(player.getLocation()) || player.getGameMode() == GameMode.CREATIVE) {
             return;
         }
-        if (p.hasMetadata("lastenergy") && System.currentTimeMillis() - p.getMetadata("lastenergy").get(0).asLong() < 100) {
+
+        if (player.hasMetadata("lastenergy") && System.currentTimeMillis() - player.getMetadata("lastenergy").get(0).asLong() < ENERGY_UPDATE_INTERVAL) {
             return;
         }
-        if (ToggleEnergyCommand.energytoggled.contains(p.getName())) {
-        	return;
+
+        if (ToggleEnergyCommand.energytoggled.contains(player.getName())) {
+            return;
         }
-        p.setMetadata("lastenergy", new FixedMetadataValue(PracticeServer.plugin, System.currentTimeMillis()));
-        Energy.setEnergy(p, Energy.getEnergy(p) - (float) amt);
+
+        player.setMetadata("lastenergy", new FixedMetadataValue(PracticeServer.plugin, System.currentTimeMillis()));
+        setEnergy(player, getEnergy(player) - amount);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onEnergyUse(PlayerInteractEvent e) {
-        if (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) {
-            Player p = e.getPlayer();
-            ItemStack itemInHand = p.getInventory().getItemInMainHand();
-            if (nodamage.containsKey(p.getName()) && System.currentTimeMillis() - nodamage.get(p.getName()) < 100) {
-                e.setUseItemInHand(Event.Result.DENY);
-                e.setCancelled(true);
+    public void onEnergyUse(PlayerInteractEvent event) {
+        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            Player player = event.getPlayer();
+            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+            if (noDamage.containsKey(player.getName()) && System.currentTimeMillis() - noDamage.get(player.getName()) < ENERGY_UPDATE_INTERVAL) {
+                event.setUseItemInHand(Event.Result.DENY);
+                event.setCancelled(true);
                 return;
             }
-            int amt = 6;
-            if (Energy.getEnergy(p) > 0.0f) {
-                if(itemInHand != null && itemInHand.getItemMeta() != null && itemInHand.getItemMeta().getDisplayName() != null) {
-                    if (itemInHand.getType() == Material.WOOD_SWORD) {
-                        amt = 5;
-                    } else if (itemInHand.getType() == Material.WOOD_AXE || itemInHand.getType() == Material.WOOD_SPADE || itemInHand.getType() == Material.STONE_SWORD) {
-                        amt = 6;
-                    } else if (itemInHand.getType() == Material.STONE_AXE || itemInHand.getType() == Material.STONE_SPADE || itemInHand.getType() == Material.IRON_SWORD) {
-                        amt = 7;
-                    } else if (itemInHand.getType() == Material.IRON_AXE || itemInHand.getType() == Material.IRON_SPADE || (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && itemInHand.getType() == Material.DIAMOND_SWORD)) {
-                        amt = 8;
-                    } else if (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && (itemInHand.getType() == Material.DIAMOND_AXE || itemInHand.getType() == Material.DIAMOND_SPADE) || itemInHand.getType() == Material.GOLD_SWORD) {
-                        amt = 9;
-                    } else if (itemInHand.getType() == Material.GOLD_AXE || itemInHand.getType() == Material.GOLD_SPADE || itemInHand.getType() == Material.DIAMOND_SWORD) {
-                        amt = 11;
-                    } else if (itemInHand.getType() == Material.DIAMOND_AXE || itemInHand.getType() == Material.DIAMOND_SPADE) {
-                        amt = 12;
+
+            int amount = 6;
+            if (getEnergy(player) > ENERGY_REDUCTION_THRESHOLD) {
+                if (itemInHand != null && itemInHand.getItemMeta() != null && itemInHand.getItemMeta().getDisplayName() != null) {
+                    Material handType = itemInHand.getType();
+
+                    if (handType == Material.WOOD_SWORD) {
+                        amount = 2;
+                    } else if (handType == Material.WOOD_AXE || handType == Material.WOOD_SPADE || handType == Material.STONE_SWORD) {
+                        amount = 3;
+                    } else if (handType == Material.STONE_AXE || handType == Material.STONE_SPADE || handType == Material.IRON_SWORD) {
+                        amount = 4;
+                    } else if (handType == Material.IRON_AXE || handType == Material.IRON_SPADE || handType == Material.DIAMOND_SWORD) {
+                        amount = 5;
+                    } else if (handType == Material.DIAMOND_AXE || handType == Material.DIAMOND_SPADE || handType == Material.GOLD_SWORD) {
+                        amount = 6;
+                    } else if (handType == Material.GOLD_AXE || handType == Material.GOLD_SPADE) {
+                        amount = 7;
                     }
-                    Energy.removeEnergy(p, amt);
+
+                    removeEnergy(player, amount);
                 }
             }
-            if (Energy.getEnergy(p) <= 0.0f) {
-                Energy.setEnergy(p, 0.0f);
-                cd.put(p.getName(), System.currentTimeMillis());
-                p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 40, 5), true);
-                p.playSound(p.getLocation(), Sound.ENTITY_WOLF_PANT, 10.0f, 1.5f);
+
+            if (getEnergy(player) <= ENERGY_REDUCTION_THRESHOLD) {
+                setEnergy(player, ENERGY_REDUCTION_THRESHOLD);
+                cooldown.put(player.getName(), System.currentTimeMillis());
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, ENERGY_REDUCTION_POTION_DURATION, ENERGY_REDUCTION_POTION_AMPLIFIER), true);
+                player.playSound(player.getLocation(), Sound.ENTITY_WOLF_PANT, 10.0f, 1.5f);
             }
         }
     }
-
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onEnergyUseDamage(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player && e.getEntity() instanceof LivingEntity) {
-            Player p = (Player) e.getDamager();
-            ItemStack itemInHand = p.getInventory().getItemInMainHand();
-            if (nodamage.containsKey(p.getName()) && System.currentTimeMillis() - nodamage.get(p.getName()) < 100) {
-                e.setCancelled(true);
-                e.setDamage(0.0);
+    public void onEnergyUseDamage(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof LivingEntity) {
+            Player player = (Player) event.getDamager();
+            ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+            if (noDamage.containsKey(player.getName()) && System.currentTimeMillis() - noDamage.get(player.getName()) < ENERGY_UPDATE_INTERVAL) {
+                event.setCancelled(true);
+                event.setDamage(0.0);
                 return;
             }
-            if(p.hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
-                e.setDamage(0.0);
-                e.setCancelled(true);
+
+            if (player.hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
+                event.setDamage(0.0);
+                event.setCancelled(true);
             }
-            nodamage.put(p.getName(), System.currentTimeMillis());
-            if (Energy.getEnergy(p) > 0.0f) {
-                if (p.hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
-                    p.removePotionEffect(PotionEffectType.SLOW_DIGGING);
+
+            noDamage.put(player.getName(), System.currentTimeMillis());
+
+            if (getEnergy(player) > ENERGY_REDUCTION_THRESHOLD) {
+                if (player.hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
+                    player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
                 }
-                int amt = 6;
-                if(itemInHand != null && itemInHand.getItemMeta() != null && itemInHand.getItemMeta().getDisplayName() != null) {
-                    if (itemInHand.getType() == Material.WOOD_HOE || itemInHand.getType() == Material.WOOD_SPADE || itemInHand.getType() == Material.WOOD_SWORD) {
-                        amt = 7;
-                    } else if (itemInHand.getType() == Material.STONE_HOE || itemInHand.getType() == Material.STONE_SPADE || itemInHand.getType() == Material.WOOD_AXE || itemInHand.getType() == Material.STONE_SWORD) {
-                        amt = 8;
-                    } else if (itemInHand.getType() == Material.STONE_AXE || itemInHand.getType() == Material.IRON_HOE || itemInHand.getType() == Material.IRON_AXE || itemInHand.getType() == Material.IRON_SPADE) {
-                        amt = 9;
-                    } else if (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && (itemInHand.getType() == Material.DIAMOND_SWORD || itemInHand.getType() == Material.DIAMOND_HOE || itemInHand.getType() == Material.DIAMOND_SPADE) || itemInHand.getType() == Material.IRON_AXE) {
-                        amt = 10;
-                    } else if (itemInHand.getType() == Material.GOLD_HOE || itemInHand.getType() == Material.GOLD_SPADE || itemInHand.getType() == Material.GOLD_SWORD || (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && itemInHand.getType() == Material.DIAMOND_AXE)) {
-                        amt = 11;
-                    } else if (itemInHand.getType() == Material.GOLD_AXE || itemInHand.getType() == Material.DIAMOND_SWORD || itemInHand.getType() == Material.DIAMOND_HOE || itemInHand.getType() == Material.DIAMOND_SPADE) {
-                        amt = 12;
-                    } else if (itemInHand.getType() == Material.DIAMOND_AXE) {
-                        amt = 13;
+
+                int amount = 6;
+                if (itemInHand != null && itemInHand.getItemMeta() != null && itemInHand.getItemMeta().getDisplayName() != null) {
+                    Material handType = itemInHand.getType();
+
+                    if (handType == Material.WOOD_HOE || handType == Material.WOOD_SPADE || handType == Material.WOOD_SWORD) {
+                        amount = 7;
+                    } else if (handType == Material.STONE_HOE || handType == Material.STONE_SPADE || handType == Material.WOOD_AXE || handType == Material.STONE_SWORD) {
+                        amount = 8;
+                    } else if (handType == Material.STONE_AXE || handType == Material.IRON_HOE || handType == Material.IRON_AXE || handType == Material.IRON_SPADE) {
+                        amount = 9;
+                    } else if (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && (handType == Material.DIAMOND_SWORD || handType == Material.DIAMOND_HOE || handType == Material.DIAMOND_SPADE) || handType == Material.IRON_AXE) {
+                        amount = 10;
+                    } else if (handType == Material.GOLD_HOE || handType == Material.GOLD_SPADE || handType == Material.GOLD_SWORD || (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && handType == Material.DIAMOND_AXE)) {
+                        amount = 11;
+                    } else if (handType == Material.GOLD_AXE || handType == Material.DIAMOND_SWORD || handType == Material.DIAMOND_HOE || handType == Material.DIAMOND_SPADE) {
+                        amount = 12;
+                    } else if (handType == Material.DIAMOND_AXE) {
+                        amount = 13;
                     }
-                    Energy.removeEnergy(p, amt);
+
+                    removeEnergy(player, amount);
                 }
             }
-            if (Energy.getEnergy(p) <= 0.0f) {
-                Energy.setEnergy(p, 0.0f);
-                cd.put(p.getName(), System.currentTimeMillis());
-                p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 40, 5), true);
-                p.playSound(p.getLocation(), Sound.ENTITY_WOLF_PANT, 10.0f, 1.5f);
+
+            if (getEnergy(player) <= ENERGY_REDUCTION_THRESHOLD) {
+                setEnergy(player, ENERGY_REDUCTION_THRESHOLD);
+                cooldown.put(player.getName(), System.currentTimeMillis());
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, ENERGY_REDUCTION_POTION_DURATION, ENERGY_REDUCTION_POTION_AMPLIFIER), true);
+                player.playSound(player.getLocation(), Sound.ENTITY_WOLF_PANT, 10.0f, 1.5f);
             }
         }
     }
-
 }
-

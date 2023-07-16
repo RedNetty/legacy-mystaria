@@ -54,89 +54,85 @@ public class PersistentPlayers implements Listener {
     public static void assignTokens(boolean test) {
         Map<UUID, Integer> tokens = new HashMap<>();
         try {
+            // Retrieve the necessary columns from PlayerData table
             ResultSet rs = SQLMain.con.createStatement().executeQuery(
-                    "SELECT UUID, Username, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, PlayerKills, Gems, Deaths, MaxHP, OreMined " +
+                    "SELECT UUID, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, PlayerKills, Gems, Deaths, MaxHP, OreMined " +
                             "FROM PlayerData");
             while (rs.next()) {
-                int newtokens = 0;
+                int newTokens = 0;
                 int mobKills = rs.getInt("T1Kills") + rs.getInt("T2Kills") + rs.getInt("T3Kills")
                         + rs.getInt("T4Kills") + rs.getInt("T5Kills") + rs.getInt("T6Kills");
                 int deaths = rs.getInt("Deaths");
-                int pks = rs.getInt("PlayerKills");
+                int playerKills = rs.getInt("PlayerKills");
                 int maxHP = rs.getInt("MaxHP");
                 int oreMined = rs.getInt("OreMined");
-                if (pks > deaths) newtokens += 5;
-                if (mobKills > 200 && deaths < 5) {
-                    newtokens += 5;
+
+                if (playerKills > deaths) {
+                    newTokens += 5;
                 }
-                newtokens += mobKills / 200;
-                newtokens += maxHP / 2000;
-                newtokens += oreMined / 64;
-                tokens.put(UUID.fromString(rs.getString("UUID")), newtokens);
-                //PersistentPlayer pp = (PersistentPlayer) e.getValue();
-                //pp.tokens += newtokens;
+
+                if (mobKills > 200 && deaths < 5) {
+                    newTokens += 5;
+                }
+
+                newTokens += mobKills / 200;
+                newTokens += maxHP / 2000;
+                newTokens += oreMined / 64;
+
+                tokens.put(UUID.fromString(rs.getString("UUID")), newTokens);
             }
-            int i = 0;
-            rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, (T1Kills+T2Kills+T3Kills+T4Kills+T5Kills+T6Kills) as MobKills", "MobKills");
-            while (rs.next() && i < 10) {
-                UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
-                i++;
+
+            // Retrieve leaderboard data for each category and add tokens based on ranking
+            String[] leaderboardCategories = { "T1Kills", "T2Kills", "T3Kills", "T4Kills", "T5Kills", "PlayerKills", "OreMined", "MaxHP", "Gems" };
+            for (String category : leaderboardCategories) {
+                int i = 0;
+                rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, " + category, category);
+                while (true) {
+                    assert rs != null;
+                    if (!(rs.next() && i < 10)) break;
+                    UUID uuid = UUID.fromString(rs.getString("UUID"));
+                    tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
+                    i++;
+                }
             }
-            i = 0;
-            rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, PlayerKills", "PlayerKills");
-            while (rs.next() && i < 10) {
-                UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
-                i++;
-            }
-            i = 0;
-            rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, OreMined", "OreMined");
-            while (rs.next() && i < 10) {
-                UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
-                i++;
-            }
-            i = 0;
-            rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, MaxHP", "MaxHP");
-            while (rs.next() && i < 10) {
-                UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
-                i++;
-            }
-            i = 0;
-            rs = LeaderboardCommand.getPlayerData("PlayerData", "UUID, Gems", "Gems");
-            while (rs.next() && i < 10) {
-                UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, tokens.get(uuid) + tokensBasedOnLb(i));
-                i++;
-            }
-            rs = SQLMain.con.createStatement().executeQuery("SELECT UUID, Rank FROM PersistentData NATURAL JOIN PlayerData WHERE Rank != 'default'");
+
+            // Apply rank multiplier to tokens
+            rs = SQLMain.con.createStatement().executeQuery(
+                    "SELECT UUID, playerrank FROM PersistentData NATURAL JOIN PlayerData WHERE persistentdata.playerrank != 'default'");
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("UUID"));
-                tokens.put(uuid, Math.round(tokens.get(uuid) * getRankMultiplier(rs.getString("Rank"))));
+                tokens.put(uuid, Math.round(tokens.get(uuid) * getRankMultiplier(rs.getString("PlayerRank"))));
             }
-            if(test){
-                for(UUID uuid : tokens.keySet()){
-                    tokens.put(uuid, 0);
-                }
+
+            if (test) {
+                tokens.replaceAll((u, v) -> 0);
             }
+
+            // Update tokens for each player and save changes to the database
             for (UUID uuid : tokens.keySet()) {
                 try {
-                    persistentPlayers.get(uuid).tokens += tokens.get(uuid);
+                    PersistentPlayer pp = persistentPlayers.get(uuid);
+                    if (pp != null) {
+                        pp.tokens += tokens.get(uuid);
+                        OfflinePlayer pl = Bukkit.getOfflinePlayer(uuid);
+                        System.out.println("Awarded " + tokens.get(uuid) + " Tokens to " + pl.getName());
+                        if (pl.isOnline())
+                            Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN + "You received " + tokens.get(uuid) + " tokens this wipe!");
+                    } else {
+                        OfflinePlayer pl = Bukkit.getOfflinePlayer(uuid);
+                        System.out.println("Error on " + pl.getName());
+                    }
+                } catch (Exception e) {
                     OfflinePlayer pl = Bukkit.getOfflinePlayer(uuid);
-                    System.out.println("Awarded " + tokens.get(uuid) + " Tokens to " + pl.getName());
-                    if (pl.isOnline())
-                        Bukkit.getPlayer(uuid).sendMessage(ChatColor.GREEN + "You recieved " + tokens.get(uuid) + " tokens this wipe!");
-                }catch(Exception e){
-                    OfflinePlayer pl = Bukkit.getOfflinePlayer(uuid);
-                    System.out.println("Errored on " + pl.getName());
+                    System.out.println("Error on " + pl.getName());
                 }
             }
-            for(UUID uuid : persistentPlayers.keySet()){
+
+            // Update PersistentData table with the updated token values
+            for (UUID uuid : persistentPlayers.keySet()) {
                 try {
                     SQLMain.con.createStatement().execute("UPDATE PersistentData SET Tokens = " + persistentPlayers.get(uuid).tokens + " WHERE UUID ='" + uuid.toString() + "'");
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -144,6 +140,7 @@ public class PersistentPlayers implements Listener {
             ex.printStackTrace();
         }
     }
+
 
     public static float getRankMultiplier(String rank) {
         switch (rank) {
@@ -178,7 +175,7 @@ public class PersistentPlayers implements Listener {
         switch (perk) {
             case "Tokens":
                 is.setType(Material.GOLD_NUGGET);
-                im.setDisplayName(ChatColor.GREEN + "Tokens: " + level);
+                im.setDisplayName(ChatColor.YELLOW + "Tokens: " + level);
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "You aquire Tokens based on your performance each wipe.",
                         ChatColor.GRAY + "Methods to earn Tokens at the end of the wipe:",
@@ -197,7 +194,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "Mount":
                 is.setType(Material.SADDLE);
-                im.setDisplayName(ChatColor.GREEN + "Mount Start " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Mount Start " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start the wipe with a mount",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + "Tier " + getBonus(perk, level),
@@ -207,7 +204,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "BankPages":
                 is.setType(Material.ENDER_CHEST);
-                im.setDisplayName(ChatColor.GREEN + "Big Bank " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Big Bank " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Increase the amount of pages in your bank",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + " Page(s)",
@@ -217,7 +214,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "Pickaxe":
                 is.setType(Material.DIAMOND_PICKAXE);
-                im.setDisplayName(ChatColor.GREEN + "Pickaxe Forging " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Pickaxe Forging " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Pickaxes you purchase start at a higher level",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + "Level " + getBonus(perk, level),
@@ -227,7 +224,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "Farmer":
                 is.setType(Material.GOLD_HOE);
-                im.setDisplayName(ChatColor.GREEN + "Farmer " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Farmer " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Deal increased damage to monsters:",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + "%",
@@ -237,7 +234,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "LastStand":
                 is.setType(Material.DIAMOND_SWORD);
-                im.setDisplayName(ChatColor.GREEN + "Last Stand " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Last Stand " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Deal increased damage while under 30% Health:",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + "%",
@@ -247,7 +244,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "OrbRolls":
                 is.setType(Material.MAGMA_CREAM);
-                im.setDisplayName(ChatColor.GREEN + "Reroller " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Reroller " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Legendary Orbs will roll each stat X times and take the maximum",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + " Extra Roll(s)",
@@ -257,7 +254,7 @@ public class PersistentPlayers implements Listener {
                 break;
             case "Luck":
                 is.setType(Material.GOLD_INGOT);
-                im.setDisplayName(ChatColor.GREEN + "Luck " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Luck " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Enchants and Altars will be more likely to succeed",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + "%",
@@ -267,61 +264,61 @@ public class PersistentPlayers implements Listener {
                 break;
             case "Reaper":
                 is.setType(Material.REDSTONE);
-                im.setDisplayName(ChatColor.GREEN + "Reaper " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Reaper " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Restore a percentage of missing health on kill, tripled vs Players.",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getBonus(perk, level) + "%",
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;
             case "KitWeapon":
                 is.setType(Material.WOOD_AXE);
-                im.setDisplayName(ChatColor.GREEN + "Starter's Axe " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Starter's Axe " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start with a T1 Axe, upgradable Rarity",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getRarityFromInt(level - 1),
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;
             case "KitHelm":
                 is.setType(Material.LEATHER_HELMET);
-                im.setDisplayName(ChatColor.GREEN + "Starter's Helm " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Starter's Helm " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start with a T1 Helm, upgradable Rarity",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getRarityFromInt(level - 1),
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;
             case "KitChest":
                 is.setType(Material.LEATHER_CHESTPLATE);
-                im.setDisplayName(ChatColor.GREEN + "Starter's Chestplate " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Starter's Chestplate " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start with a T1 Chestplate, upgradable Rarity",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getRarityFromInt(level - 1),
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;
             case "KitLegs":
                 is.setType(Material.LEATHER_LEGGINGS);
-                im.setDisplayName(ChatColor.GREEN + "Starter's Leggings " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Starter's Leggings " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start with T1 Leggings, upgradable Rarity",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getRarityFromInt(level - 1),
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;
             case "KitBoots":
                 is.setType(Material.LEATHER_BOOTS);
-                im.setDisplayName(ChatColor.GREEN + "Starter's Boots " + convertRoman(level));
+                im.setDisplayName(ChatColor.YELLOW + "Starter's Boots " + convertRoman(level));
                 im.setLore(Arrays.asList(
                         ChatColor.GRAY + "Start with T1 Boots, upgradable Rarity",
                         ChatColor.GRAY + "Current: " + ChatColor.AQUA + getRarityFromInt(level - 1),
-                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + "" + getCost(perk, level) + " Tokens")
+                        (maxed ? ChatColor.RED + "Cannot be upgraded further" : ChatColor.GREEN + String.valueOf(getCost(perk, level)) + " Tokens")
                 ));
                 is.setItemMeta(im);
                 break;

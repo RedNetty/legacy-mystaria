@@ -35,6 +35,11 @@ public class NewMerchant implements Listener {
 
     public static HashMap<Player, Inventory> tradeMap = new LinkedHashMap<>();
 
+
+    public static void clearTradeMap() {
+        tradeMap = new LinkedHashMap<>();
+    }
+
     @EventHandler
     public void onVendorInteract(PlayerInteractAtEntityEvent e) {
         if (DeployCommand.patchlockdown) {

@@ -95,7 +95,6 @@ public class Merchant implements Listener {
             reward = (((t / 10D) + 1D) * (t * t)) * 12D;
             reward = r.nextInt((int) reward / 3) + (int) reward;
         }
-        System.out.println("Reward: " + reward);
         if ((ModerationMechanics.isDonator(p)) || (ModerationMechanics.isStaff(p))){
             double rew = (double) reward * 1.20D;
             p.getInventory().addItem(Money.createBankNote((int)rew));

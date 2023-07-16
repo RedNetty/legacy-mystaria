@@ -22,6 +22,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -172,7 +173,7 @@ public class Mobs implements Listener {
                 processShootingTask();
             }
         };
-        shootingTask.runTaskTimer(PracticeServer.plugin, 20L, 20L);
+        shootingTask.runTaskTimer(PracticeServer.plugin, 35L, 35L);
     }
 
     public void onDisable() {
@@ -284,7 +285,6 @@ public class Mobs implements Listener {
             }
         }
     }
-
     private void processEliteEntityEffects(LivingEntity l, int step) {
         if (isFrozenBoss(l)) {
             if (l.hasPotionEffect(PotionEffectType.SLOW)) {
@@ -296,10 +296,12 @@ public class Mobs implements Listener {
                 }
             }
             for (Entity e : l.getNearbyEntities(8.0, 8.0, 8.0)) {
-                if (!(e instanceof Player)) continue;
-                Player p = (Player) e;
-                if (step > 0)
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 1), true);
+                if (e instanceof Player) {
+                    Player p = (Player) e;
+                    if (step > 0) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 1), true);
+                    }
+                }
             }
         }
     }
@@ -311,24 +313,26 @@ public class Mobs implements Listener {
         }
         try {
             ItemStack itemStack = l.getEquipment().getItemInMainHand();
-            int min = Damage.getDamageRange(itemStack).get(0);
-            int max = Damage.getDamageRange(itemStack).get(1);
+            List<Integer> damageRange = Damage.getDamageRange(itemStack);
+            int min = damageRange.get(0);
+            int max = damageRange.get(1);
             int dmg = (ThreadLocalRandom.current().nextInt(max - min + 1) + min) * 3;
             for (Entity e : l.getNearbyEntities(8.0, 8.0, 8.0)) {
-                if (!(e instanceof Player)) continue;
-                Listeners.mobd.remove(l.getUniqueId());
-                Player p = (Player) e;
-                crit.put(l, 0);
-                p.damage(dmg, l);
-                crit.remove(l);
-                Vector v = p.getLocation().clone().toVector().subtract(l.getLocation().toVector());
-                if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
-                    v.normalize();
-                }
-                if (isFrozenBoss(l)) {
-                    p.setVelocity(v.multiply(-3));
-                } else {
-                    p.setVelocity(v.multiply(3));
+                if (e instanceof Player) {
+                    Player p = (Player) e;
+                    Listeners.mobd.remove(l.getUniqueId());
+                    crit.put(l, 0);
+                    p.damage(dmg, l);
+                    crit.remove(l);
+                    Vector v = p.getLocation().clone().toVector().subtract(l.getLocation().toVector());
+                    if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) {
+                        v.normalize();
+                    }
+                    if (isFrozenBoss(l)) {
+                        p.setVelocity(v.multiply(-3));
+                    } else {
+                        p.setVelocity(v.multiply(3));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -337,6 +341,7 @@ public class Mobs implements Listener {
         l.getWorld().playSound(l.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.5f);
         Particles.EXPLOSION_HUGE.display(0.0f, 0.0f, 0.0f, 1.0f, 40, l.getLocation().clone().add(0.0, 1.0, 0.0), 20.0);
     }
+
     private void resetEliteEntityPotionEffects(LivingEntity l) {
         if (l.hasPotionEffect(PotionEffectType.SLOW)) {
             l.removePotionEffect(PotionEffectType.SLOW);
@@ -350,15 +355,19 @@ public class Mobs implements Listener {
     }
 
     private void processNamedEntities(LivingEntity l) {
-        if (!Listeners.named.containsKey(l.getUniqueId()) || System.currentTimeMillis() - Listeners.named.get(l.getUniqueId()) < 5000)
+        if (!Listeners.named.containsKey(l.getUniqueId()) || System.currentTimeMillis() - Listeners.named.get(l.getUniqueId()) < 5000) {
             return;
+        }
         Listeners.named.remove(l.getUniqueId());
         String name = "";
         if (l.hasMetadata("name")) {
             name = l.getMetadata("name").get(0).asString();
         }
-        if (!l.getType().equals(EntityType.ARMOR_STAND)) l.setCustomName(name);
+        if (!l.getType().equals(EntityType.ARMOR_STAND)) {
+            l.setCustomName(name);
+        }
     }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntitySpawn(CreatureSpawnEvent e) {
         e.getEntity().getEquipment().clear();
@@ -398,26 +407,21 @@ public class Mobs implements Listener {
                         l.getWorld().playSound(l.getLocation(), Sound.ENTITY_SKELETON_DEATH, 1.0f, 1.0f);
                     }
                     l.getWorld().playSound(l.getLocation(), Sound.ENTITY_SKELETON_HURT, 1.0f, 1.0f);
-                }
-                if (e.getEntity() instanceof Zombie) {
+                } else if (e.getEntity() instanceof Zombie) {
                     if (e.getDamage() >= l.getHealth()) {
                         l.getWorld().playSound(l.getLocation(), Sound.ENTITY_ZOMBIE_DEATH, 1.0f, 1.0f);
                     }
                     l.getWorld().playSound(l.getLocation(), Sound.ENTITY_ZOMBIE_HURT, 1.0f, 1.0f);
-                }
-                if ((e.getEntity() instanceof Spider || e.getEntity() instanceof CaveSpider) && e.getDamage() >= l.getHealth()) {
+                } else if ((e.getEntity() instanceof Spider || e.getEntity() instanceof CaveSpider) && e.getDamage() >= l.getHealth()) {
                     l.getWorld().playSound(l.getLocation(), Sound.ENTITY_SPIDER_DEATH, 1.0f, 1.0f);
-                }
-                if ((e.getEntity() instanceof Silverfish && e.getDamage() >= l.getHealth())) {
+                } else if (e.getEntity() instanceof Silverfish && e.getDamage() >= l.getHealth()) {
                     l.getWorld().playSound(l.getLocation(), Sound.ENTITY_SILVERFISH_DEATH, 1.0f, 1.0f);
-                }
-                if (e.getEntity() instanceof PigZombie) {
+                } else if (e.getEntity() instanceof PigZombie) {
                     if (e.getDamage() >= l.getHealth()) {
                         l.getWorld().playSound(l.getLocation(), Sound.ENTITY_ZOMBIE_PIG_DEATH, 1.0f, 1.0f);
                     }
                     l.getWorld().playSound(l.getLocation(), Sound.ENTITY_ZOMBIE_PIG_HURT, 1.0f, 1.0f);
                 }
-
             }
         }
     }
@@ -438,7 +442,6 @@ public class Mobs implements Listener {
                 return;
             }
             if (l.hasPotionEffect(PotionEffectType.SLOW)) {
-
                 if (l.getEquipment().getItemInMainHand() != null && l.getEquipment().getItemInMainHand().getType().name().contains("_HOE")) {
                     l.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 1));
                 } else {
@@ -465,7 +468,6 @@ public class Mobs implements Listener {
         }
     }
 
-
     @EventHandler
     public void onEntityTargetLastHit(EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Creature && e.getDamager() instanceof Player) {
@@ -483,10 +485,6 @@ public class Mobs implements Listener {
         }
     }
 
-    //
-    // Knockback Retaliation.
-    //
-
     @EventHandler
     public void onMobHitSpider(EntityDamageEvent e) {
         if (e.getEntity() instanceof Spider || e.getEntity() instanceof CaveSpider || e.getEntity() instanceof Skeleton || e.getEntity() instanceof Zombie || e.getEntity() instanceof PigZombie) {
@@ -494,7 +492,6 @@ public class Mobs implements Listener {
             m.setVelocity(m.getLocation().getDirection().multiply(0.09));
         }
     }
-    // ----------------------Knockback End-------------------------------
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onMobDeath(EntityDamageEvent e) {
@@ -523,7 +520,9 @@ public class Mobs implements Listener {
             int rcrt = random.nextInt(150) + 1;
             if (!crit.containsKey(s) && (Mobs.getMobTier(s) == 1 && rcrt <= 5 || Mobs.getMobTier(s) == 2 && rcrt <= 7 || Mobs.getMobTier(s) == 3 && rcrt <= 10 || Mobs.getMobTier(s) == 4 && rcrt <= 13 || Mobs.getMobTier(s) >= 5 && rcrt <= 20)) {
 
-                if (!(isGolemBoss(s) && getGolemStage(s) == 3)) crit.put(s, 4);
+                if (!(isGolemBoss(s) && getGolemStage(s) == 3)) {
+                    crit.put(s, 4);
+                }
                 if (Mobs.isElite(s) && !isGolemBoss(s)) {
                     s.getWorld().playSound(s.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.0f, 4.0f);
                     double max = s.getMaxHealth();
@@ -533,9 +532,10 @@ public class Mobs implements Listener {
                     Listeners.named.put(s.getUniqueId(), System.currentTimeMillis());
                     if (isFrozenBoss(s)) {
                         for (Entity x : s.getNearbyEntities(8.0, 8.0, 8.0)) {
-                            if (!(x instanceof Player)) continue;
-                            Player p = (Player) x;
-                            p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1), true);
+                            if (x instanceof Player) {
+                                Player p = (Player) x;
+                                p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1), true);
+                            }
                         }
                     } else {
                         s.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 10), true);
@@ -573,7 +573,6 @@ public class Mobs implements Listener {
         // If none of the above conditions are met, the player is not safespotting
     }
 
-
     @EventHandler
     public void onSafeSpot(EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof LivingEntity && !(e.getEntity() instanceof Player) && e.getDamager() instanceof Player) {
@@ -581,7 +580,9 @@ public class Mobs implements Listener {
                 return;
             }
             LivingEntity s = (LivingEntity) e.getEntity();
-            if (s.getType().equals(EntityType.ARMOR_STAND)) return;
+            if (s.getType().equals(EntityType.ARMOR_STAND)) {
+                return;
+            }
 
             Player p = (Player) e.getDamager();
             if (isSafeSpot(p, s)) {
@@ -657,5 +658,4 @@ public class Mobs implements Listener {
             e.setDamage(dmg);
         }
     }
-
 }

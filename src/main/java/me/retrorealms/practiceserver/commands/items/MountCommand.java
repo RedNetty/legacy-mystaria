@@ -1,6 +1,8 @@
 package me.retrorealms.practiceserver.commands.items;
 
+import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,7 +21,7 @@ public class MountCommand implements CommandExecutor {
             if (inv.contains(Material.SADDLE)) {
                 inv.remove(Material.SADDLE);
             }
-            inv.addItem(Horses.mount(Horses.horseTier.get(p), false));
+            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) inv.addItem(Horses.createMount(Horses.horseTier.get(p), false));
         }
         return false;
     }

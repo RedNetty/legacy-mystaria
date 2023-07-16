@@ -2,7 +2,6 @@ package me.retrorealms.practiceserver.commands.misc;
 
 import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
 import me.retrorealms.practiceserver.utils.StringUtil;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,7 +11,7 @@ public class DropRatesCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-        if(sender instanceof Player) {
+        if (sender instanceof Player) {
             Player player = (Player) sender;
             StringUtil.sendCenteredMessage(player, "&e-- Drop Rates --");
             StringUtil.sendCenteredMessage(player, "&bTier 1 &7 - &3" + Mobdrops.getT1RATES() + "%");

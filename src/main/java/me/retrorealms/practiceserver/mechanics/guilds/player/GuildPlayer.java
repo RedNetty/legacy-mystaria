@@ -1,7 +1,9 @@
 package me.retrorealms.practiceserver.mechanics.guilds.player;
 
+import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.guilds.guild.Guild;
 import me.retrorealms.practiceserver.mechanics.guilds.guild.GuildManager;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 
 import java.util.UUID;
 
@@ -178,6 +180,7 @@ public class GuildPlayer {
     }
 
     public boolean isInGuild() {
+        if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return false;
         if (getGuildName() != null) {
             Guild guild = GuildManager.getInstance().get(getGuildName());
             return guild != null;

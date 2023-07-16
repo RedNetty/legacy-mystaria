@@ -65,34 +65,34 @@ public class LootDrops {
             if (tier == 1) {
                 scrolltype = random.nextInt(1);
                 if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaks_book(false);
+                    return TeleportBooks.deadpeaksBook(false);
                 }
                 if (scrolltype == 1) {
-                    return TeleportBooks.tripoli_book(false);
+                    return TeleportBooks.tripoliBook(false);
                 }
             }
             if (tier == 2) {
                 scrolltype = random.nextInt(1);
                 if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaks_book(false);
+                    return TeleportBooks.deadpeaksBook(false);
                 }
                 if (scrolltype == 1) {
-                    return TeleportBooks.tripoli_book(false);
+                    return TeleportBooks.tripoliBook(false);
                 }
             }
             if (tier == 3) {
                 scrolltype = random.nextInt(1);
                 if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaks_book(false);
+                    return TeleportBooks.deadpeaksBook(false);
                 }
                 if (scrolltype == 1) {
-                    return TeleportBooks.tripoli_book(false);
+                    return TeleportBooks.tripoliBook(false);
                 }
             }
             if (tier == 4) {
                 scrolltype = random.nextInt(1);
                 if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaks_book(false);
+                    return TeleportBooks.deadpeaksBook(false);
                 }
                 if (scrolltype == 1) {
                     return TeleportBooks.avalonBook(false);
@@ -104,7 +104,7 @@ public class LootDrops {
                     return TeleportBooks.avalonBook(false);
                 }
                 if (scrolltype == 1) {
-                    return TeleportBooks.tripoli_book(false);
+                    return TeleportBooks.tripoliBook(false);
                 }
             }
             if (tier == 6) {
@@ -113,7 +113,7 @@ public class LootDrops {
                     return TeleportBooks.avalonBook(false);
                 }
                 if (scrolltype == 1) {
-                    return TeleportBooks.tripoli_book(false);
+                    return TeleportBooks.tripoliBook(false);
                 }
             }
         }
