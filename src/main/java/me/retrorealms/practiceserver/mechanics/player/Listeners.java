@@ -10,26 +10,21 @@ import me.retrorealms.practiceserver.commands.moderation.ToggleGMCommand;
 import me.retrorealms.practiceserver.commands.moderation.VanishCommand;
 import me.retrorealms.practiceserver.enums.ranks.RankEnum;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
-import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
-import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
 import me.retrorealms.practiceserver.mechanics.drops.EliteDrops;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
 import me.retrorealms.practiceserver.mechanics.item.Items;
-import me.retrorealms.practiceserver.mechanics.item.Journal;
 import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.PlayerEntity;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
-import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.server.ServerListPingEvent;
@@ -42,7 +37,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.*;
-import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -54,6 +48,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.inventivetalent.glow.GlowAPI;
+
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -997,7 +992,7 @@ public class Listeners implements Listener {
 		ItemStack itemStack = event.getItemDrop().getItemStack();
 		if (itemStack != null && (itemStack.getType() != Material.AIR) && (itemStack.hasItemMeta())
 				&& (itemStack.getItemMeta().hasLore())) {
-			me.retrorealms.practiceserver.utils.GlowAPI.setGlowing(event.getItemDrop(), groupOf(itemStack));
+			GlowAPI.setGlowing(event.getItemDrop(), groupOf(itemStack), Bukkit.getOnlinePlayers());
 		}
 	}
 
@@ -1069,7 +1064,7 @@ public class Listeners implements Listener {
 			player.getInventory().addItem(Horses.createMount(Horses.horseTier.get(player), false));
 		} else if (PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) {
 			player.getInventory().addItem(Horses.createMount(3, false).clone());
-			Horses.horseTier.put(player, 3);
+			if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
 		}
 
 		player.setMaxHealth(50.0);

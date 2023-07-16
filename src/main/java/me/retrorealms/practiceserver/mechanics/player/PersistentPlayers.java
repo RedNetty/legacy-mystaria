@@ -16,7 +16,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -46,6 +48,14 @@ public class PersistentPlayers implements Listener {
 
     @EventHandler
     void onJoin(PlayerJoinEvent e) {
+        UUID uuid = e.getPlayer().getUniqueId();
+        if (!persistentPlayers.containsKey(uuid)) PersistentPlayers.put(uuid, new PersistentPlayer(50, 0, 0, 0, 0, 1,
+                0, 0, 0, 1, 0, 0, 0, 0));
+    }
+
+
+    @EventHandler
+    public void onEquip(PlayerInteractEvent e) {
         UUID uuid = e.getPlayer().getUniqueId();
         if (!persistentPlayers.containsKey(uuid)) PersistentPlayers.put(uuid, new PersistentPlayer(50, 0, 0, 0, 0, 1,
                 0, 0, 0, 1, 0, 0, 0, 0));

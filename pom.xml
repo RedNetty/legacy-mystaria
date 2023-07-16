@@ -123,6 +123,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.gmail.filoghost</groupId>
+            <artifactId>holograms</artifactId>
+            <version>1.1</version>
+            <systemPath>${basedir}/lib/HolographicDisplays.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+        <dependency>
             <groupId>com.github.thekeenant.tabbed</groupId>
             <artifactId>parent</artifactId>
             <version>v1.8</version>
@@ -135,19 +142,24 @@
             <version>3.5.0</version>
         </dependency>
         <dependency>
-            <groupId>fr.rhaz.sockets</groupId>
-            <artifactId>socket4mc</artifactId>
-            <version>3.2.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/socket4mc-3.2.8.jar</systemPath>
-        </dependency>
-
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.inventivetalent</groupId>
+            <artifactId>glowapi4</artifactId>
+            <version>1.4.6</version>
+            <systemPath>${project.basedir}/lib/GlowAPI_v1.4.6-SNAPSHOT.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.inventivetalent</groupId>
+            <artifactId>reflectionutil</artifactId>
+            <version>1.4.6</version>
+            <systemPath>${project.basedir}/lib/PacketListenerAPI_v3.6.0-SNAPSHOT.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
@@ -174,21 +186,6 @@
             <systemPath>${project.basedir}/lib/Citizens-Plugin-1.13.jar</systemPath>
             <scope>system</scope>
         </dependency>
-        <dependency>
-            <groupId>org.inventivetalent</groupId>
-            <artifactId>glowapi</artifactId>
-            <version>1.4.6</version>
-            <systemPath>${project.basedir}/lib/GlowAPI_v1.4.6-SNAPSHOT.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.saintx</groupId>
-            <artifactId>holograms</artifactId>
-            <version>1.0</version>
-            <systemPath>${project.basedir}/lib/HolographicDisplays.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
 
 
 
@@ -200,13 +197,6 @@
             <scope>system</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.earth2me.essentials</groupId>
-            <artifactId>EssentialsX</artifactId>
-            <version>1.0</version>
-            <systemPath>${project.basedir}/lib/EssentialsX-2.0.1.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.kitteh.vanish</groupId>
@@ -216,13 +206,6 @@
             <scope>system</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.inventivetalent</groupId>
-            <artifactId>BossBarAPI</artifactId>
-            <version>1.0</version>
-            <systemPath>${project.basedir}/lib/BossBarAPI_v2.4.1.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
 
         <dependency>
             <groupId>com.comphenix</groupId>
@@ -236,17 +219,9 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>SpigotMC</artifactId>
             <version>1.0</version>
-            <systemPath>${project.basedir}/lib/paper-1.12.2-1620.jar</systemPath>
+            <systemPath>${project.basedir}/lib/PaperMC-1.12.2.jar</systemPath>
             <scope>system</scope>
             <classifier>remapped-mojang</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mcsg.double0negative.tabapi</groupId>
-            <artifactId>BossBarAPI</artifactId>
-            <version>1.0</version>
-            <systemPath>${project.basedir}/lib/TabAPI.jar</systemPath>
-            <scope>system</scope>
         </dependency>
 
         <dependency>
@@ -261,7 +236,7 @@
             <groupId>com.sk89q</groupId>
             <artifactId>worldedit</artifactId>
             <version>6.1.5</version>
-            <systemPath>${project.basedir}/lib/worldedit-bukkit-6.1.5.jar</systemPath>
+            <systemPath>${project.basedir}/lib/worldedit-bukkit-6.1.9.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
@@ -269,7 +244,7 @@
             <groupId>com.sk89q</groupId>
             <artifactId>worldguard</artifactId>
             <version>6.1</version>
-            <systemPath>${project.basedir}/lib/worldguard-6.2.jar</systemPath>
+            <systemPath>${project.basedir}/lib/worldguard-bukkit-6.2.2.jar</systemPath>
             <scope>system</scope>
         </dependency>
 

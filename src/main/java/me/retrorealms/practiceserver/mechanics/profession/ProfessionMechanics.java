@@ -39,6 +39,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -71,249 +72,280 @@ public class  ProfessionMechanics implements Listener {
     }
 
     @EventHandler
-    public void onPlayerFish(PlayerFishEvent e) {
-        final Player pl = e.getPlayer();
-        e.setExpToDrop(0);
+    public void onPlayerFish(PlayerFishEvent event) {
+        Player player = event.getPlayer();
+        event.setExpToDrop(0);
 
-        if (pl.getEquipment().getItemInMainHand().getType() != Material.FISHING_ROD) {
-            e.setCancelled(true);
-            return; // Get out of here.
+        if (!isValidFishingRod(player)) {
+            event.setCancelled(true);
+            return;
         }
 
-        if (e.getState().equals(PlayerFishEvent.State.FISHING)) {
-            if (!Fishing.getInstance().inFishingRegion(pl)) {
-                e.getPlayer().sendMessage(ChatColor.RED + "There are " + ChatColor.UNDERLINE + "no" + ChatColor.RED + " populated fishing spots near this location.");
-                e.getPlayer().sendMessage(ChatColor.GRAY + "Look for particles above water blocks to signify active fishing spots.");
-                e.setCancelled(true);
+        if (event.getState() == PlayerFishEvent.State.FISHING && !Fishing.getInstance().inFishingRegion(player)) {
+            player.sendMessage(ChatColor.RED + "There are " + ChatColor.UNDERLINE + "no" + ChatColor.RED +
+                    " populated fishing spots near this location.");
+            player.sendMessage(ChatColor.GRAY + "Look for particles above water blocks to signify active fishing spots.");
+            event.setCancelled(true);
+            return;
+        }
+
+        if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
+            int spotTier = Fishing.getInstance().getFishingSpotTier(player.getLocation());
+            if (event.getCaught() != null) {
+                event.getCaught().remove();
+            }
+
+            if (!Fishing.getInstance().inFishingRegion(player)) {
+                player.sendMessage(ChatColor.RED + "You must be near a Fishing Location to catch fish!");
                 return;
+            }
+
+            int durabilityBuff = Fishing.getDurabilityBuff(player.getEquipment().getItemInMainHand());
+
+            player.sendMessage(ChatColor.GRAY + "You've caught something, examining..");
+
+            if (!canGetFish(player, spotTier)) {
+                player.sendMessage(ChatColor.RED + "Mhm, looks like it got away..");
+                return;
+            }
+
+            if (Fishing.isDRFishingPole(player.getEquipment().getItemInMainHand())) {
+                handleFishCatch(player, spotTier, durabilityBuff);
+            }
+        }
+    }
+
+    private boolean isValidFishingRod(Player player) {
+        return player.getEquipment().getItemInMainHand().getType() == Material.FISHING_ROD;
+    }
+
+    private boolean canGetFish(Player player, int spotTier) {
+        int itemTier = Fishing.getRodTier(player.getEquipment().getItemInMainHand());
+        int level = CraftItemStack.asNMSCopy(player.getEquipment().getItemInMainHand()).getTag().getInt("level");
+        int successRate = calculateSuccessRate(player, itemTier, spotTier, level);
+        int randomValue = new Random().nextInt(90);
+
+        return successRate > randomValue;
+    }
+
+    private int calculateSuccessRate(Player player, int itemTier, int spotTier, int level) {
+        int successRate = 50 + (2 * (20 - Math.abs((Fishing.getNextLevelUp(itemTier) - level))));
+        int successMod = Fishing.getSuccessChance(player.getEquipment().getItemInMainHand());
+        successRate += successMod;
+
+        if (itemTier > spotTier) {
+            successRate = 100;
+        }
+
+        return successRate;
+    }
+
+    private void handleFishCatch(Player player, int spotTier, int durabilityBuff) {
+        ItemStack fish = Fishing.getFishDrop(spotTier, player);
+        int fishAmount = calculateFishAmount(player);
+
+        if (player.getInventory().firstEmpty() != -1) {
+            player.getInventory().setItem(player.getInventory().firstEmpty(), fish);
+        } else {
+            Item item = player.getWorld().dropItem(player.getLocation(), fish);
+            item.setPickupDelay(0);
+        }
+
+        player.sendMessage(ChatColor.GREEN + "...you've caught some " + fish.getItemMeta().getDisplayName() + ChatColor.GREEN + "!");
+
+        int exp = Fishing.getFishEXP(spotTier);
+        Fishing.gainExp(player.getEquipment().getItemInMainHand(), player, exp);
+
+        if (shouldDoubleDrop(player.getEquipment().getItemInMainHand())) {
+            handleDoubleDrop(player, spotTier);
+        }
+
+        if (shouldTripleDrop(player.getEquipment().getItemInMainHand())) {
+            handleTripleDrop(player, spotTier);
+        }
+
+        if (shouldFindJunk(player.getEquipment().getItemInMainHand())) {
+            handleJunkFind(player, spotTier);
+        }
+
+        if (shouldFindTreasure(player.getEquipment().getItemInMainHand())) {
+            handleTreasureFind(player);
+        }
+    }
+
+    private int calculateFishAmount(Player player) {
+        int fishAmount = 1;
+
+        RankEnum rank = ModerationMechanics.getRank(player);
+        if (rank == RankEnum.SUPPORTER || rank == RankEnum.SUB3) {
+            fishAmount = 3;
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&d&lSUPPORTER &b>> &e&nx3 FISH"));
+        } else if (rank == RankEnum.SUB || rank == RankEnum.SUB1 || rank == RankEnum.SUB2) {
+            fishAmount = 2;
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&lSUB &b>> &e&nx2 FISH"));
+        }
+
+        return fishAmount;
+    }
+
+    private boolean shouldDoubleDrop(ItemStack fishingRod) {
+        int doubleDropChance = Fishing.getDoubleDropChance(fishingRod);
+        int randomValue = new Random().nextInt(100) + 1;
+
+        return doubleDropChance >= randomValue;
+    }
+
+    private void handleDoubleDrop(Player player, int spotTier) {
+        ItemStack fish = Fishing.getFishDrop(spotTier, player);
+        fish.setAmount(2);
+
+        int fishAmount = calculateFishAmount(player);
+
+        if (player.getInventory().firstEmpty() != -1) {
+            player.getInventory().setItem(player.getInventory().firstEmpty(), fish);
+        } else {
+            Item item = player.getWorld().dropItem(player.getLocation(), fish);
+            item.setPickupDelay(0);
+        }
+
+        player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "          DOUBLE FISH CATCH" + ChatColor.YELLOW + " (2x)");
+    }
+
+    private boolean shouldTripleDrop(ItemStack fishingRod) {
+        int tripleDropChance = Fishing.getTripleDropChance(fishingRod);
+        int randomValue = new Random().nextInt(60) + 1;
+
+        return tripleDropChance >= randomValue;
+    }
+
+    private void handleTripleDrop(Player player, int spotTier) {
+        ItemStack fish = Fishing.getFishDrop(spotTier, player);
+        fish.setAmount(3);
+
+        int fishAmount = calculateFishAmount(player);
+
+        if (player.getInventory().firstEmpty() != -1) {
+            player.getInventory().setItem(player.getInventory().firstEmpty(), fish);
+        } else {
+            Item item = player.getWorld().dropItem(player.getLocation(), fish);
+            item.setPickupDelay(0);
+        }
+
+        fish = Fishing.getFishDrop(spotTier, player);
+
+        if (player.getInventory().firstEmpty() != -1) {
+            player.getInventory().setItem(player.getInventory().firstEmpty(), fish);
+        } else {
+            Item item = player.getWorld().dropItem(player.getLocation(), fish);
+            item.setPickupDelay(0);
+        }
+
+        player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "          TRIPLE FISH CATCH" + ChatColor.YELLOW + " (3x)");
+    }
+
+    private boolean shouldFindJunk(ItemStack fishingRod) {
+        int junkChance = Fishing.getJunkFindChance(fishingRod);
+        int randomValue = new Random().nextInt(100) + 1;
+
+        return junkChance >= randomValue;
+    }
+
+    private void handleJunkFind(Player player, int spotTier) {
+        int junkType = new Random().nextInt(100) + 1;
+        ItemStack junk = null;
+
+        if (junkType > 70 && junkType < 95) {
+            if (spotTier == 1) {
+                junk = MerchantMechanics.T4_scrap;
+                junk.setAmount(5 + new Random().nextInt(3));
+            } else if (spotTier == 2) {
+                junk = MerchantMechanics.T4_scrap;
+                junk.setAmount(4 + new Random().nextInt(3));
+            } else if (spotTier == 3) {
+                junk = MerchantMechanics.T4_scrap;
+                junk.setAmount(2 + new Random().nextInt(3));
+            } else if (spotTier == 4) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(1 + new Random().nextInt(3));
+            } else if (spotTier == 5) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(1 + new Random().nextInt(3));
+            }
+        } else if (junkType >= 95) {
+            if (spotTier == 1) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(20 + new Random().nextInt(7));
+            } else if (spotTier == 2) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(15 + new Random().nextInt(7));
+            } else if (spotTier == 3) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(10 + new Random().nextInt(7));
+            } else if (spotTier == 4) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(5 + new Random().nextInt(7));
+            } else if (spotTier == 5) {
+                junk = MerchantMechanics.T5_scrap;
+                junk.setAmount(2 + new Random().nextInt(6));
             }
         }
 
-        if (e.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
-            final int spot_tier = Fishing.getInstance().getFishingSpotTier(pl.getLocation());
-            if (e.getCaught() != null)
-                e.getCaught().remove();
-
-            if (!Fishing.getInstance().inFishingRegion(pl)) {
-                pl.sendMessage(ChatColor.RED + "You must be near a Fishing Location to catch fish!");
-                return;
-            }
-
-            int duraBuff = Fishing.getDurabilityBuff(pl.getEquipment().getItemInMainHand());
-
-            pl.sendMessage(ChatColor.GRAY + "You've caught something, examining..");
-            int do_i_get_fish = new Random().nextInt(90);
-
-            int item_tier = Fishing.getRodTier(pl.getEquipment().getItemInMainHand());
-            int success_rate = 0;
-
-            if (item_tier > spot_tier) {
-                success_rate = 100;
-            }
-            int lvl = CraftItemStack.asNMSCopy(pl.getEquipment().getItemInMainHand()).getTag().getInt("level");
-            success_rate = 50 + (2 * (20 - Math.abs((Fishing.getNextLevelUp(item_tier) - lvl))));
-
-
-            int success_mod = Fishing.getSuccessChance(pl.getEquipment().getItemInMainHand());
-            success_rate += success_mod; // %CHANCE
-
-            if (success_rate <= do_i_get_fish) {
-                pl.sendMessage(ChatColor.RED + "Mhm, looks like it got away..");
-                return;
-            }
-
-            if (Fishing.isDRFishingPole(pl.getEquipment().getItemInMainHand())) {
-                // They get fish!
-                ItemStack fish = Fishing.getFishDrop(spot_tier, pl);
-                fish.setAmount(1);
-
-                if (ModerationMechanics.getRank(pl) == RankEnum.SUPPORTER || ModerationMechanics.getRank(pl) == RankEnum.SUB3) {
-                    fish.setAmount(3);
-                    pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&d&lSUPPORTER &b>> &e&nx3 FISH"));
+        if (junk != null) {
+            int itemCount = junk.getAmount();
+            if (junk.getType() == Material.POTION) {
+                // Not stackable.
+                int amount = junk.getAmount();
+                junk.setAmount(1);
+                while (amount > 0) {
+                    amount--;
+                    if (player.getInventory().firstEmpty() != -1) {
+                        player.getInventory().setItem(player.getInventory().firstEmpty(), junk);
+                    } else {
+                        Item item = player.getWorld().dropItem(player.getLocation(), junk);
+                        item.setPickupDelay(0);
+                    }
                 }
-
-                if (ModerationMechanics.getRank(pl) == RankEnum.SUB || ModerationMechanics.getRank(pl) == RankEnum.SUB1 || ModerationMechanics.getRank(pl) == RankEnum.SUB2) {
-                    fish.setAmount(2);
-                    pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&lSUB &b>> &e&nx2 FISH"));
-                }
-
-                if (pl.getInventory().firstEmpty() != -1) {
-                    pl.getInventory().setItem(pl.getInventory().firstEmpty(), fish);
+            } else {
+                if (player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().setItem(player.getInventory().firstEmpty(), junk);
                 } else {
-                    // Full inventory!
-                    pl.getWorld().dropItem(pl.getLocation(), fish);
-                }
-                if (new Random().nextInt(100) > duraBuff) {
-
-                }
-                pl.sendMessage(ChatColor.GREEN + "...you've caught some " + fish.getItemMeta().getDisplayName() + ChatColor.GREEN + "!");
-
-                int exp = Fishing.getFishEXP(spot_tier);
-                Fishing.gainExp(pl.getEquipment().getItemInMainHand(), pl, exp);
-                int doi_double_drop = new Random().nextInt(100) + 1;
-                if (Fishing.getDoubleDropChance(pl.getEquipment().getItemInMainHand()) >= doi_double_drop) {
-                    fish = Fishing.getFishDrop(spot_tier, pl);
-
-                    fish.setAmount(2);
-
-                    if (ModerationMechanics.getRank(pl) == RankEnum.SUPPORTER || ModerationMechanics.getRank(pl) == RankEnum.YOUTUBER || ModerationMechanics.getRank(pl) == RankEnum.SUB3) {
-                        fish.setAmount(3);
-                        pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&d&lSUPPORTER &b>> &e&nx3 FISH"));
-                    }
-
-                    if (ModerationMechanics.getRank(pl) == RankEnum.SUB || ModerationMechanics.getRank(pl) == RankEnum.SUB1 || ModerationMechanics.getRank(pl) == RankEnum.SUB2) {
-                        fish.setAmount(2);
-                        pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&lSUB &b>> &e&nx2 FISH"));
-                    }
-
-                    if (pl.getInventory().firstEmpty() != -1) {
-                        pl.getInventory().setItem(pl.getInventory().firstEmpty(), fish);
-                    } else {
-                        // Full inventory!
-                        pl.getWorld().dropItem(pl.getLocation(), fish);
-                    }
-                    pl.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "          DOUBLE FISH CATCH" + ChatColor.YELLOW + " (2x)");
-
-                }
-
-                int doi_triple_drop = new Random().nextInt(60) + 1;
-                if (Fishing.getTripleDropChance(pl.getEquipment().getItemInMainHand()) >= doi_triple_drop) {
-                    fish = Fishing.getFishDrop(spot_tier, pl);
-
-                    fish.setAmount(3);
-
-                    if (ModerationMechanics.getRank(pl) == RankEnum.SUPPORTER || ModerationMechanics.getRank(pl) == RankEnum.YOUTUBER || ModerationMechanics.getRank(pl) == RankEnum.SUB3) {
-                        fish.setAmount(3);
-                        pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&d&lSUPPORTER &b>> &e&nx3 FISH"));
-                    }
-
-                    if (ModerationMechanics.getRank(pl) == RankEnum.SUB || ModerationMechanics.getRank(pl) == RankEnum.SUB1 || ModerationMechanics.getRank(pl) == RankEnum.SUB2) {
-                        fish.setAmount(2);
-                        pl.sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&lSUB &b>> &e&nx2 FISH"));
-                    }
-                    if (pl.getInventory().firstEmpty() != -1) {
-                        pl.getInventory().setItem(pl.getInventory().firstEmpty(), fish);
-                    } else {
-                        // Full inventory!
-                        pl.getWorld().dropItem(pl.getLocation(), fish);
-                    }
-
-                    fish = Fishing.getFishDrop(spot_tier, pl);
-                    if (pl.getInventory().firstEmpty() != -1) {
-                        pl.getInventory().setItem(pl.getInventory().firstEmpty(), fish);
-                    } else {
-                        // Full inventory!
-                        pl.getWorld().dropItem(pl.getLocation(), fish);
-                    }
-                    pl.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "          TRIPLE FISH CATCH" + ChatColor.YELLOW + " (3x)");
-                }
-                int junk_chance = Fishing.getJunkFindChance(pl.getEquipment().getItemInMainHand());
-                if (junk_chance >= (new Random().nextInt(100) + 1)) {
-                    int junk_type = new Random().nextInt(100) + 1; // 0, 1, 2
-                    ItemStack junk = null;
-                    if (junk_type > 70 && junk_type < 95) {
-                        if (spot_tier == 1) {
-                            junk = MerchantMechanics.T4_scrap;
-                            junk.setAmount(5 + new Random().nextInt(3));
-                        }
-                        if (spot_tier == 2) {
-                            junk = MerchantMechanics.T4_scrap;
-                            junk.setAmount(4 + new Random().nextInt(3));
-                        }
-                        if (spot_tier == 3) {
-                            junk = MerchantMechanics.T4_scrap;
-                            junk.setAmount(2 + new Random().nextInt(3));
-                        }
-                        if (spot_tier == 4) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(1 + new Random().nextInt(3));
-                        }
-                        if (spot_tier == 5) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(1 + new Random().nextInt(3));
-                        }
-                    }
-
-                    if (junk_type >= 95) {
-                        if (spot_tier == 1) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(20 + new Random().nextInt(7));
-                        }
-                        if (spot_tier == 2) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(15 + new Random().nextInt(7));
-                        }
-                        if (spot_tier == 3) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(10 + new Random().nextInt(7));
-                        }
-                        if (spot_tier == 4) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(5 + new Random().nextInt(7));
-                        }
-                        if (spot_tier == 5) {
-                            junk = MerchantMechanics.T5_scrap;
-                            junk.setAmount(2 + new Random().nextInt(6));
-                        }
-                    }
-
-                    if (junk != null) {
-                        int item_count = junk.getAmount();
-                        if (junk.getType() == Material.POTION) {
-                            // Not stackable.
-                            int amount = junk.getAmount();
-                            junk.setAmount(1);
-                            while (amount > 0) {
-                                amount--;
-                                if (pl.getInventory().firstEmpty() != -1) {
-                                    pl.getInventory().setItem(pl.getInventory().firstEmpty(), junk);
-                                } else {
-                                    // Full inventory!
-                                    pl.getWorld().dropItem(pl.getLocation(), junk);
-                                }
-                            }
-                        } else {
-                            if (pl.getInventory().firstEmpty() != -1) {
-                                pl.getInventory().setItem(pl.getInventory().firstEmpty(), junk);
-                            } else {
-                                // Full inventory!
-                                pl.getWorld().dropItem(pl.getLocation(), junk);
-                            }
-                        }
-
-                        pl.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "  YOU FOUND SOME JUNK! -- " + item_count + "x "
-                                + junk.getItemMeta().getDisplayName());
-                    }
-                }
-
-                int treasure_chance = Fishing.getTreasureFindChance(pl.getEquipment().getItemInMainHand());
-                if (treasure_chance >= (new Random().nextInt(300) + 1)) {
-                    // Give em treasure!
-                    int treasure_type = new Random().nextInt(3); // 0, 1
-                    ItemStack treasure = null;
-                    if (treasure_type == 0) {
-                        // OOA
-                        treasure = Items.orb(false);
-                    }
-
-                    if (treasure_type == 1 || treasure_type == 2) {
-                        treasure = Items.enchant(5, new Random().nextInt(1), false);
-                    }
-
-                    if (treasure != null) {
-
-                        if (pl.getInventory().firstEmpty() != -1) {
-                            pl.getInventory().setItem(pl.getInventory().firstEmpty(), treasure);
-                        } else {
-                            // Full inventory!
-                            pl.getWorld().dropItem(pl.getLocation(), treasure);
-                        }
-
-                        pl.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "  YOU FOUND SOME TREASURE! -- a(n) "
-                                + treasure.getItemMeta().getDisplayName());
-                    }
+                    Item item = player.getWorld().dropItem(player.getLocation(), junk);
+                    item.setPickupDelay(0);
                 }
             }
+
+            player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "  YOU FOUND SOME JUNK! -- " + itemCount + "x " +
+                    junk.getItemMeta().getDisplayName());
+        }
+    }
+
+    private boolean shouldFindTreasure(ItemStack fishingRod) {
+        int treasureChance = Fishing.getTreasureFindChance(fishingRod);
+        int randomValue = new Random().nextInt(300) + 1;
+
+        return treasureChance >= randomValue;
+    }
+
+    private void handleTreasureFind(Player player) {
+        int treasureType = new Random().nextInt(3);
+        ItemStack treasure = null;
+
+        if (treasureType == 0) {
+            treasure = Items.orb(false);
+        } else if (treasureType == 1 || treasureType == 2) {
+            treasure = Items.enchant(5, new Random().nextInt(1), false);
+        }
+
+        if (treasure != null) {
+            if (player.getInventory().firstEmpty() != -1) {
+                player.getInventory().setItem(player.getInventory().firstEmpty(), treasure);
+            } else {
+                Item item = player.getWorld().dropItem(player.getLocation(), treasure);
+                item.setPickupDelay(0);
+            }
+
+            player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "  YOU FOUND SOME TREASURE! -- a(n) " +
+                    treasure.getItemMeta().getDisplayName());
         }
     }
 

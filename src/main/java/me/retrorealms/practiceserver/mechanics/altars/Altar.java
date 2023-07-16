@@ -2,6 +2,7 @@ package me.retrorealms.practiceserver.mechanics.altars;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
+import me.retrorealms.practiceserver.mechanics.player.Listeners;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import me.retrorealms.practiceserver.utils.JSONMessage;
@@ -19,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.inventivetalent.glow.GlowAPI;
 
 import java.util.*;
 
@@ -118,7 +120,7 @@ class AltarInstance {
         is.setItemMeta(meta);
         Item i = location.getWorld().dropItem(randomOffset(location, 2), is);
         droppedItems.add(i);
-        //GlowAPI.setGlowing(i, Listeners.groupOf(hand));
+        GlowAPI.setGlowing(i, Listeners.groupOf(hand), p);
     }
 }
 

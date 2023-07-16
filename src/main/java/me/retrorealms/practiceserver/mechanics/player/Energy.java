@@ -32,7 +32,7 @@ public class Energy implements Listener {
     private static final float ENERGY_PER_ARMOR_PIECE = 5.0f;
     private static final float ENERGY_INCREASE_PER_INTEL = 0.01f;
     private static final int ENERGY_REDUCTION_AMOUNT = 85;
-    private static final float ENERGY_REDUCTION_MULTIPLIER = 4.0f;
+    private static final float ENERGY_REDUCTION_MULTIPLIER = 3.2f;
     private static final int ENERGY_REDUCTION_THRESHOLD = 0;
     private static final long ENERGY_REDUCTION_DELAY = 2000L;
     private static final int ENERGY_REDUCTION_POTION_DURATION = 40;

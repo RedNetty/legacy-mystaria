@@ -23,9 +23,9 @@ public class Drops {
         Random random = new Random();
         int rarity = 1;
         int r = random.nextInt(260);
-        if (r < 5) {
+        if (r < 11) {
             rarity = 4;
-        } else if (r < 14) {
+        } else if (r < 32) {
             rarity = 3;
         } else if (r < 100) {
             rarity = 2;

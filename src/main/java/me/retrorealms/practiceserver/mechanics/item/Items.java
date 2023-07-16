@@ -22,6 +22,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.inventivetalent.glow.GlowAPI;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,13 +64,13 @@ public class Items {
         org.inventivetalent.glow.GlowAPI.Color color = null;
         switch (tier) {
             case 0:
-                return org.inventivetalent.glow.GlowAPI.Color.WHITE;
+                return GlowAPI.Color.WHITE;
             case 1:
-                return org.inventivetalent.glow.GlowAPI.Color.GREEN;
+                return GlowAPI.Color.GREEN;
             case 2:
-                return org.inventivetalent.glow.GlowAPI.Color.AQUA;
+                return GlowAPI.Color.AQUA;
             case 3:
-                return org.inventivetalent.glow.GlowAPI.Color.YELLOW;
+                return GlowAPI.Color.YELLOW;
         }
         return color;
     }

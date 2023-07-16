@@ -23,190 +23,131 @@ import java.util.concurrent.ThreadLocalRandom;
 public class LootDrops {
     public static ItemStack createLootDrop(int tier) {
         Random random = new Random();
-        int dodrop = random.nextInt(301);
+        int dropChance = random.nextInt(301); // Random number to determine the type of drop.
 
-        if (dodrop < 50) {
-            int whatenchant = random.nextInt(2);
-            if (tier < 3 || tier >= 3 && whatenchant == 0) {
-                return Items.enchant(tier, random.nextInt(2), false);
-            }
-            return Items.orb(false);
+        if (dropChance < 50) {
+            return createEnchantmentOrOrb(tier, random);
+        } else if (dropChance <= 100) {
+            return createGems(tier, random);
+        } else if (dropChance <= 160) {
+            return createPotion(tier);
+        } else if (dropChance <= 230) {
+            return createTeleportBook(tier, random);
+        } else if (dropChance < 250) {
+            return createTagOrTracker();
+        } else if (dropChance <= 260) {
+            return createScroll(tier);
+        } else if (tier == 5 && dropChance <= 270) {
+            return createLegendaryOrb();
+        } else if (dropChance <= 300) {
+            return createCrate(tier);
+        } else {
+            return createPotion(tier);
         }
-        if (dodrop <= 100) {
-            int gemamt = 0;
-            if (tier == 1) {
-                gemamt = random.nextInt(9) + 8;
-            }
-            else if (tier == 2) {
-                gemamt = random.nextInt(17) + 16;
-            }
-            else if (tier == 3) {
-                gemamt = random.nextInt(33) + 32;
-            }
-            else if (tier == 4) {
-                gemamt = random.nextInt(257) + 256;
-            }
-            else if (tier == 5) {
-                gemamt = random.nextInt(513) + 512;
-            }
-            else if (tier == 6) {
-                gemamt = random.nextInt(1029) + 1028;
-            }
-            if (gemamt > 64) {
-                return Money.createBankNote(gemamt);
-            }
-            return Money.makeGems(gemamt);
-        }
-        if (dodrop <= 160) {
-            return potion(tier);
-        }
-        if (dodrop <= 230) {
-            int scrolltype;
-            if (tier == 1) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaksBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.tripoliBook(false);
-                }
-            }
-            if (tier == 2) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaksBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.tripoliBook(false);
-                }
-            }
-            if (tier == 3) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaksBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.tripoliBook(false);
-                }
-            }
-            if (tier == 4) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.deadpeaksBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.avalonBook(false);
-                }
-            }
-            if (tier == 5) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.avalonBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.tripoliBook(false);
-                }
-            }
-            if (tier == 6) {
-                scrolltype = random.nextInt(1);
-                if (scrolltype == 0) {
-                    return TeleportBooks.avalonBook(false);
-                }
-                if (scrolltype == 1) {
-                    return TeleportBooks.tripoliBook(false);
-                }
-            }
-        }
-        if (dodrop < 250) {
-            boolean whatDrop = ThreadLocalRandom.current().nextBoolean();
-            if(whatDrop) {
-                return Nametag.item_ownership_tag.clone();
-            }else{
-                return WepTrak.weapon_tracker_item.clone();
-            }
-        }
-        if(dodrop <= 260) {
-            return new ItemStack(new ScrollGenerator().next(tier - 1));
-        }
-        if(tier == 5 && dodrop <= 270) {
-            return new ItemStack(Items.legendaryOrb(false));
-        }
-        if(dodrop <= 300) {
-            return new ItemStack(CratesMain.createCrate(tier, false));
-        }
-        return new ItemStack(Material.AIR);
     }
+
+    private static ItemStack createEnchantmentOrOrb(int tier, Random random) {
+        int enchantmentType = random.nextInt(2);
+        if (tier < 3 || (tier >= 3 && enchantmentType == 0)) {
+            return Items.enchant(tier, random.nextInt(2), false);
+        }
+        return Items.orb(false);
+    }
+
+    private static ItemStack createGems(int tier, Random random) {
+        int gemAmount = calculateGemAmount(tier, random);
+        if (gemAmount > 64) {
+            return Money.createBankNote(gemAmount);
+        }
+        return Money.makeGems(gemAmount);
+    }
+
+    private static int calculateGemAmount(int tier, Random random) {
+        switch (tier) {
+            default:
+            case 1:
+                return random.nextInt(20) + 100;
+            case 2:
+                return random.nextInt(17) + 206;
+            case 3:
+                return random.nextInt(33) + 302;
+            case 4:
+                return random.nextInt(257) + 756;
+            case 5:
+                return random.nextInt(513) + 1212;
+            case 6:
+                return random.nextInt(1029) + 1028;
+        }
+    }
+
+    private static ItemStack createPotion(int tier) {
+        return potion(tier);
+    }
+
+    private static ItemStack createTeleportBook(int tier, Random random) {
+        int scrollType = random.nextInt(2);
+        switch (tier) {
+            case 1:
+            case 2:
+            case 3:
+                return scrollType == 0 ? TeleportBooks.deadpeaksBook(false) : TeleportBooks.tripoliBook(false);
+            case 4:
+            case 5:
+            case 6:
+                return scrollType == 0 ? TeleportBooks.avalonBook(false) : TeleportBooks.tripoliBook(false);
+            default:
+                return TeleportBooks.tripoliBook(false);
+        }
+    }
+
+    private static ItemStack createTagOrTracker() {
+        boolean whatDrop = ThreadLocalRandom.current().nextBoolean();
+        return whatDrop ? Nametag.item_ownership_tag.clone() : WepTrak.weapon_tracker_item.clone();
+    }
+
+    private static ItemStack createScroll(int tier) {
+        return new ItemStack(new ScrollGenerator().next(tier - 1));
+    }
+
+    private static ItemStack createLegendaryOrb() {
+        return new ItemStack(Items.legendaryOrb(false));
+    }
+
+    private static ItemStack createCrate(int tier) {
+        return new ItemStack(CratesMain.createCrate(tier, false));
+    }
+
 
     @SuppressWarnings("deprecation")
     private static ItemStack potion(int tier) {
         switch (tier) {
             case 1:
-                Potion potion = new Potion(PotionType.REGEN);
-                ItemStack toReturn = potion.toItemStack(1);
-                PotionMeta potionMeta = (PotionMeta) toReturn.getItemMeta();
-                potionMeta.setDisplayName(ChatColor.WHITE + "Minor Health Potion");
-                potionMeta.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.GREEN + "15HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta.addItemFlags(itemFlag);
-                }
-                toReturn.setItemMeta(potionMeta);
-                return toReturn;
+                return createPotion(PotionType.REGEN, ChatColor.WHITE + "Minor Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.GREEN + "15HP");
             case 2:
-                Potion potion1 = new Potion(PotionType.INSTANT_HEAL);
-                ItemStack toReturn1 = potion1.toItemStack(1);
-                PotionMeta potionMeta1 = (PotionMeta) toReturn1.getItemMeta();
-                potionMeta1.setDisplayName(ChatColor.GREEN + "Health Potion");
-                potionMeta1.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.AQUA + "75HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta1.addItemFlags(itemFlag);
-                }
-                toReturn1.setItemMeta(potionMeta1);
-                return toReturn1;
+                return createPotion(PotionType.INSTANT_HEAL, ChatColor.GREEN + "Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.AQUA + "75HP");
             case 3:
-                Potion potion2 = new Potion(PotionType.STRENGTH);
-                ItemStack toReturn2 = potion2.toItemStack(1);
-                PotionMeta potionMeta2 = (PotionMeta) toReturn2.getItemMeta();
-                potionMeta2.setDisplayName(ChatColor.AQUA + "Major Health Potion");
-                potionMeta2.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.AQUA + "300HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta2.addItemFlags(itemFlag);
-                }
-                toReturn2.setItemMeta(potionMeta2);
-                return toReturn2;
+                return createPotion(PotionType.STRENGTH, ChatColor.AQUA + "Major Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.AQUA + "300HP");
             case 4:
-                Potion potion3 = new Potion(PotionType.INSTANT_DAMAGE);
-                ItemStack toReturn3 = potion3.toItemStack(1);
-                PotionMeta potionMeta3 = (PotionMeta) toReturn3.getItemMeta();
-                potionMeta3.setDisplayName(ChatColor.LIGHT_PURPLE.toString() + "Superior Health Potion");
-                potionMeta3.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.YELLOW + "800HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta3.addItemFlags(itemFlag);
-                }
-                toReturn3.setItemMeta(potionMeta3);
-                return toReturn3;
+                return createPotion(PotionType.INSTANT_DAMAGE, ChatColor.LIGHT_PURPLE.toString() + "Superior Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.YELLOW + "800HP");
             case 5:
-                Potion potion4 = new Potion(PotionType.FIRE_RESISTANCE);
-                ItemStack toReturn4 = potion4.toItemStack(1);
-                PotionMeta potionMeta5 = (PotionMeta) toReturn4.getItemMeta();
-                potionMeta5.setDisplayName(ChatColor.YELLOW + "Legendary Health Potion");
-                potionMeta5.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.YELLOW + "1600HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta5.addItemFlags(itemFlag);
-                }
-                toReturn4.setItemMeta(potionMeta5);
-                return toReturn4;
+                return createPotion(PotionType.FIRE_RESISTANCE, ChatColor.YELLOW + "Legendary Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.YELLOW + "1600HP");
             case 6:
-                Potion potion5 = new Potion(PotionType.SPEED);
-                ItemStack toReturn5 = potion5.toItemStack(1);
-                PotionMeta potionMeta6 = (PotionMeta) toReturn5.getItemMeta();
-                potionMeta6.setDisplayName(ChatColor.BLUE + "Chilled Health Potion");
-                potionMeta6.setLore(Arrays.asList(ChatColor.GRAY + "A potion that restores " + ChatColor.BLUE + "3200HP"));
-                for (ItemFlag itemFlag : ItemFlag.values()) {
-                    potionMeta6.addItemFlags(itemFlag);
-                }
-                toReturn5.setItemMeta(potionMeta6);
-                return toReturn5;
+                return createPotion(PotionType.SPEED, ChatColor.BLUE + "Chilled Health Potion", ChatColor.GRAY + "A potion that restores " + ChatColor.BLUE + "3200HP");
+            default:
+                return null;
         }
-        return null;
+    }
+
+    private static ItemStack createPotion(PotionType type, String displayName, String lore) {
+        Potion potion = new Potion(type);
+        ItemStack toReturn = potion.toItemStack(1);
+        PotionMeta potionMeta = (PotionMeta) toReturn.getItemMeta();
+        potionMeta.setDisplayName(displayName);
+        potionMeta.setLore(Arrays.asList(lore));
+        for (ItemFlag itemFlag : ItemFlag.values()) {
+            potionMeta.addItemFlags(itemFlag);
+        }
+        toReturn.setItemMeta(potionMeta);
+        return toReturn;
     }
 }

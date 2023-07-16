@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import ac.grim.grimac.GrimAbstractAPI;
-import ac.grim.grimac.events.FlagEvent;
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import me.filoghost.holographicdisplays.core.api.v2.V2HologramsAPIProvider;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.commands.moderation.ToggleGMCommand;
@@ -26,6 +26,7 @@ import me.retrorealms.practiceserver.mechanics.player.Energy;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.vendors.Merchant;
 import me.retrorealms.practiceserver.utils.Particles;
+import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
@@ -365,16 +366,15 @@ public class Damage implements Listener {
 			float y = random.nextFloat();
 			float z = random.nextFloat();
 
-			Hologram hologram = HologramsAPI.createHologram(PracticeServer.getInstance(), entity.getLocation().clone().add(x, 0.5 + y, z));
-
+			Hologram hologram = HolographicDisplaysAPI.get(PracticeServer.getInstance()).createHologram(entity.getLocation().clone().add(x, 0.5 + y, z));
 			if (type.equalsIgnoreCase("dmg")) {
-				hologram.appendTextLine(ChatColor.RED + "-" + damage + "❤");
+				hologram.getLines().appendText(ChatColor.RED + "-" + damage + "❤");
 			}
 			if (type.equalsIgnoreCase("dodge")) {
-				hologram.appendTextLine(ChatColor.RED + "*DODGE*");
+				hologram.getLines().appendText(ChatColor.RED + "*DODGE*");
 			}
 			if (type.equalsIgnoreCase("block")) {
-				hologram.appendTextLine(ChatColor.RED + "*BLOCK*");
+				hologram.getLines().appendText(ChatColor.RED + "*BLOCK*");
 			}
 
 			new BukkitRunnable() {
@@ -471,8 +471,8 @@ public class Damage implements Listener {
 
 					event.setCancelled(true);
 
-					player.sendMessage(ChatColor.RED + "            " + damage + ChatColor.RED + ChatColor.BOLD + " DMG "
-							+ ChatColor.RED + "-> " + ChatColor.RESET + "DPS DUMMY" + " [" + 99999999 + "HP]");
+					StringUtil.sendCenteredMessage(player, ChatColor.RED + "" + damage + ChatColor.RED + ChatColor.BOLD + " DMG "
+							+ ChatColor.RED + "➜ " + ChatColor.RESET + "DPS DUMMY" + " [" + 99999999 + "HP]");
 				}
 			}
 		}
@@ -584,11 +584,11 @@ public class Damage implements Listener {
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 					callHologramDamage(d, p, "block", 0);
 					if (Toggles.getToggleStatus(d, "Debug")) {
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+						StringUtil.sendCenteredMessage(d, ChatColor.RED.toString() + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
 					}
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+						StringUtil.sendCenteredMessage(p, ChatColor.DARK_GREEN.toString() + ChatColor.BOLD + "*BLOCK* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
 				} else if (dodger <= dodge) {
@@ -598,11 +598,11 @@ public class Damage implements Listener {
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
 					callHologramDamage(d, p, "dodge", 0);
 					if (Toggles.getToggleStatus(d, "Debug")) {
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT DODGED* ("
+						StringUtil.sendCenteredMessage(d, ChatColor.RED.toString() + ChatColor.BOLD + "*OPPONENT DODGED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
 					}
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* ("
+						StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*DODGE* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
 				} else if (blockr <= 80 && p.isBlocking()) {
@@ -611,11 +611,11 @@ public class Damage implements Listener {
 					callHologramDamage(d, p, "block", 0);
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 					if (Toggles.getToggleStatus(d, "Debug")) {
-						d.sendMessage("          " + ChatColor.RED + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
+						StringUtil.sendCenteredMessage(d, ChatColor.RED.toString() + ChatColor.BOLD + "*OPPONENT BLOCKED* ("
 								+ (PracticeServer.FFA ? "Anonymous" : p.getName()) + ")");
 					}
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* ("
+						StringUtil.sendCenteredMessage(p,  ChatColor.DARK_GREEN.toString() + ChatColor.BOLD + "*BLOCK* ("
 								+ (PracticeServer.FFA ? "Anonymous" : d.getName()) + ")");
 					}
 				}
@@ -640,7 +640,7 @@ public class Damage implements Listener {
 					callHologramDamage(p, li, "block", 0);
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+						StringUtil.sendCenteredMessage(p, ChatColor.DARK_GREEN.toString() + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
 					}
 				} else if (dodger <= dodge) {
@@ -650,7 +650,7 @@ public class Damage implements Listener {
 					callHologramDamage(p, li, "dodge", 0);
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 1.0f, 1.0f);
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.GREEN + ChatColor.BOLD + "*DODGE* (" + mname
+						StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*DODGE* (" + mname
 								+ ChatColor.GREEN + ")");
 					}
 				} else if (blockr <= 80 && p.isBlocking()) {
@@ -659,7 +659,7 @@ public class Damage implements Listener {
 					callHologramDamage(p, li, "block", 0);
 					p.playSound(p.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 					if (Toggles.getToggleStatus(p, "Debug")) {
-						p.sendMessage("          " + ChatColor.DARK_GREEN + ChatColor.BOLD + "*BLOCK* (" + mname
+						StringUtil.sendCenteredMessage(p, ChatColor.DARK_GREEN.toString() + ChatColor.BOLD + "*BLOCK* (" + mname
 								+ ChatColor.DARK_GREEN + ")");
 					}
 				}
@@ -880,7 +880,7 @@ public class Damage implements Listener {
 						toggles = Toggles.getToggles(p.getUniqueId());
 
 						if (toggles.contains("Debug")) {
-							p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + "            +" + ChatColor.GREEN
+							StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "+" + ChatColor.GREEN
 									+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
 									+ (int) p.getHealth() + "/" + (int) p.getMaxHealth() + "HP]");
 						}
@@ -893,7 +893,7 @@ public class Damage implements Listener {
 					toggles = Toggles.getToggles(p.getUniqueId());
 
 					if (toggles.contains("Debug")) {
-						p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + " " + "           +" + ChatColor.GREEN
+						StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + " " + "+" + ChatColor.GREEN
 								+ life + ChatColor.GREEN + ChatColor.BOLD + " HP " + ChatColor.GRAY + "["
 								+ (int) p.getMaxHealth() + "/" + (int) p.getMaxHealth() + "HP]");
 					}
@@ -997,8 +997,8 @@ public class Damage implements Listener {
 					if (health < 0) {
 						health = 0;
 					}
-					p.sendMessage(ChatColor.RED + "            -" + cleaned + ChatColor.RED + ChatColor.BOLD + "HP "
-							+ ChatColor.GRAY + "[-" + (int) arm + "%A -> -" + (int) pre + ChatColor.BOLD + "DMG"
+					StringUtil.sendCenteredMessage(p, ChatColor.RED + "-" + cleaned + ChatColor.RED + ChatColor.BOLD + "HP "
+							+ ChatColor.GRAY + "[-" + (int) arm + "%A ➜ -" + (int) pre + ChatColor.BOLD + "DMG"
 							+ ChatColor.GRAY + "] " + ChatColor.GREEN + "[" + health + ChatColor.BOLD + "HP"
 							+ ChatColor.GREEN + "]");
 				}
@@ -1010,8 +1010,8 @@ public class Damage implements Listener {
 					if (health < 0) {
 						health = 0;
 					}
-					p.sendMessage(ChatColor.RED + "            -" + (int) dmg + ChatColor.RED + ChatColor.BOLD + "HP "
-							+ ChatColor.GRAY + "[-0%A -> -0" + ChatColor.BOLD + "DMG" + ChatColor.GRAY + "] "
+					StringUtil.sendCenteredMessage(p, ChatColor.RED + "-" + (int) dmg + ChatColor.RED + ChatColor.BOLD + "HP "
+							+ ChatColor.GRAY + "[-0%A ➜ -0" + ChatColor.BOLD + "DMG" + ChatColor.GRAY + "] "
 							+ ChatColor.GREEN + "[" + health + ChatColor.BOLD + "HP" + ChatColor.GREEN + "]");
 				}
 
@@ -1040,9 +1040,9 @@ public class Damage implements Listener {
 				}
 				ArrayList<String> toggles = Toggles.getToggles(d.getUniqueId());
 				if (toggles.contains("Debug")) {
-					d.sendMessage(ChatColor.RED + "            " + dmg + ChatColor.RED + ChatColor.BOLD + " DMG "
-							+ ChatColor.RED + "-> " + (PracticeServer.FFA
-									? (d.isOp() ? p.getName().toString() : "Anonymous") : p.getName().toString())
+					StringUtil.sendCenteredMessage(d, ChatColor.RED.toString() + dmg + ChatColor.RED + ChatColor.BOLD + " DMG "
+							+ ChatColor.RED + "➜ " + (PracticeServer.FFA
+							? (d.isOp() ? p.getName().toString() : "Anonymous") : p.getName().toString())
 							+ " [" + health + "HP]");
 				}
 				lastphit.put(p, d);
@@ -1067,29 +1067,29 @@ public class Damage implements Listener {
 						WepTrak.incrementStat(d.getInventory().getItemInMainHand(), "mk");
 					}
 					switch (tier) {
-					case 1:
-						guildPlayer.setT1Kills(guildPlayer.getT1Kills() + 1);
-						break;
-					case 2:
-						guildPlayer.setT2Kills(guildPlayer.getT2Kills() + 1);
-						break;
-					case 3:
-						guildPlayer.setT3Kills(guildPlayer.getT3Kills() + 1);
-						break;
-					case 4:
-						guildPlayer.setT4Kills(guildPlayer.getT4Kills() + 1);
-						break;
-					case 5:
-						guildPlayer.setT5Kills(guildPlayer.getT5Kills() + 1);
-						break;
-					case 6:
-						guildPlayer.setT6Kills(guildPlayer.getT6Kills() + 1);
-						break;
+						case 1:
+							guildPlayer.setT1Kills(guildPlayer.getT1Kills() + 1);
+							break;
+						case 2:
+							guildPlayer.setT2Kills(guildPlayer.getT2Kills() + 1);
+							break;
+						case 3:
+							guildPlayer.setT3Kills(guildPlayer.getT3Kills() + 1);
+							break;
+						case 4:
+							guildPlayer.setT4Kills(guildPlayer.getT4Kills() + 1);
+							break;
+						case 5:
+							guildPlayer.setT5Kills(guildPlayer.getT5Kills() + 1);
+							break;
+						case 6:
+							guildPlayer.setT6Kills(guildPlayer.getT6Kills() + 1);
+							break;
 					}
 				}
 				if ((Toggles.getToggles(d.getUniqueId())).contains("Debug")) {
-					d.sendMessage(ChatColor.RED + "            " + dmg + ChatColor.RED + ChatColor.BOLD + " DMG "
-							+ ChatColor.RED + "-> " + ChatColor.RESET + name + " [" + health + "HP]");
+					StringUtil.sendCenteredMessage(d, ChatColor.RED.toString() + dmg + ChatColor.RED + ChatColor.BOLD + " DMG "
+							+ ChatColor.RED + "➜ " + ChatColor.RESET + name + " [" + health + "HP]");
 				}
 			}
 		} catch (Exception ignored) {

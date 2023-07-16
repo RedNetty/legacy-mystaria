@@ -699,11 +699,15 @@ public class SQLMain implements Listener {
                 }
             }
             int mount = rs.getInt("Mount") + 1;
-            Horses.horseTier.put(player, mount);
+            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) Horses.horseTier.put(player, mount);
             getTogglesFromSQL(player.getUniqueId(), rs);
         } else {
             ModerationMechanics.rankHashMap.put(player.getUniqueId(), RankEnum.DEFAULT);
-            Horses.horseTier.put(player, 0);
+            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
+                Horses.horseTier.put(player, 0);
+            }else{
+                if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
+            }
         }
     }
 

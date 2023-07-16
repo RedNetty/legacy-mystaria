@@ -49,6 +49,7 @@ import me.retrorealms.practiceserver.mechanics.useless.task.AsyncTask;
 import me.retrorealms.practiceserver.mechanics.vendors.GemGambling;
 import me.retrorealms.practiceserver.mechanics.vendors.OrbGambling;
 import me.retrorealms.practiceserver.mechanics.vendors.OreMerchant;
+import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.JSONMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -251,12 +252,19 @@ public class ChatMechanics implements Listener {
     }
 
     private boolean isAllowedCommand(String command, Player player) {
-        List<String> allowedCommands = Arrays.asList("guildshow", "ginfo", "gwho", "guildpromote", "gpromote", "gdemote", "guilddemote", "orbs", "guildwho", "guildinfo", "gshow", "guildquit", "gquit", "guildcreate", "gaccept", "guildaccept", "gcreate", "ginvite", "guildinvite", "gkick", "guildkick", "guilddecline", "gdecline", "guild", "g");
+        List<String> allowedCommands = new ArrayList<>(Arrays.asList("guildshow", "ginfo", "gwho", "guildpromote", "gpromote", "gdemote", "guilddemote", "orbs", "guildwho", "guildinfo", "gshow", "guildquit", "gquit", "guildcreate", "gaccept", "guildaccept", "gcreate", "ginvite", "guildinvite", "gkick", "guildkick", "guilddecline", "gdecline", "guild", "g"));
+
+        if (!player.isOp() && PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) {
+            allowedCommands.addAll(Arrays.asList("patch", "pet", "shard", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "g", "guilds", "guilds", "abandon", "create", "guildcreate", "gcreate", "join", "gi", "report", "editreport"));
+            return allowedCommands.contains(command);
+        }
+
         if (ModerationMechanics.isDonator(player)) {
             allowedCommands.addAll(Arrays.asList("togglegems", "lootbuff", "pet", "shard", "market", "patch", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "toggletrail", "g", "guilds", "guilds", "abandon", "create", "join", "gi", "report", "editreport"));
         } else {
             allowedCommands.addAll(Arrays.asList("patch", "pet", "shard", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "g", "guilds", "guilds", "abandon", "create", "guildcreate", "gcreate", "join", "gi", "report", "editreport"));
         }
+
         return allowedCommands.contains(command);
     }
 

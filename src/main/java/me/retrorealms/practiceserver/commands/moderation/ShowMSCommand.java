@@ -13,44 +13,79 @@ import org.bukkit.entity.Player;
 public class ShowMSCommand implements CommandExecutor {
 
     public boolean onCommand(final CommandSender sender, final Command cmd, final String label, final String[] args) {
-        if (sender instanceof Player) {
-            final Player p = (Player) sender;
-            if (p.isOp()) {
-                if (args.length != 1) {
-                    p.sendMessage(new StringBuilder().append(ChatColor.RED).append(ChatColor.BOLD)
-                            .append("Incorrect Syntax. ").append(ChatColor.RED).append("/showms <radius>")
-                            .toString());
-                    return true;
-                }
-                int radius = 0;
-                try {
-                    radius = Integer.parseInt(args[0]);
-                } catch (Exception e2) {
-                    radius = 0;
-                }
-                Location loc = p.getLocation();
-                final World w = loc.getWorld();
-                final int x = (int) loc.getX();
-                final int y = (int) loc.getY();
-                final int z = (int) loc.getZ();
-                int count = 0;
-                for (int i = -radius; i <= radius; ++i) {
-                    for (int j = -radius; j <= radius; ++j) {
-                        for (int k = -radius; k <= radius; ++k) {
-                            loc = w.getBlockAt(x + i, y + j, z + k).getLocation();
-                            if (Spawners.spawners.containsKey(loc)) {
-                                ++count;
-                                loc.getBlock().setType(Material.MOB_SPAWNER);
-                            }
-                        }
+        if (!isPlayerWithOpStatus(sender)) {
+            return false;
+        }
+
+        Player player = (Player) sender;
+
+        int radius = parseRadius(args, player);
+        if (radius < 0) {
+            return true;
+        }
+
+        int count = countAndDisplayMobSpawners(player, radius);
+
+        sendResultMessage(player, count, radius);
+
+        return true;
+    }
+
+    private boolean isPlayerWithOpStatus(CommandSender sender) {
+        return sender instanceof Player && sender.isOp();
+    }
+
+    private int parseRadius(String[] args, Player player) {
+        if (args.length != 1) {
+            player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Incorrect Syntax. " + ChatColor.RED + "/showms <radius>");
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ChatColor.RED + "Invalid radius. Please enter a number.");
+            return -1;
+        }
+    }
+
+    private int countAndDisplayMobSpawners(Player player, int radius) {
+        Location location = player.getLocation();
+        World world = location.getWorld();
+
+        int startX = location.getBlockX() - radius;
+        int endX = location.getBlockX() + radius;
+        int startY = location.getBlockY() - radius;
+        int endY = location.getBlockY() + radius;
+        int startZ = location.getBlockZ() - radius;
+        int endZ = location.getBlockZ() + radius;
+
+        int count = 0;
+        for (int x = startX; x <= endX; x++) {
+            for (int y = startY; y <= endY; y++) {
+                for (int z = startZ; z <= endZ; z++) {
+                    if (Spawners.spawners.containsKey(world.getBlockAt(x, y, z).getLocation())) {
+                        count++;
+                        world.getBlockAt(x, y, z).setType(Material.MOB_SPAWNER);
                     }
                 }
-                p.sendMessage(ChatColor.YELLOW + "Displaying " + count + " mob spawners in a " + radius
-                        + " block radius...");
-                p.sendMessage(ChatColor.GRAY + "Break them to unregister the spawn point.");
             }
         }
-        return false;
+
+        return count;
+    }
+
+    private void sendResultMessage(Player player, int count, int radius) {
+        StringBuilder message = new StringBuilder();
+        message.append(ChatColor.YELLOW)
+                .append("Displaying ")
+                .append(count)
+                .append(" mob spawners in a ")
+                .append(radius)
+                .append(" block radius...");
+
+        player.sendMessage(message.toString());
+        player.sendMessage(ChatColor.GRAY + "Break them to unregister the spawn point.");
     }
 
 }

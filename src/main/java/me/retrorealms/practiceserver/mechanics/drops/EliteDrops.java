@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.inventivetalent.glow.GlowAPI;
 
+
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -91,8 +92,8 @@ public class EliteDrops {
                     crit = true;
 
 
-                    mindmg = ThreadLocalRandom.current().nextInt(260, 285);
-                    maxdmg = ThreadLocalRandom.current().nextInt(335, 365);
+                    mindmg = ThreadLocalRandom.current().nextInt(390, 430); // Increase the minimum damage range
+                    maxdmg = ThreadLocalRandom.current().nextInt(440, 500);
 
                     critamt = ThreadLocalRandom.current().nextInt(5, 7);
                     acc = true;
@@ -103,10 +104,12 @@ public class EliteDrops {
                     name = ChatColor.YELLOW + "Tortmenting Sword of Slaughter";
                     is.setType(Material.GOLD_SWORD);
                     llore = llore + "The Warden's great sword.";
-                    rarityId = 2;
+                    rarityId = 3;
+                    rarity = ChatColor.YELLOW.toString() + ChatColor.ITALIC + "Unique";
+                }
                     if (item == 5) {
 
-                        nrg = ThreadLocalRandom.current().nextInt(6, 6);
+                        nrg = ThreadLocalRandom.current().nextInt(7,8);
                         hp = ThreadLocalRandom.current().nextInt(2000, 2350);
                         blockamt = ThreadLocalRandom.current().nextInt(3, 6);
                         dpsamt = ThreadLocalRandom.current().nextInt(10, 12);
@@ -122,7 +125,7 @@ public class EliteDrops {
                     }
                     if (item == 6) {
                         dexamt = ThreadLocalRandom.current().nextInt(260, 300);
-                        nrg = ThreadLocalRandom.current().nextInt(8, 8);
+                        nrg = ThreadLocalRandom.current().nextInt(7,8);
                         hp = ThreadLocalRandom.current().nextInt(3900, 4700);
                         blockamt = ThreadLocalRandom.current().nextInt(3, 6);
                         dpsamt = ThreadLocalRandom.current().nextInt(15, 20);
@@ -137,7 +140,7 @@ public class EliteDrops {
                     }
                     if (item == 7) {
                         dexamt = ThreadLocalRandom.current().nextInt(260, 300);
-                        nrg = ThreadLocalRandom.current().nextInt(8, 8);
+                        nrg = ThreadLocalRandom.current().nextInt(7,8);
                         hp = ThreadLocalRandom.current().nextInt(3900, 4700);
                         blockamt = ThreadLocalRandom.current().nextInt(3, 6);
                         dpsamt = ThreadLocalRandom.current().nextInt(15, 20);
@@ -151,7 +154,7 @@ public class EliteDrops {
                         rarityId = 2;
                     }
                     if (item == 8) {
-                        nrg = ThreadLocalRandom.current().nextInt(6, 6);
+                        nrg = ThreadLocalRandom.current().nextInt(7,8);
                         hp = ThreadLocalRandom.current().nextInt(2000, 2350);
                         blockamt = ThreadLocalRandom.current().nextInt(3, 6);
                         dpsamt = ThreadLocalRandom.current().nextInt(10, 12);
@@ -165,7 +168,6 @@ public class EliteDrops {
                         llore = llore + "The boots worn by The Warden himself.";
                         rarityId = 2;
                     }
-                }
                 break;
             case "krampus":
                 tier = 5;
@@ -201,7 +203,7 @@ public class EliteDrops {
                     dpsamt = 9;
 
                     hp = ThreadLocalRandom.current().nextInt(2000, 2350);
-                    nrg = ThreadLocalRandom.current().nextInt(6, 6);
+                    nrg = ThreadLocalRandom.current().nextInt(7,8);
                     nrghp = 2;
 
                     vit = true;
@@ -219,7 +221,7 @@ public class EliteDrops {
                     dpsamt = 19;
 
                     hp = ThreadLocalRandom.current().nextInt(3900, 4700);
-                    nrg = ThreadLocalRandom.current().nextInt(8, 8);
+                    nrg = ThreadLocalRandom.current().nextInt(7,8);
                     nrghp = 2;
 
                     vit = true;
@@ -237,7 +239,7 @@ public class EliteDrops {
                     dpsamt = 19;
 
                     hp = ThreadLocalRandom.current().nextInt(3900, 4700);
-                    nrg = ThreadLocalRandom.current().nextInt(8, 8);
+                    nrg = ThreadLocalRandom.current().nextInt(7,8);
                     nrghp = 2;
 
                     vit = true;
@@ -255,7 +257,7 @@ public class EliteDrops {
                     dpsamt = 9;
 
                     hp = ThreadLocalRandom.current().nextInt(2000, 2350);
-                    nrg = ThreadLocalRandom.current().nextInt(6, 6);
+                    nrg = ThreadLocalRandom.current().nextInt(6, 7);
                     nrghp = 2;
 
                     vit = true;
@@ -295,7 +297,7 @@ public class EliteDrops {
                     is.setType(Material.GOLD_HELMET);
 
                     hp = ThreadLocalRandom.current().nextInt(2700, 3400);
-                    hps = ThreadLocalRandom.current().nextInt(350, 350);
+                    hps = ThreadLocalRandom.current().nextInt(350, 400);
                     nrghp = 1;
 
                     dodge = random.nextBoolean();
@@ -316,7 +318,7 @@ public class EliteDrops {
                     is.setType(Material.GOLD_CHESTPLATE);
 
                     hp = ThreadLocalRandom.current().nextInt(2700, 3400);
-                    hps = ThreadLocalRandom.current().nextInt(350, 350);
+                    hps = ThreadLocalRandom.current().nextInt(350, 400);
                     nrghp = 1;
 
                     dodge = random.nextBoolean();
@@ -337,7 +339,7 @@ public class EliteDrops {
                     is.setType(Material.GOLD_LEGGINGS);
 
                     hp = ThreadLocalRandom.current().nextInt(2700, 3400);
-                    hps = ThreadLocalRandom.current().nextInt(350, 350);
+                    hps = ThreadLocalRandom.current().nextInt(350, 400);
                     nrghp = 1;
 
                     dodge = random.nextBoolean();
@@ -358,7 +360,7 @@ public class EliteDrops {
                     is.setType(Material.GOLD_BOOTS);
 
                     hp = ThreadLocalRandom.current().nextInt(2700, 3400);
-                    hps = ThreadLocalRandom.current().nextInt(350, 350);
+                    hps = ThreadLocalRandom.current().nextInt(350, 400);
                     nrghp = 1;
 
                     dodge = random.nextBoolean();

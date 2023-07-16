@@ -45,19 +45,18 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Alignments implements Listener {
+    private static final int NEUTRAL_SECONDS = 120;
     public static ConcurrentHashMap<String, Integer> neutral = new ConcurrentHashMap<String, Integer>();
     public static ConcurrentHashMap<String, Integer> chaotic = new ConcurrentHashMap<String, Integer>();
     public static ConcurrentHashMap<String, Long> tagged = new ConcurrentHashMap<String, Long>();
     public static boolean logout = false;
-
     public static HashMap<Player, BossBar> playerBossBars;
-
-    private static final int NEUTRAL_SECONDS = 120;
     private final int CHAOTIC_SECONDS = 300;
 
     public static boolean isSafeZone(Location loc) {
@@ -131,79 +130,17 @@ public class Alignments implements Listener {
         PracticeServer.log.info("[Alignments] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         new BukkitRunnable() {
-
             public void run() {
                 for (Player p : Bukkit.getServer().getOnlinePlayers()) {
                     if (p.isOnline()) {
-                        int time;
-                        if (chaotic.containsKey(p.getName())) {
-                            time = chaotic.get(p.getName());
-                            if (time <= 1) {
-                                chaotic.remove(p.getName());
-                                neutral.put(p.getName(), NEUTRAL_SECONDS);
-                                updatePlayerAlignment(p);
-                                setNeutral(p);
-                                ActionBar.sendActionBar(p, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 4);
-                            } else {
-                                chaotic.put(p.getName(), --time);
-                            }
+                        if (isSafeZone(p.getLocation()) && isPlayerChaotic(p)) {
+                            kickPlayerFromSafeZone(p);
+                            return;
                         }
-                        if (neutral.containsKey(p.getName())) {
-                            time = neutral.get(p.getName());
-                            if (time == 1) {
-                                neutral.remove(p.getName());
-                                updatePlayerAlignment(p);
-                                setLawful(p);
-                                //  TTA_Methods.sendActionBar(p, ChatColor.GREEN + "* YOU ARE NOW " + ChatColor.BOLD + "LAWFUL" + ChatColor.GREEN + " ALIGNMENT *", 60);
-                            } else {
-                                --time;
-                                neutral.put(p.getName(), time--);
-                            }
-                        }
-                    }
-                    if (tagged.containsKey(p.getName()) && (!tagged.containsKey(p.getName()) || System.currentTimeMillis() - tagged.get(p.getName()) <= 10000) || p.getHealth() <= 0.0)
-                        continue;
-                    PlayerInventory i = p.getInventory();
-                    double amt = 5.0;
-                    int vit = 0;
-                    ItemStack[] arritemStack = i.getArmorContents();
-                    int n = arritemStack.length;
-                    int n2 = 0;
-                    while (n2 < n) {
-                        ItemStack is = arritemStack[n2];
-                        if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
-                            double added = Damage.getHps(is);
-                            amt += added;
-                            int addedvit = Damage.getElem(is, "VIT");
-                            vit += addedvit;
-                        }
-                        ++n2;
-                    }
-                    if (vit > 0) {
-                        amt += (int) Math.round((double) vit * 0.3);
-                    }
-                    double healthToSet = p.getHealth() + amt;
-                    if (healthToSet > p.getMaxHealth()) {
-                        p.setHealth(p.getMaxHealth());
-                    } else p.setHealth(healthToSet);
-                    double healthPercentage = (p.getHealth() / p.getMaxHealth());
-                    if (healthPercentage * 100.0F > 100.0F) {
-                        healthPercentage = 1.0;
-                    }
-                    float pcnt = (float) (healthPercentage * 1.F);
-                    BarColor barColor = Damage.getBarColor(p);
-                    ChatColor titleColor = Damage.barTitleColor(p);
-                    if (Toggles.hasLevelBarHP(p)) {
-                        if (!playerBossBars.containsKey(p)) {
-                            // Set new one
-                            BossBar bossBar = Bukkit.createBossBar(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth(), barColor, BarStyle.SOLID);
-                            bossBar.addPlayer(p);
-                            playerBossBars.put(p, bossBar);
-                            playerBossBars.get(p).setProgress(pcnt);
-                        } else {
-                            playerBossBars.get(p).setTitle(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth());
-                            playerBossBars.get(p).setProgress(pcnt);
-                        }
+                        updateTimeCounters(p);
+                        updatePlayerHealthBar(p);
+                        if (isPlayerTagged(p)) continue;
+                        healPlayer(p);
                     }
                 }
             }
@@ -237,6 +174,77 @@ public class Alignments implements Listener {
         }
     }
 
+    private void updateTimeCounters(Player p) {
+        int time;
+        if (chaotic.containsKey(p.getName())) {
+            time = chaotic.get(p.getName());
+            if (time <= 1) {
+                chaotic.remove(p.getName());
+                neutral.put(p.getName(), NEUTRAL_SECONDS);
+                updatePlayerAlignment(p);
+                setNeutral(p);
+            } else {
+                chaotic.put(p.getName(), --time);
+            }
+        }
+        if (neutral.containsKey(p.getName())) {
+            time = neutral.get(p.getName());
+            if (time == 1) {
+                neutral.remove(p.getName());
+                updatePlayerAlignment(p);
+                setLawful(p);
+            } else {
+                --time;
+                neutral.put(p.getName(), time--);
+            }
+        }
+    }
+
+    private boolean isPlayerTagged(Player p) {
+        return tagged.containsKey(p.getName()) && (!tagged.containsKey(p.getName()) || System.currentTimeMillis() - tagged.get(p.getName()) <= 10000) || p.getHealth() <= 0.0;
+    }
+
+
+    private void healPlayer(Player p) {
+        PlayerInventory i = p.getInventory();
+        double amt = 5.0;
+        int vit = 0;
+        List<ItemStack> armorContents = new ArrayList<>(Arrays.asList(i.getArmorContents()));
+
+        for (ItemStack is : armorContents) {
+            if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+                double added = Damage.getHps(is);
+                amt += added;
+                int addedvit = Damage.getElem(is, "VIT");
+                vit += addedvit;
+            }
+        }
+
+        if (vit > 0) {
+            amt += (int) Math.round((double) vit * 0.3);
+        }
+
+        double healthToSet = p.getHealth() + amt;
+        p.setHealth(Math.min(healthToSet, p.getMaxHealth()));
+    }
+    private void updatePlayerHealthBar(Player p) {
+        double healthPercentage = (p.getHealth() / p.getMaxHealth());
+        float pcnt = (float) (healthPercentage * 1.F);
+        BarColor barColor = Damage.getBarColor(p);
+        ChatColor titleColor = Damage.barTitleColor(p);
+        if (Toggles.hasLevelBarHP(p)) {
+            if (!playerBossBars.containsKey(p)) {
+                BossBar bossBar = Bukkit.createBossBar(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth(), barColor, BarStyle.SOLID);
+                bossBar.addPlayer(p);
+                playerBossBars.put(p, bossBar);
+                playerBossBars.get(p).setProgress(pcnt);
+            } else {
+                playerBossBars.get(p).setTitle(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth());
+                playerBossBars.get(p).setProgress(pcnt);
+            }
+        }
+    }
+
     public void onDisable() {
         PracticeServer.log.info("[Alignments] has been disabled.");
         if (PracticeServer.DATABASE) return;
@@ -258,8 +266,8 @@ public class Alignments implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onChaoticSpawn(PlayerRespawnEvent e) {
         Player p = e.getPlayer();
-        if (chaotic.containsKey(p.getName())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
+        if (isPlayerChaotic(p)) {
+            sendChaoticMessage(p);
             e.setRespawnLocation(TeleportBooks.generateRandomSpawnPoint(p.getName()));
         } else {
             e.setRespawnLocation(TeleportBooks.stonePeaks);
@@ -274,43 +282,7 @@ public class Alignments implements Listener {
     @EventHandler
     public void onZoneMessage(PlayerMoveEvent e) {
         Player p = e.getPlayer();
-        if (isSafeZone(e.getFrom()) && chaotic.containsKey(p.getName())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.");
-            ActionBar.sendActionBar(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.", 50);
-            p.teleport(TeleportBooks.generateRandomSpawnPoint(p.getName()));
-            return;
-        }
-        if (isSafeZone(e.getTo())) {
-            if (chaotic.containsKey(p.getName())) {
-                p.teleport(e.getFrom());
-                StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
-                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 3);
-                return;
-            }
-            if (Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) <= 10000) {
-                p.teleport(e.getFrom());
-                long combattime = Listeners.combat.get(p.getName());
-                double left = (System.currentTimeMillis() - combattime) / 1000;
-                int time = (int) (10 - Math.round(left));
-                StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat.");
-                StringUtil.sendCenteredMessage(p, ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s");
-                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 3);
-                return;
-            }
-        }
-        if (!isSafeZone(e.getFrom()) && isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF)***");
-            ActionBar.sendActionBar(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***" + ChatColor.GRAY + " (PVP-OFF) (MONSTERS-OFF)", 2);
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
-
-
-        }
-        if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON)***");
-            ActionBar.sendActionBar(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE *** " + ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 2);
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
-        }
-
+        handleZoneChange(e, p);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -319,36 +291,7 @@ public class Alignments implements Listener {
             return;
         }
         Player p = e.getPlayer();
-        if (isSafeZone(e.getTo())) {
-            if (chaotic.containsKey(p.getName())) {
-                StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
-                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 3);
-                e.setCancelled(true);
-                return;
-            }
-            if (Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) <= 10000) {
-                long combattime = Listeners.combat.get(p.getName());
-                double left = (System.currentTimeMillis() - combattime) / 1000;
-                int time = (int) (10 - Math.round(left));
-                StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat.");
-                StringUtil.sendCenteredMessage(p, ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s");
-                ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat, " + ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s", 3);
-                e.setCancelled(true);
-                return;
-            }
-        }
-        if (!isSafeZone(e.getFrom()) && isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF)***");
-            ActionBar.sendActionBar(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***" + ChatColor.GRAY + " (PVP-OFF) (MONSTERS-OFF)", 2);
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
-
-
-        }
-        if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
-            StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON)***");
-            ActionBar.sendActionBar(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE *** " + ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 2);
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
-        }
+        handleZoneChange(e, p);
     }
 
     @EventHandler
@@ -372,38 +315,132 @@ public class Alignments implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onNeutral(EntityDamageByEntityEvent e) {
+        handleEntityDamage(e);
+    }
+
+
+    private boolean isPlayerChaotic(Player p) {
+        return chaotic.containsKey(p.getName());
+    }
+
+    private void sendChaoticMessage(Player p) {
+        StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.");
+    }
+
+    private void handleZoneChange(PlayerMoveEvent e, Player p) {
+        if (isSafeZone(e.getTo())) {
+            handlePlayerEnteringSafeZone(e, p);
+        }
+        if (!isSafeZone(e.getFrom()) && isSafeZone(e.getTo())) {
+            notifyPlayerEnteredSafeZone(p);
+        }
+        if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
+            notifyPlayerEnteredChaoticZone(p);
+        }
+    }
+
+    private void handleEntityDamage(EntityDamageByEntityEvent e) {
         if (e.getDamage() <= 0.0) {
             return;
         }
         if (Duels.stayLawful.containsKey(e.getDamager())) return;
         if (e.getDamager() instanceof Projectile && e.getEntity() instanceof Player) {
-            if (((Projectile) e.getDamager()).getShooter() instanceof Player) {
-                Player d = (Player) ((Projectile) e.getDamager()).getShooter();
-                Projectile projectile = (Projectile) e.getDamager();
-                if (!chaotic.containsKey(d.getName())) {
-                    if (Toggles.getToggles(d.getUniqueId()).contains("Anti PVP")) return;
-                    if (neutral.containsKey(d.getName())) {
-                        neutral.put(d.getName(), NEUTRAL_SECONDS);
-                    } else {
-                        setNeutral(d);
-                        ActionBar.sendActionBar(d, ChatColor.YELLOW + "* YOU ARE NOW " + ChatColor.BOLD + "NEUTRAL" + ChatColor.YELLOW + " ALIGNMENT *", 3);
-                    }
-                }
-            }
+            handleProjectileDamage(e);
         }
-
         if (e.getDamager() instanceof Player && e.getEntity() instanceof Player) {
-            Player d = (Player) e.getDamager();
-            if (!chaotic.containsKey(d.getName())) {
-                if (Toggles.getToggles(d.getUniqueId()).contains("Anti PVP")) return;
-                if (Duels.duelers.containsKey(d)) return;
-                if (neutral.containsKey(d.getName())) {
-                    neutral.put(d.getName(), NEUTRAL_SECONDS);
+            handlePlayerDamage(e);
+        }
+    }
+
+    private void handlePlayerEnteringSafeZone(PlayerMoveEvent e, Player p) {
+        if (isPlayerChaotic(p)) {
+            preventPlayerEnteringSafeZone(e, p);
+            return;
+        }
+        if (isPlayerInCombat(p)) {
+            preventPlayerLeavingCombatZone(e, p);
+        }
+    }
+
+    private void handleProjectileDamage(EntityDamageByEntityEvent e) {
+        if (((Projectile) e.getDamager()).getShooter() instanceof Player) {
+            Player d = (Player) ((Projectile) e.getDamager()).getShooter();
+            if (!isPlayerChaotic(d)) {
+                if (isPlayerAntiPVP(d)) return;
+                if (isPlayerNeutral(d)) {
+                    resetNeutralTimer(d);
                 } else {
                     setNeutral(d);
                 }
             }
         }
+    }
+
+    private void preventPlayerEnteringSafeZone(PlayerMoveEvent e, Player p) {
+        p.teleport(e.getFrom());
+        sendChaoticMessage(p);
+        ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " enter " + ChatColor.BOLD + "NON-PVP" + ChatColor.RED + " zones with a chaotic alignment.", 3);
+    }
+
+    private void preventPlayerLeavingCombatZone(PlayerMoveEvent e, Player p) {
+        p.teleport(e.getFrom());
+        long combattime = Listeners.combat.get(p.getName());
+        double left = (System.currentTimeMillis() - combattime) / 1000;
+        int time = (int) (10 - Math.round(left));
+        StringUtil.sendCenteredMessage(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat.");
+        StringUtil.sendCenteredMessage(p, ChatColor.GRAY + "Out of combat in: " + ChatColor.BOLD + time + "s");
+        ActionBar.sendActionBar(p, ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " leave a chaotic zone while in combat", 3);
+    }
+
+    private void notifyPlayerEnteredSafeZone(Player p) {
+        StringUtil.sendCenteredMessage(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE (DMG-OFF)***");
+        ActionBar.sendActionBar(p, ChatColor.GREEN.toString() + ChatColor.BOLD + "*** SAFE ZONE ***" + ChatColor.GRAY + " (PVP-OFF) (MONSTERS-OFF)", 2);
+        p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
+    }
+
+    private void notifyPlayerEnteredChaoticZone(Player p) {
+        StringUtil.sendCenteredMessage(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE (PVP-ON)***");
+        ActionBar.sendActionBar(p, ChatColor.RED.toString() + ChatColor.BOLD + "*** CHAOTIC ZONE *** " + ChatColor.GRAY + "(PVP-ON) (MONSTERS-ON)", 2);
+        p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
+    }
+
+    private boolean isPlayerInCombat(Player p) {
+        return Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) <= 10000;
+    }
+
+    private boolean isPlayerAntiPVP(Player p) {
+        return Toggles.getToggles(p.getUniqueId()).contains("Anti PVP");
+    }
+
+    private boolean isPlayerInDuel(Player p) {
+        return Duels.duelers.containsKey(p);
+    }
+
+    private boolean isPlayerNeutral(Player p) {
+        return neutral.containsKey(p.getName());
+    }
+
+    private void resetNeutralTimer(Player p) {
+        neutral.put(p.getName(), NEUTRAL_SECONDS);
+    }
+
+    private void handlePlayerDamage(EntityDamageByEntityEvent e) {
+        Player d = (Player) e.getDamager();
+        if (!isPlayerChaotic(d)) {
+            if (isPlayerAntiPVP(d)) return;
+            if (isPlayerInDuel(d)) return;
+            if (isPlayerNeutral(d)) {
+                resetNeutralTimer(d);
+            } else {
+                setNeutral(d);
+            }
+        }
+    }
+
+    private void kickPlayerFromSafeZone(Player p) {
+        StringUtil.sendCenteredMessage(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.");
+        ActionBar.sendActionBar(p, ChatColor.RED + "The guards have kicked you out of the " + ChatColor.UNDERLINE + "protected area" + ChatColor.RED + " due to your chaotic alignment.", 50);
+        p.teleport(TeleportBooks.generateRandomSpawnPoint(p.getName()));
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -469,7 +506,7 @@ public class Alignments implements Listener {
                             WepTrak.incrementStat(weapon, "pk");
                         }
                     }
-                    if(GuildPlayers.getInstance().get(killer.getUniqueId()) != null) {
+                    if (GuildPlayers.getInstance().get(killer.getUniqueId()) != null) {
                         GuildPlayer guildPlayerKiller = GuildPlayers.getInstance().get(killer.getUniqueId());
                         guildPlayerKiller.setPlayerKills((guildPlayerKiller.getPlayerKills() + 1));
                     }

@@ -24,6 +24,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.inventivetalent.glow.GlowAPI;
 
+
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -157,7 +158,7 @@ public class Respawn implements Listener {
                                 playerList.add(player);
                             }
                         }
-                        me.retrorealms.practiceserver.utils.GlowAPI.setGlowing(item, groupOf(item.getItemStack()));
+                        GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
                     }
                 }
             });

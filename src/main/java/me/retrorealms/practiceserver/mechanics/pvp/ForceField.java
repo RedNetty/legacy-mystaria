@@ -98,31 +98,61 @@ public class ForceField implements Listener {
 
     private Set<Location> getChangedBlocks(Player player) {
         Set<Location> locations = new HashSet<>();
-        if (player == null || (!Listeners.isInCombat(player) && !Alignments.chaotic.containsKey(player.getName()))) {
-            return locations;
-        }
+
+
+        if (player == null) return locations;
+
+        // Do nothing if player is not tagged or chaotic
+        if (!Listeners.isInCombat(player) && !Alignments.chaotic.containsKey(player.getName())) return locations;
 
         // Find the radius around the player
         int r = 10;
         Location l = player.getLocation();
-        IntStream.rangeClosed(-r, r).forEach(x -> {
-            IntStream.rangeClosed(-r, r).forEach(z -> {
-                Location location = l.clone().add(x, 0, z);
-                if (Alignments.isSafeZone(location) && isPvpSurrounding(location)) {
-                    IntStream.range(-r, r).forEach(i -> {
-                        Location loc = location.clone().add(0, i, 0);
-                        if (l.distanceSquared(loc) <= 80 && loc.getBlock().getType().equals(Material.AIR)) {
-                            locations.add(loc);
-                        }
-                    });
-                }
-            });
-        });
+        Location loc1 = l.clone().add(r, 0, r);
+        Location loc2 = l.clone().subtract(r, 0, r);
+        int topBlockX = loc1.getBlockX() < loc2.getBlockX() ? loc2.getBlockX() : loc1.getBlockX();
+        int bottomBlockX = loc1.getBlockX() > loc2.getBlockX() ? loc2.getBlockX() : loc1.getBlockX();
+        int topBlockZ = loc1.getBlockZ() < loc2.getBlockZ() ? loc2.getBlockZ() : loc1.getBlockZ();
+        int bottomBlockZ = loc1.getBlockZ() > loc2.getBlockZ() ? loc2.getBlockZ() : loc1.getBlockZ();
 
+        // Iterate through all blocks surrounding the player
+        for (int x = bottomBlockX; x <= topBlockX; x++) {
+            for (int z = bottomBlockZ; z <= topBlockZ; z++) {
+                // Location corresponding to current loop
+                Location location = new Location(l.getWorld(), (double) x, l.getY(), (double) z);
+
+                // PvP is enabled here, no need to do anything else
+                if (!Alignments.isSafeZone(location)) continue;
+
+                // Check if PvP is enabled in a location surrounding this
+                if (!isPvpSurrounding(location)) continue;
+
+                // Add circular locations
+                for (int i = -r; i < r; i++) {
+                    Location loc = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
+                    loc.setY(loc.getY() + i);
+
+                    if (l.distanceSquared(loc) > 80) continue;
+
+                    // Do nothing if the block at the location is not air
+                    if (!loc.getBlock().getType().equals(Material.AIR)) continue;
+
+                    // Add this location to locations
+                    locations.add(new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
+                }
+            }
+        }
         return locations;
     }
 
     private boolean isPvpSurrounding(Location loc) {
-        return Arrays.stream(ALL_DIRECTIONS.toArray()).anyMatch(direction -> !Alignments.isSafeZone(loc.getBlock().getRelative((BlockFace) direction).getLocation()));
+        for (BlockFace direction : ALL_DIRECTIONS) {
+            if (!Alignments.isSafeZone(loc.getBlock().getRelative(direction).getLocation())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
+

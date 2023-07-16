@@ -27,7 +27,7 @@ public class SQLCreate {
                     + "T4Kills INT,"
                     + "T5Kills INT,"
                     + "T6Kills INT,"
-                    + "Deaths INT,"
+                    + "GlowAPI.Color.s INT,"
                     + "PlayerKills INT,"
                     + "OreMined INT,"
                     + "ChestsOpened INT,"

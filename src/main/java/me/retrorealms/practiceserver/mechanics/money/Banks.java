@@ -10,6 +10,7 @@ import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
+import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -241,16 +242,18 @@ public class Banks implements Listener {
                 for (int i = 0; i < this.withdraw.size(); ++i) {
                     this.withdraw.remove(p.getName());
                 }
-                p.sendMessage(ChatColor.RED + "Withdraw operation - " + ChatColor.BOLD + "CANCELLED");
+                StringUtil.sendCenteredMessage(p,ChatColor.RED + "Withdraw operation - " + ChatColor.BOLD + "CANCELLED");
                 return;
             }
             int amt = 0;
             try {
                 amt = Integer.parseInt(message);
                 if (amt > Economy.getBalance(p.getUniqueId())) {
-                    p.sendMessage(ChatColor.GRAY + "You cannot withdraw more GEMS than you have stored.");
+                    StringUtil.spacer(p);
+                    StringUtil.sendCenteredMessage(p,ChatColor.GRAY + "You cannot withdraw more GEMS than you have stored.");
                 } else if (amt <= 0) {
-                    p.sendMessage(ChatColor.RED + "You must enter a POSIVIVE amount.");
+                    StringUtil.spacer(p);
+                    StringUtil.sendCenteredMessage(p,ChatColor.RED + "You must enter a POSITIVE amount.");
                 } else {
                     for (int j = 0; j < this.withdraw.size(); ++j) {
                         this.withdraw.remove(p.getName());
@@ -259,13 +262,14 @@ public class Banks implements Listener {
                     if (p.getInventory().firstEmpty() != -1) {
                         p.getInventory().setItem(p.getInventory().firstEmpty(), Money.createBankNote(amt));
                     }
-                    p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD)
-                            .append("New Balance: ").append(ChatColor.GREEN)
-                            .append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)").toString());
+                    StringUtil.spacer(p);
+                    StringUtil.sendCenteredMessage(p, "&c-" + amt + "&c&lG &7➜ Your Bank" );
+                    StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + " &aGEM(s)");
                     p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FLAP, 1.0f, 1.2f);
                 }
             } catch (NumberFormatException ex) {
-                p.sendMessage(ChatColor.RED
+                StringUtil.spacer(p);
+                StringUtil.sendCenteredMessage(p,ChatColor.RED
                         + "Please enter a NUMBER, the amount you'd like to WITHDRAW from your bank account. Or type 'cancel' to void the withdrawl.");
             }
         }
@@ -296,14 +300,15 @@ public class Banks implements Listener {
         if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
             if (e.getClick() == ClickType.RIGHT && e.getSlot() == banksize - 5) {
                 e.setCancelled(true);
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD)
+                StringUtil.spacer(p);
+                StringUtil.sendCenteredMessage(p, new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD)
                         .append("Current Balance: ").append(ChatColor.GREEN)
                         .append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)").toString());
                 for (int i = 0; i < this.withdraw.size(); ++i) {
                     this.withdraw.remove(p.getName());
                 }
                 this.withdraw.add(p.getName());
-                p.sendMessage(ChatColor.GRAY
+                StringUtil.sendCenteredMessage(p,ChatColor.GRAY
                         + "Please enter the amount you'd like To CONVERT into a gem note. Alternatively, type "
                         + ChatColor.RED + "'cancel'" + ChatColor.GRAY + " to void this operation.");
                 new BukkitRunnable() {
@@ -329,7 +334,8 @@ public class Banks implements Listener {
                 PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
                 p.closeInventory();
                 if (page + 1 > pp.bankpages) {
-                    p.sendMessage(ChatColor.RED + "You do not have access to that many bank pages.");
+                    StringUtil.spacer(p);
+                    StringUtil.sendCenteredMessage(p,ChatColor.RED + "You do not have access to that many bank pages.");
                     e.setCancelled(true);
                     return;
                 }
@@ -356,11 +362,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 e.setCurrentItem(null);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
@@ -377,11 +381,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 e.setCurrentItem(null);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
@@ -406,11 +408,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 GemPouches.setPouchBal(e.getCurrentItem(), 0);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
@@ -427,11 +427,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 e.setCursor(null);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
@@ -448,11 +446,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 e.setCursor(null);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
@@ -473,11 +469,9 @@ public class Banks implements Listener {
                 p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                 e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
                 p.updateInventory();
-                p.sendMessage(new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD).append("+")
-                        .append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN).append(ChatColor.BOLD).append("G")
-                        .append(ChatColor.GREEN).append(", ").append(ChatColor.BOLD).append("New Balance: ")
-                        .append(ChatColor.GREEN).append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)")
-                        .toString());
+                StringUtil.clearChat(p);
+                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
+                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
                 GemPouches.setPouchBal(e.getCursor(), 0);
                 if (!PracticeServer.DATABASE) {
                     nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));

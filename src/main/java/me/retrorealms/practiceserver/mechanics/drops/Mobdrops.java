@@ -12,10 +12,7 @@ import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.utils.JSONMessage;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.EntityEffect;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -26,6 +23,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.inventivetalent.glow.GlowAPI;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +124,8 @@ public class Mobdrops implements Listener {
         if (livingEntity != null && livingEntity.hasMetadata("name")) {
             name = livingEntity.getMetadata("name").get(0).asString();
         }
-        String message = ChatColor.RED + name + ChatColor.YELLOW + " has dropped " + "@i@";
+        if(is.getType() == Material.BOOK) return;
+        String message = ChatColor.getLastColors(name) + "➤   " + ChatColor.RED + name + ChatColor.YELLOW + " has dropped " + "@i@";
         if (livingEntity == null) {
             message = StringUtil.getCenteredMessage(ChatColor.RED + "                      ➤" + ChatColor.YELLOW + " You have received " + "@i@" + ChatColor.YELLOW + " from the World-Boss");
         }
@@ -147,7 +146,8 @@ public class Mobdrops implements Listener {
             hoveredChat.addAll(meta.getLore());
         JSONMessage normal = new JSONMessage("");
 
-        normal.addText(ChatColor.RESET + before + "");
+        String centered = StringUtil.getCentered(before + " SHOW.");
+        normal.addText(ChatColor.RESET + centered + before + "");
         normal.addHoverText(hoveredChat, ChatColor.BOLD + ChatColor.UNDERLINE.toString() + "SHOW");
         normal.addText(ChatColor.RED + ".");
         normal.sendToPlayer(killer);
@@ -316,7 +316,10 @@ public class Mobdrops implements Listener {
                         if (is2.getType() == Material.JACK_O_LANTERN)
                             return;
                         Item item = DropPriority.DropItem(player, s, s.getLocation(), is2);
-                        me.retrorealms.practiceserver.utils.GlowAPI.setGlowing(item, groupOf(item.getItemStack()));
+                        GlowAPI.Color color = groupOf(is2);
+                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+                        //GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
                     } else if (!MobHandler.isCustomNamedElite(s) && !elite) {
                         final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
                         ItemStack[] armorContents;
@@ -356,7 +359,10 @@ public class Mobdrops implements Listener {
                         if (is2.getType() == Material.JACK_O_LANTERN)
                             return;
                         Item item = DropPriority.DropItem(player, s, s.getLocation(), is2);
-                        me.retrorealms.practiceserver.utils.GlowAPI.setGlowing(item, groupOf(item.getItemStack()));
+                        GlowAPI.Color color = groupOf(is2);
+                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+                        GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
 
                     } else if (s.hasMetadata("type")) { // Named Elite Drops
                         final String type = s.getMetadata("type").get(0).asString();
@@ -368,8 +374,10 @@ public class Mobdrops implements Listener {
                         if (is.getType() == Material.JACK_O_LANTERN)
                             return;
                         Item itemDrop = DropPriority.DropItem(player, s, s.getLocation(), is);
-
-                        me.retrorealms.practiceserver.utils.GlowAPI.setGlowing(itemDrop, groupOf(itemDrop.getItemStack()));
+                        GlowAPI.Color color = groupOf(is);
+                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+                        GlowAPI.setGlowing(itemDrop, groupOf(itemDrop.getItemStack()), Bukkit.getOnlinePlayers());
                     }
                 }
             }

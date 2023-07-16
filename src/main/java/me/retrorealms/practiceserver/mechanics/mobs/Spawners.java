@@ -71,7 +71,7 @@ public class Spawners implements Listener {
     static boolean isPlayerNearby(final Location loc) {
         for (final Player p : Bukkit.getOnlinePlayers()) {
             if (p.getWorld() == loc.getWorld()) {
-                if (p.getLocation().distanceSquared(loc) < 680.0) {
+                if (p.getLocation().distanceSquared(loc) < 640.0) {
                     return true;
                 }
             }
@@ -943,7 +943,7 @@ public class Spawners implements Listener {
                             }
                             final Location loc = Spawners.mobs.get(s);
                             final Location newloc = s.getLocation();
-                            if (loc.distance(newloc) <= (Mobs.isGolemBoss(s) || MobHandler.isWorldBoss(s) ? 45 : 32)) {
+                            if (loc.distance(newloc) <= (Mobs.isGolemBoss(s) || MobHandler.isWorldBoss(s) ? 45 : 30)) {
                                 continue;
                             }
                             s.setFallDistance(0.0f);
@@ -951,7 +951,7 @@ public class Spawners implements Listener {
                             int distance = (int)loc.distance(newloc);
                             int MAX_DISTANCE = 30;
                             if(isElite(s)) MAX_DISTANCE = 35;
-                            if(MobHandler.isCustomNamedElite(s) || MobHandler.isWorldBoss(s)) MAX_DISTANCE = 35;
+                            if(MobHandler.isCustomNamedElite(s) || MobHandler.isWorldBoss(s)) MAX_DISTANCE = 45;
 
                             if(distance > MAX_DISTANCE) {
                                 Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, s.getLocation().clone().add(0.0, 0.15, 0.0), 20);

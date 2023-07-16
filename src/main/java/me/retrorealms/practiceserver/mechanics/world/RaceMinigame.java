@@ -36,12 +36,14 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class RaceMinigame implements Listener {
     // made this sleep-deprived at 2am but with love
     // Map to store blocks and their original materials for restoration
-    private final HashMap<Block, Material> blocksToReplace = new HashMap<>();
+    private final Map<Block, Material> blocksToReplace = new ConcurrentHashMap<>();
 
     private WorldBorder worldBorder;
     private Random random;
@@ -53,8 +55,8 @@ public class RaceMinigame implements Listener {
     private int shrinkTime; // Time in seconds to shrink the border
 
     private List<String> regionNames;
-    private List<UUID> playersTotal;
-    private List<UUID> playersLeft;
+    private final List<UUID> playersTotal = new CopyOnWriteArrayList<>();
+    private final List<UUID> playersLeft = new CopyOnWriteArrayList<>();
     private MinigameState gameState;
 
     /**
@@ -71,8 +73,6 @@ public class RaceMinigame implements Listener {
         regionNames = new ArrayList<>(); // Add your defined region names here
         gameState = MinigameState.NONE;
 
-        playersTotal = new ArrayList<>();
-        playersLeft = new ArrayList<>();
         regionNames.add("race");
         regionNames.add("race1");
         regionNames.add("race2");
@@ -108,7 +108,7 @@ public class RaceMinigame implements Listener {
      * @param player The player to initialize.
      */
     public void initializePlayer(Player player) {
-        if (player instanceof NPC)
+        if (player instanceof NPC || player.getUniqueId() == null)
             return;
 
         if (!playersTotal.contains(player.getUniqueId())) {
@@ -122,7 +122,7 @@ public class RaceMinigame implements Listener {
             SQLMain.updatePersistentStats(player);
 
             // Deals with clearing normal wipe items temporarily
-            Horses.horseTier.put(player, 3);
+            if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
             Alignments.setLawful(player);
 
             player.getInventory().clear();
@@ -144,17 +144,23 @@ public class RaceMinigame implements Listener {
      * @param player The player to eliminate.
      */
     public void eliminatePlayer(Player player) {
-        if (!playersLeft.contains(player.getUniqueId()))
-            return;
+        synchronized (playersLeft) {
+            if (!playersLeft.contains(player.getUniqueId()))
+                return;
 
-        playersLeft.removeIf(uuid -> Bukkit.getPlayer(uuid) == null || Bukkit.getPlayer(uuid).getGameMode() == GameMode.SPECTATOR || Bukkit.getPlayer(uuid).isDead() || !Bukkit.getPlayer(uuid).isOnline());
-        Alignments.setLawful(player);
-        player.getWorld().strikeLightningEffect(player.getLocation());
-        removePlayer(player);
-        StringUtil.broadcastCentered("&c>>> " + player.getName() + " has been eliminated.");
-        StringUtil.broadcastCentered("&7" + playersLeft.size() + " player(s) remaining.");
+            playersLeft.removeIf(uuid -> Bukkit.getPlayer(uuid) == null || Bukkit.getPlayer(uuid).getGameMode() == GameMode.SPECTATOR || Bukkit.getPlayer(uuid).isDead() || !Bukkit.getPlayer(uuid).isOnline());
+            Alignments.setLawful(player);
+            player.getWorld().strikeLightningEffect(player.getLocation());
+            removePlayer(player);
+            if(player.getKiller() != null) {
+                StringUtil.broadcastCentered("&c>>> " + player.getName() + " has been eliminated by " + player.getKiller().getName() + ".");
+            }else{
+                StringUtil.broadcastCentered("&c>>> " + player.getName() + " has been eliminated.");
+            }
+            StringUtil.broadcastCentered("&7" + playersLeft.size() + " player(s) remaining.");
 
-        checkWinner();
+            checkWinner();
+        }
     }
 
 
@@ -173,6 +179,7 @@ public class RaceMinigame implements Listener {
      * Starts the lobby phase of the race mini-game.
      */
     public void startLobby() {
+        Parties.clearParties();
         Bukkit.getServer().getWorld("jew").getEntities().forEach(entity -> {
             if (entity instanceof Item)
                 entity.remove();
@@ -243,10 +250,9 @@ public class RaceMinigame implements Listener {
         // Get the world and region associated with the random region name
         World world = Bukkit.getWorld("jew"); // Replace with your world name
         RegionManager regionManager = WorldGuardPlugin.inst().getRegionManager(world);
-
-
-        if (regionManager.getRegion(randomRegionName) != null)
-            worldBorder.setCenter(getRandomLocation(world, regionManager.getRegion(randomRegionName)));
+        if (regionManager != null && regionManager.getRegion(randomRegionName) != null) {
+            worldBorder.setCenter(getRandomLocation(world, Objects.requireNonNull(regionManager.getRegion(randomRegionName))));
+        }
         new BukkitRunnable() {
             int secondsLeft = preparationTime;
             @Override
@@ -305,30 +311,46 @@ public class RaceMinigame implements Listener {
         worldBorder.setWarningDistance(150);
     }
 
+    public void clearItems() {
+        Bukkit.getScheduler().runTaskAsynchronously(PracticeServer.getInstance(), () -> {
+            World world = Bukkit.getWorld("jew");
+            if (world != null) {
+                world.getEntities().forEach(entity -> {
+                    if (entity instanceof Item)
+                        entity.remove();
+                });
+            }
+        });
+    }
     /**
      * Ends the race minigame.
      */
     public void endRace() {
         gameState = MinigameState.NONE;
-
+        restoreBeaconBlocks();
+        resetBorder();
+        RegionHandler.restoreRegionFlags();
+        clearItems();
+        playersTotal.clear();
+        playersLeft.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {
             player.getInventory().clear();
             player.setGameMode(GameMode.SURVIVAL);
             Alignments.setLawful(player);
             Economy.clearEconomy();
-            PracticeServer.getSQL().loadData(player);
+            new BukkitRunnable(){
+                @Override
+                public void run() {
+                    PracticeServer.getSQL().loadData(player);
+                    Listeners.hpCheck(player);
+                }
+            }.runTaskLater(PracticeServer.getInstance(), 20L);
         });
 
         SQLMain.loadGems();
-        Bukkit.getWorld("jew").getEntities().clear();
         NewMerchant.clearTradeMap();
-        playersTotal.clear();
-        playersLeft.clear();
         Banks.resetTempBanks();
 
-        restoreBeaconBlocks();
-        resetBorder();
-        RegionHandler.restoreRegionFlags();
     }
 
     /**
@@ -379,8 +401,9 @@ public class RaceMinigame implements Listener {
 
 
     public void createLocationBeacon(Location beaconLocation) {
-
-        System.out.println(beaconLocation.getX() + beaconLocation.getZ());
+        if (beaconLocation == null || beaconLocation.getWorld() == null) {
+            return;
+        }
         // Create the beacon block
         Block beaconBlock = Bukkit.getWorld("jew").getBlockAt(getGroundLocation(beaconLocation));
         blocksToReplace.put(beaconBlock, beaconBlock.getType());
@@ -400,24 +423,26 @@ public class RaceMinigame implements Listener {
 
     }
     public void checkWinner() {
-        if (playersLeft.size() <= maxTeamSize) {
-            List<List<Player>> teams = new ArrayList<>();
-            for (UUID uuid : playersLeft) {
-                Player teamPlayer = Bukkit.getPlayer(uuid);
-                if (teamPlayer != null) {
-                    List<Player> team = getTeam(uuid);
-                    boolean teamAlreadyAdded = teams.stream().anyMatch(existingTeam -> new HashSet<>(existingTeam).containsAll(team) && new HashSet<>(team).containsAll(existingTeam));
-                    if (!teamAlreadyAdded) {
-                        teams.add(team);
+        synchronized (playersLeft) {
+            if (playersLeft.size() <= maxTeamSize) {
+                List<List<Player>> teams = new ArrayList<>();
+                for (UUID uuid : playersLeft) {
+                    Player teamPlayer = Bukkit.getPlayer(uuid);
+                    if (teamPlayer != null) {
+                        List<Player> team = getTeam(uuid);
+                        boolean teamAlreadyAdded = teams.stream().anyMatch(existingTeam -> new HashSet<>(existingTeam).containsAll(team) && new HashSet<>(team).containsAll(existingTeam));
+                        if (!teamAlreadyAdded) {
+                            teams.add(team);
+                        }
                     }
                 }
-            }
-            if (teams.size() == 1) {
-                // The remaining players are all on the same team, they are the winners
-                List<Player> winningTeam = teams.get(0);
-                String teamNames = winningTeam.stream().map(Player::getName).collect(Collectors.joining(", "));
-                StringUtil.broadcastCentered("&7>> &e&lRACE &7- The team " + teamNames + " has won the race!");
-                Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), this::endRace, 500L);
+                if (teams.size() == 1) {
+                    // The remaining players are all on the same team, they are the winners
+                    List<Player> winningTeam = teams.get(0);
+                    String teamNames = winningTeam.stream().map(Player::getName).collect(Collectors.joining(", "));
+                    StringUtil.broadcastCentered("&7>> &e&lRACE &7- The team " + teamNames + " has won the race!");
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), this::endRace, 400L);
+                }
             }
         }
     }
@@ -457,6 +482,7 @@ public class RaceMinigame implements Listener {
         for (Block block : blocksToReplace.keySet()) {
             block.setType(blocksToReplace.get(block));
         }
+        blocksToReplace.clear();
     }
     public boolean isPlaying(Player player) {
         return playersLeft.contains(player.getUniqueId());
@@ -490,7 +516,7 @@ public class RaceMinigame implements Listener {
     }
     @EventHandler //events at the bottom because I said so
     public void onDeath(PlayerDeathEvent event) {
-        if (gameState == MinigameState.SHRINK && playersLeft.contains(event.getEntity().getUniqueId())) {
+        if (gameState == MinigameState.SHRINK) {
             Alignments.setLawful(event.getEntity());
             eliminatePlayer(event.getEntity());
         }
@@ -520,16 +546,19 @@ public class RaceMinigame implements Listener {
         }
         if (player.getGameMode().equals(GameMode.SPECTATOR) && gameState != MinigameState.SHRINK)
             player.setGameMode(GameMode.SURVIVAL);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (gameState == MinigameState.SHRINK) {
-                    Alignments.setLawful(player);
-                    removePlayer(player);
-                    player.setGameMode(GameMode.SPECTATOR);
+
+        if (gameState == MinigameState.SHRINK) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (gameState == MinigameState.SHRINK) {
+                        Alignments.setLawful(player);
+                        removePlayer(player);
+                        player.setGameMode(GameMode.SPECTATOR);
+                    }
                 }
-            }
-        }.runTaskLater(PracticeServer.getInstance(), 40L);
+            }.runTaskLater(PracticeServer.getInstance(), 40L);
+        }
     }
 
 }
