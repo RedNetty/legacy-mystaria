@@ -5,6 +5,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
+import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
 import me.retrorealms.practiceserver.mechanics.loot.LootChests;
@@ -18,52 +19,47 @@ import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.vendors.NewMerchant;
 import me.retrorealms.practiceserver.mechanics.world.region.RegionHandler;
+import me.retrorealms.practiceserver.utils.MathUtils;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.NPC;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class RaceMinigame implements Listener {
     // made this sleep-deprived at 2am but with love
     // Map to store blocks and their original materials for restoration
     private final Map<Block, Material> blocksToReplace = new ConcurrentHashMap<>();
-
-    private WorldBorder worldBorder;
-    private Random random;
-
-    // Configuration variables
-    private int preparationTime; // Preparation time in seconds
-    private int lobbyTime;
-    private int maxTeamSize;
-    private int shrinkTime; // Time in seconds to shrink the border
-
-    private List<String> regionNames;
     private final List<UUID> playersTotal = new CopyOnWriteArrayList<>();
     private final List<UUID> playersLeft = new CopyOnWriteArrayList<>();
+    private WorldBorder worldBorder;
+    private Random random;
+    private int preparationTime;
+    private int lobbyTime;
+    private int maxTeamSize;
+    private int shrinkTime;
+    private List<String> regionNames;
     private MinigameState gameState;
 
     /**
      * Called when the plugin is enabled.
      */
     public void onEnable() {
-        // Initialize variables
         random = new Random();
         preparationTime = 15; // Example: 15 minutes
         lobbyTime = 10;
@@ -105,6 +101,7 @@ public class RaceMinigame implements Listener {
 
     /**
      * Initializes the player for the race mini-game.
+     *
      * @param player The player to initialize.
      */
     public void initializePlayer(Player player) {
@@ -122,7 +119,7 @@ public class RaceMinigame implements Listener {
             SQLMain.updatePersistentStats(player);
 
             // Deals with clearing normal wipe items temporarily
-            if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
+            if (!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
             Alignments.setLawful(player);
 
             player.getInventory().clear();
@@ -141,6 +138,7 @@ public class RaceMinigame implements Listener {
 
     /**
      * Eliminates the player from the race mini-game.
+     *
      * @param player The player to eliminate.
      */
     public void eliminatePlayer(Player player) {
@@ -152,9 +150,9 @@ public class RaceMinigame implements Listener {
             Alignments.setLawful(player);
             player.getWorld().strikeLightningEffect(player.getLocation());
             removePlayer(player);
-            if(player.getKiller() != null) {
+            if (player.getKiller() != null) {
                 StringUtil.broadcastCentered("&c>>> " + player.getName() + " has been eliminated by " + player.getKiller().getName() + ".");
-            }else{
+            } else {
                 StringUtil.broadcastCentered("&c>>> " + player.getName() + " has been eliminated.");
             }
             StringUtil.broadcastCentered("&7" + playersLeft.size() + " player(s) remaining.");
@@ -166,6 +164,7 @@ public class RaceMinigame implements Listener {
 
     /**
      * Gets the team of a player. (Just uses parties, may change in future)
+     *
      * @param uuid The UUID of the player.
      * @return The team of the player.
      */
@@ -255,6 +254,7 @@ public class RaceMinigame implements Listener {
         }
         new BukkitRunnable() {
             int secondsLeft = preparationTime;
+
             @Override
             public void run() {
                 if (gameState != MinigameState.PREP) {
@@ -322,6 +322,13 @@ public class RaceMinigame implements Listener {
             }
         });
     }
+
+    public void clearFlags(Player player) {
+        if(Alignments.chaotic.containsKey(player.getName())) Alignments.setLawful(player);
+        Alignments.tagged.remove(player.getName());
+        Listeners.combat.remove(player.getName());
+    }
+
     /**
      * Ends the race minigame.
      */
@@ -334,11 +341,11 @@ public class RaceMinigame implements Listener {
         playersTotal.clear();
         playersLeft.clear();
         Bukkit.getOnlinePlayers().forEach(player -> {
+            clearFlags(player);
             player.getInventory().clear();
             player.setGameMode(GameMode.SURVIVAL);
-            Alignments.setLawful(player);
             Economy.clearEconomy();
-            new BukkitRunnable(){
+            new BukkitRunnable() {
                 @Override
                 public void run() {
                     PracticeServer.getSQL().loadData(player);
@@ -422,6 +429,15 @@ public class RaceMinigame implements Listener {
         }
 
     }
+
+    private void winnerEffects(Player player) {
+        CratesMain.doFirework(player);
+
+        player.getLocation().getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(0, 2.5, 0), 25, .13, .13, .13, -0.0025);
+
+
+    }
+
     public void checkWinner() {
         synchronized (playersLeft) {
             if (playersLeft.size() <= maxTeamSize) {
@@ -441,11 +457,29 @@ public class RaceMinigame implements Listener {
                     List<Player> winningTeam = teams.get(0);
                     String teamNames = winningTeam.stream().map(Player::getName).collect(Collectors.joining(", "));
                     StringUtil.broadcastCentered("&7>> &e&lRACE &7- The team " + teamNames + " has won the race!");
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), this::endRace, 400L);
+                    new BukkitRunnable() {
+                        int timesToRun = 10;
+
+                        @Override
+                        public void run() {
+                            for (Player player : winningTeam) {
+                                clearFlags(player);
+                                if (timesToRun >= 1) {
+                                    winnerEffects(player);
+                                    timesToRun--;
+                                }
+                                if (timesToRun <= 0) {
+                                    cancel();
+                                }
+                            }
+                        }
+                    }.runTaskTimer(PracticeServer.getInstance(), 0, 5L);
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), this::endRace, 120L);
                 }
             }
         }
     }
+
     private Location getRandomLocation(World world, ProtectedRegion region) {
         // Generate random X and Z coordinates within the region bounds
         int randomX = random.nextInt(region.getMaximumPoint().getBlockX() - region.getMinimumPoint().getBlockX()) + region.getMinimumPoint().getBlockX();
@@ -463,11 +497,13 @@ public class RaceMinigame implements Listener {
         worldBorder.setWarningDistance(155);
         worldBorder.setSize(3500);
     }
+
     public int getZoneDamage(Player player) {
         int dmg = (int) (player.getMaxHealth() * 0.01);
         if (dmg <= 1) dmg = 3;
         return dmg;
     }
+
     public void addPlayer(Player player) {
         if (isPlaying(player)) return;
         playersLeft.add(player.getUniqueId());
@@ -484,12 +520,15 @@ public class RaceMinigame implements Listener {
         }
         blocksToReplace.clear();
     }
+
     public boolean isPlaying(Player player) {
         return playersLeft.contains(player.getUniqueId());
     }
+
     public Location getGroundLocation(Location location) {
         return location.getWorld().getHighestBlockAt(location).getLocation().add(0, -1, 0);
     }
+
     public void setLobbyTime(int lobbyTime) {
         this.lobbyTime = lobbyTime;
     }
@@ -514,6 +553,7 @@ public class RaceMinigame implements Listener {
     public MinigameState getGameState() {
         return gameState;
     }
+
     @EventHandler //events at the bottom because I said so
     public void onDeath(PlayerDeathEvent event) {
         if (gameState == MinigameState.SHRINK) {
@@ -524,7 +564,8 @@ public class RaceMinigame implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        if(!event.getPlayer().getInventory().contains(Material.SADDLE) && gameState != MinigameState.NONE) event.getPlayer().getInventory().addItem(Horses.createMount(3, false));
+        if (!event.getPlayer().getInventory().contains(Material.SADDLE) && gameState != MinigameState.NONE)
+            event.getPlayer().getInventory().addItem(Horses.createMount(3, false));
         if (gameState == MinigameState.SHRINK) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
         }

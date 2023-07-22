@@ -1,5 +1,6 @@
 package me.retrorealms.practiceserver.utils;
 
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -99,7 +100,23 @@ public class MathUtils {
     static public final float cosDeg(float degrees) {
         return Sin.table[(int) ((degrees + 90) * degToIndex) & SIN_MASK];
     }
-
+    public static Color getRandomColor() {
+        Random random = new Random();
+        int colors = random.nextInt(12);
+        switch (colors) {
+            case 0: return Color.YELLOW;
+            case 1: return Color.BLUE;
+            case 2: return Color.PURPLE;
+            case 4: return Color.OLIVE;
+            case 5: return Color.MAROON;
+            case 6: return Color.RED;
+            case 7: return Color.AQUA;
+            case 8: return Color.WHITE;
+            case 9: return Color.FUCHSIA;
+            case 10: return Color.LIME;
+            default: return Color.ORANGE;
+        }
+    }
     static public final int ATAN2_BITS = 7; // Adjust for accuracy.
 
     static public final int ATAN2_BITS2 = ATAN2_BITS << 1;

@@ -343,6 +343,10 @@ public class Damage implements Listener {
 		if (event.getDamage() <= 0) {
 			return;
 		}
+		if (event.getDamager().getType() == EntityType.FIREWORK || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+			event.setDamage(0);
+			event.setCancelled(true);
+		}
 
 		try {
 			if (event.getEntity() instanceof LivingEntity && event.getDamager() instanceof Player) {

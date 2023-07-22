@@ -14,6 +14,7 @@ import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGenerator;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
+import me.retrorealms.practiceserver.utils.MathUtils;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import me.retrorealms.practiceserver.utils.item.ItemGenerator;
@@ -53,8 +54,8 @@ public class CratesMain implements Listener {
         FireworkMeta fwm = fw.getFireworkMeta();
         FireworkEffect effect = FireworkEffect.builder()
                 .flicker(false)
-                .withColor(Color.YELLOW)
-                .withFade(Color.YELLOW)
+                .withColor(MathUtils.getRandomColor())
+                .withFade(MathUtils.getRandomColor())
                 .with(FireworkEffect.Type.BURST)
                 .trail(true)
                 .build();

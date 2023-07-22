@@ -190,198 +190,239 @@ public class Mobdrops implements Listener {
 
     @EventHandler
     public void onMobDeath(final EntityDamageByEntityEvent e) {
-        if (MobHandler.isMobOnly(e.getEntity())) {
-            final LivingEntity s = (LivingEntity) e.getEntity();
-            Entity player = e.getDamager();
-            if (bugFix.contains(s)) {
-                return;
+        Entity damager = e.getDamager();
+        Entity entity = e.getEntity();
+
+        if (MobHandler.isMobOnly(entity)) {
+            handleMobDeath((LivingEntity) entity, damager, e);
+        }
+    }
+
+    private void handleMobDeath(LivingEntity entity, Entity damager, EntityDamageByEntityEvent e) {
+        if (bugFix.contains(entity)) {
+            return;
+        }
+
+        if (MobHandler.mobsHandIsWeapon(entity, e.getDamage())) {
+            entity.playEffect(EntityEffect.DEATH);
+            entity.remove();
+            bugFix.add(entity);
+
+            Random random = new Random();
+            int gems = random.nextInt(2) + 1;
+            boolean dodrop = false;
+            boolean elite = false;
+            int randomEliteDrop = ThreadLocalRandom.current().nextInt(80);
+            int dropRate = ThreadLocalRandom.current().nextInt(100);
+            int cratedrop = random.nextInt(50);
+
+            if (entity.getEquipment().getItemInMainHand().getItemMeta().hasEnchants()) {
+                elite = true;
             }
-            if (MobHandler.mobsHandIsWeapon(s, e.getDamage())) {
-                s.playEffect(EntityEffect.DEATH);
-                s.remove();
-                bugFix.add(s);
-                final Random random = new Random();
-                final int gems = random.nextInt(2) + 1;
-                int gemamt = gemDrop(MobHandler.getTier(s));
-                boolean dodrop = false;
-                boolean elite = false;
-                int randomEliteDrop = ThreadLocalRandom.current().nextInt(80);
-                int dropRate = ThreadLocalRandom.current().nextInt(100);
-                final int cratedrop = random.nextInt(50);
-                if (s.getEquipment().getItemInMainHand().getItemMeta().hasEnchants()) {
-                    elite = true;
-                }
-                //TODO Loot Buff improvement
-                if (MobHandler.getTier(s) == 5) {
-                    WorldBossHandler.addKill();
-                }
-                switch (MobHandler.getTier(s)) {
-                    case 1:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                T1RATES, 10, T1RATES - 5, 150);
-                        break;
-                    case 2:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                T2RATES, 7, T2RATES - 5, 100);
-                        break;
-                    case 3:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                T3RATES, 7, T3RATES - 2, 75);
-                        break;
-                    case 4:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                T4RATES, 3, T4RATES - 2, 50);
-                        break;
-                    case 5:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                T5RATES, 1, T5RATES - 2, 30);
-                        if (Mobs.isGolemBoss(s) && dropRate < 50) {
-                            dodrop = true;
-                        }
-                        break;
-                    case 6:
-                        dodrop = setDropRate(player, s, elite, dropRate, cratedrop,
-                                40, 1, 20, 8);
-                        if (Mobs.isGolemBoss(s) && dropRate < 30) {
-                            dodrop = true;
-                        }
-                        break;
-                }
-                int scrollChance = ThreadLocalRandom.current().nextInt(4);
-                if (scrollChance == 1) {
-                    DropPriority.DropItem(player, s, s.getLocation().clone().add(0, 1, 0), getBookDrop(MobHandler.getTier(s)));
-                }
-                //Gem Drops
-                if (gems == 1) {
-                    ItemStack itemStack = Money.makeGems(1);
-                    itemStack.setAmount(gemDrop(MobHandler.getTier(s)));
-                    DropPriority.DropItem(player, s, s.getLocation().clone().add(0, 1, 0), itemStack);
-                    DropPriority.DropItem(player, s, s.getLocation().clone().add(0, 1, 0), itemStack);
-                    DropPriority.DropItem(player, s, s.getLocation().clone().add(0, 1, 0), itemStack);
-                }
 
-                //Elite Random Drops
-                if (elite && MobHandler.isCustomNamedElite(s)) {
-                    if (randomEliteDrop <= 20) {
-                        ItemStack protScroll = ItemAPI.getScrollGenerator().next(MobHandler.getTier(s) - 1).clone();
-                        DropPriority.DropItem(player, s, s.getLocation().clone().add(0, 1, 0), protScroll);
+            // TODO: Loot Buff improvement
+            if (MobHandler.getTier(entity) == 5) {
+                WorldBossHandler.addKill();
+            }
+
+            switch (MobHandler.getTier(entity)) {
+                case 1:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            T1RATES, 10, T1RATES - 5, 150);
+                    break;
+                case 2:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            T2RATES, 7, T2RATES - 5, 100);
+                    break;
+                case 3:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            T3RATES, 7, T3RATES - 2, 75);
+                    break;
+                case 4:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            T4RATES, 3, T4RATES - 2, 50);
+                    break;
+                case 5:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            T5RATES, 1, T5RATES - 2, 30);
+                    if (Mobs.isGolemBoss(entity) && dropRate < 50) {
+                        dodrop = true;
                     }
+                    break;
+                case 6:
+                    dodrop = setDropRate(damager, entity, elite, dropRate, cratedrop,
+                            40, 1, 20, 8);
+                    if (Mobs.isGolemBoss(entity) && dropRate < 30) {
+                        dodrop = true;
+                    }
+                    break;
+            }
+
+            int scrollChance = ThreadLocalRandom.current().nextInt(4);
+            if (scrollChance == 1) {
+                DropPriority.DropItem(damager, entity, entity.getLocation().clone().add(0, 1, 0), getBookDrop(MobHandler.getTier(entity)));
+            }
+
+            // Gem Drops
+            if (gems == 1) {
+                ItemStack itemStack = Money.makeGems(1);
+                itemStack.setAmount(gemDrop(MobHandler.getTier(entity)));
+                DropPriority.DropItem(damager, entity, entity.getLocation().clone().add(0, 1, 0), itemStack);
+                DropPriority.DropItem(damager, entity, entity.getLocation().clone().add(0, 1, 0), itemStack);
+                DropPriority.DropItem(damager, entity, entity.getLocation().clone().add(0, 1, 0), itemStack);
+            }
+
+            // Elite Random Drops
+            if (elite && MobHandler.isCustomNamedElite(entity)) {
+                if (randomEliteDrop <= 20) {
+                    ItemStack protScroll = ItemAPI.getScrollGenerator().next(MobHandler.getTier(entity) - 1).clone();
+                    DropPriority.DropItem(damager, entity, entity.getLocation().clone().add(0, 1, 0), protScroll);
+                }
+            }
+
+            if (MobHandler.isWorldBoss(entity)) {
+                dodrop = true;
+            }
+
+            // Normal Mob Drops
+            if (dodrop) {
+                if (MobHandler.isWorldBoss(entity)) {
+                    WorldBossHandler.getActiveBoss().explodeDrops(entity);
+                    return;
                 }
 
-                if (MobHandler.isWorldBoss(s)) {
-                    dodrop = true;
-                }
-                //Normal Mob Drops
-                if (dodrop) {
-                    if (MobHandler.isWorldBoss(s)) {
-                        WorldBossHandler.getActiveBoss().explodeDrops(s);
-                        return;
-                    }
-                    if (!MobHandler.isCustomNamedElite(s) && elite) {
-                        final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
-                        if (s instanceof Skeleton) {
-                            if (s.getEquipment().getHelmet() == null || s.getEquipment().getHelmet().getType() == Material.SKULL_ITEM) {
-                                drops.add(Drops.createDrop(Mobs.getMobTier(s), 5));
-                            }
-                        }
-                        ItemStack[] armorContents;
-                        for (int j = 0; j < 2; j++) {
-                            drops.add(s.getEquipment().getItemInMainHand());
-                        }
-                        for (int length = (armorContents = s.getEquipment()
-                                .getArmorContents()).length, i = 0; i < length; ++i) {
-                            final ItemStack is = armorContents[i];
-                            if (is != null && is.getType() != Material.AIR && is.hasItemMeta()
-                                    && is.getItemMeta().hasLore()) {
-                                drops.add(is);
-
-                            }
-                        }
-                        int piece = 0;
-                        if (drops.size() > 1)
-                            piece = random.nextInt(drops.size());
-                        final ItemStack is2 = drops.get(piece);
-                        if (is2.getItemMeta().hasEnchants()
-                                && is2.getItemMeta().hasEnchant(Enchantment.LOOT_BONUS_MOBS)) {
-                            is2.removeEnchantment(Enchantment.LOOT_BONUS_MOBS);
-                        }
-                        short dura = (short) -1;
-                        if (dura == 0) {
-                            dura = 1;
-                        }
-                        if (dura == is2.getType().getMaxDurability()) {
-                            dura = (short) -1;
-                        }
-                        is2.setDurability((short) 0);
-                        if (is2.getType() == Material.JACK_O_LANTERN)
-                            return;
-                        Item item = DropPriority.DropItem(player, s, s.getLocation(), is2);
-                        GlowAPI.Color color = groupOf(is2);
-                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
-                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
-                        //GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
-                    } else if (!MobHandler.isCustomNamedElite(s) && !elite) {
-                        final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
-                        ItemStack[] armorContents;
-                        if (s instanceof Skeleton) {
-                            if (s.hasMetadata("type") && s.getMetadata("type").get(0).asString().equals("witherskeleton"))
-                                drops.add(Drops.createDrop(Mobs.getMobTier(s), 5));
-                        }
-                        for (int j = 0; j < 2; j++) {
-                            drops.add(s.getEquipment().getItemInMainHand());
-                        }
-
-
-                        for (int length = (armorContents = s.getEquipment()
-                                .getArmorContents()).length, i = 0; i < length; ++i) {
-                            final ItemStack is = armorContents[i];
-                            if (is != null && is.getType() != Material.AIR && is.hasItemMeta()
-                                    && is.getItemMeta().hasLore()) {
-                                drops.add(is);
-                            }
-                        }
-                        int piece = 0;
-                        if (drops.size() > 1)
-                            piece = random.nextInt(drops.size());
-                        final ItemStack is2 = drops.get(piece);
-                        if (is2.getItemMeta().hasEnchants()
-                                && is2.getItemMeta().hasEnchant(Enchantment.LOOT_BONUS_MOBS)) {
-                            is2.removeEnchantment(Enchantment.LOOT_BONUS_MOBS);
-                        }
-                        short dura = (short) -1;
-                        if (dura == 0) {
-                            dura = 1;
-                        }
-                        if (dura == is2.getType().getMaxDurability()) {
-                            dura = (short) -1;
-                        }
-                        is2.setDurability((short) 0);
-                        if (is2.getType() == Material.JACK_O_LANTERN)
-                            return;
-                        Item item = DropPriority.DropItem(player, s, s.getLocation(), is2);
-                        GlowAPI.Color color = groupOf(is2);
-                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
-                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
-                        GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
-
-                    } else if (s.hasMetadata("type")) { // Named Elite Drops
-                        final String type = s.getMetadata("type").get(0).asString();
-                        ItemStack is;
-                        if (type.equalsIgnoreCase("krampus") || type.equalsIgnoreCase("warden") || type.equalsIgnoreCase("weakSkeletonEntity") || type.equalsIgnoreCase("bossSkeletonDungeon")) {
-                            is = EliteDrops.createCustomDungeonDrop(type, new Random().nextInt(8) + 1);
-                        } else
-                            is = EliteDrops.createCustomEliteDrop(type);
-                        if (is.getType() == Material.JACK_O_LANTERN)
-                            return;
-                        Item itemDrop = DropPriority.DropItem(player, s, s.getLocation(), is);
-                        GlowAPI.Color color = groupOf(is);
-                        if(color == GlowAPI.Color.AQUA) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
-                        if(color == GlowAPI.Color.YELLOW) player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
-                        GlowAPI.setGlowing(itemDrop, groupOf(itemDrop.getItemStack()), Bukkit.getOnlinePlayers());
-                    }
+                if (!MobHandler.isCustomNamedElite(entity) && elite) {
+                    handleEliteDrops(damager, entity);
+                } else if (!MobHandler.isCustomNamedElite(entity) && !elite) {
+                    handleNormalDrops(damager, entity);
+                } else if (entity.hasMetadata("type")) { // Named Elite Drops
+                    final String type = entity.getMetadata("type").get(0).asString();
+                    handleCustomEliteDrops(damager, entity, type);
                 }
             }
         }
+    }
+
+    private void handleEliteDrops(Entity damager, LivingEntity entity) {
+        Random random = ThreadLocalRandom.current();
+        final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+        if (entity instanceof Skeleton) {
+            if (entity.getEquipment().getHelmet() == null || entity.getEquipment().getHelmet().getType() == Material.SKULL_ITEM) {
+                drops.add(Drops.createDrop(Mobs.getMobTier(entity), 5));
+            }
+        }
+
+        ItemStack[] armorContents;
+        for (int j = 0; j < 2; j++) {
+            drops.add(entity.getEquipment().getItemInMainHand());
+        }
+
+        for (int length = (armorContents = entity.getEquipment().getArmorContents()).length, i = 0; i < length; ++i) {
+            final ItemStack is = armorContents[i];
+            if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+                drops.add(is);
+            }
+        }
+
+        int piece = 0;
+        if (drops.size() > 1)
+            piece = random.nextInt(drops.size());
+        final ItemStack is2 = drops.get(piece);
+        if (is2.getItemMeta().hasEnchants() && is2.getItemMeta().hasEnchant(Enchantment.LOOT_BONUS_MOBS)) {
+            is2.removeEnchantment(Enchantment.LOOT_BONUS_MOBS);
+        }
+        short dura = (short) -1;
+        if (dura == 0) {
+            dura = 1;
+        }
+        if (dura == is2.getType().getMaxDurability()) {
+            dura = (short) -1;
+        }
+        is2.setDurability((short) 0);
+        if (is2.getType() == Material.JACK_O_LANTERN)
+            return;
+
+        Item item = DropPriority.DropItem(damager, entity, entity.getLocation(), is2);
+        GlowAPI.Color color = groupOf(is2);
+        if (color == GlowAPI.Color.AQUA) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+        }
+        if (color == GlowAPI.Color.YELLOW) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+        }
+        //GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
+    }
+
+    private void handleNormalDrops(Entity damager, LivingEntity entity) {
+        Random random = ThreadLocalRandom.current();
+        final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+        ItemStack[] armorContents;
+        if (entity instanceof Skeleton) {
+            if (entity.hasMetadata("type") && entity.getMetadata("type").get(0).asString().equals("witherskeleton")) {
+                drops.add(Drops.createDrop(Mobs.getMobTier(entity), 5));
+            }
+        }
+
+        for (int j = 0; j < 2; j++) {
+            drops.add(entity.getEquipment().getItemInMainHand());
+        }
+
+        for (int length = (armorContents = entity.getEquipment().getArmorContents()).length, i = 0; i < length; ++i) {
+            final ItemStack is = armorContents[i];
+            if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+                drops.add(is);
+            }
+        }
+
+        int piece = 0;
+        if (drops.size() > 1)
+            piece = random.nextInt(drops.size());
+        final ItemStack is2 = drops.get(piece);
+        if (is2.getItemMeta().hasEnchants() && is2.getItemMeta().hasEnchant(Enchantment.LOOT_BONUS_MOBS)) {
+            is2.removeEnchantment(Enchantment.LOOT_BONUS_MOBS);
+        }
+        short dura = (short) -1;
+        if (dura == 0) {
+            dura = 1;
+        }
+        if (dura == is2.getType().getMaxDurability()) {
+            dura = (short) -1;
+        }
+        is2.setDurability((short) 0);
+        if (is2.getType() == Material.JACK_O_LANTERN)
+            return;
+
+        Item item = DropPriority.DropItem(damager, entity, entity.getLocation(), is2);
+        GlowAPI.Color color = groupOf(is2);
+        if (color == GlowAPI.Color.AQUA) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+        }
+        if (color == GlowAPI.Color.YELLOW) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+        }
+        GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
+    }
+
+    private void handleCustomEliteDrops(Entity damager, LivingEntity entity, String type) {
+        ItemStack is;
+        if (type.equalsIgnoreCase("krampus") || type.equalsIgnoreCase("warden")
+                || type.equalsIgnoreCase("weakSkeletonEntity") || type.equalsIgnoreCase("bossSkeletonDungeon")) {
+            is = EliteDrops.createCustomDungeonDrop(type, new Random().nextInt(8) + 1);
+        } else {
+            is = EliteDrops.createCustomEliteDrop(type);
+        }
+        if (is.getType() == Material.JACK_O_LANTERN)
+            return;
+
+        Item itemDrop = DropPriority.DropItem(damager, entity, entity.getLocation(), is);
+        GlowAPI.Color color = groupOf(is);
+        if (color == GlowAPI.Color.AQUA) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ITEM_TOTEM_USE, 1F, 1F);
+        }
+        if (color == GlowAPI.Color.YELLOW) {
+            entity.getLocation().getWorld().playSound(entity.getLocation(), Sound.ENTITY_ENDERDRAGON_DEATH, 1F, 1F);
+        }
+        GlowAPI.setGlowing(itemDrop, groupOf(itemDrop.getItemStack()), Bukkit.getOnlinePlayers());
     }
 
     private ItemStack getBookDrop(int tier) {
