@@ -4,6 +4,7 @@ package me.retrorealms.practiceserver.mechanics.damage;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 import ac.grim.grimac.GrimAbstractAPI;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
@@ -717,7 +718,9 @@ public class Damage implements Listener {
 						// Apply ice damage effect
 						DyeColor blockColor = DyeColor.LIGHT_BLUE;
 						MaterialData data = new MaterialData(Material.STAINED_GLASS_PANE, (byte) 3);
-						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.01, data);
+						IntStream.range(0,11).forEach(particleNumber -> {
+							Particles.SPELL_MOB.display(new Particles.OrdinaryColor(Color.fromRGB(126, 178, 202)), li.getLocation().add(ThreadLocalRandom.current().nextDouble(0, 0.5), ThreadLocalRandom.current().nextDouble(0.75, 1.25), ThreadLocalRandom.current().nextDouble(0, 0.5)), 30D);
+						});
 						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "ICE DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));
@@ -745,7 +748,9 @@ public class Damage implements Listener {
 						boolean color = ThreadLocalRandom.current().nextBoolean();
 						byte bytes = color ? (byte) 5 : (byte) 13;
 						MaterialData data = new MaterialData(Material.STAINED_GLASS, bytes);
-						li.getWorld().spawnParticle(Particle.BLOCK_CRACK, li.getLocation().clone().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.01, data);
+						IntStream.range(0,11).forEach(particleNumber -> {
+							Particles.SPELL_MOB.display(new Particles.OrdinaryColor(Color.fromRGB(79, 150, 50)), li.getLocation().add(ThreadLocalRandom.current().nextDouble(0, 0.5), ThreadLocalRandom.current().nextDouble(0.75, 1.25), ThreadLocalRandom.current().nextDouble(0, 0.5)), 30D);
+						});
 						li.getWorld().playSound(li.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1, 1);
 						eldmg = Damage.getElem(wep, "POISON DMG");
 						int elemult = Math.round(eldmg * (1 + Math.round(Damage.getElem(wep, "DEX") / 3000)));

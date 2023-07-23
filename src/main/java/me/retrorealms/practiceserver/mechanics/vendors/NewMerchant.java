@@ -1,7 +1,6 @@
 package me.retrorealms.practiceserver.mechanics.vendors;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.item.Durability;
@@ -9,14 +8,12 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.Listeners;
-import me.retrorealms.practiceserver.mechanics.player.Trading;
 import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import me.retrorealms.practiceserver.utils.item.ItemGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -83,11 +80,23 @@ public class NewMerchant implements Listener {
     public void onEnable() {
         System.out.println("[Merchant] has been enabled");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
+
+        Bukkit.getScheduler().runTaskTimerAsynchronously(PracticeServer.getInstance(), () -> {
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                if(player.getOpenInventory().getTopInventory().getTitle().equalsIgnoreCase("[merchant]")){
+                    updateTotal(player.getOpenInventory().getTopInventory());
+                }
+                if(player.getOpenInventory().getBottomInventory().getTitle().equalsIgnoreCase("[merchant]")){
+                    updateTotal(player.getOpenInventory().getBottomInventory());
+                }
+            });
+        },0L, 1L);
     }
 
     public void onDisable() {
         System.out.println("[Merchant] has been disabled");
     }
+
 
     @EventHandler
     public void confirmMerchant(InventoryClickEvent e) {
@@ -127,8 +136,17 @@ public class NewMerchant implements Listener {
         }
     }
 
+    public void updateTotal(Inventory inventory) {
+        if (inventory.getTitle().equals("[Merchant]")) {
+            inventory.setItem(49, Money.createBankNote(calculateTradeValue(inventory, false)));
+            for (HumanEntity viewer : inventory.getViewers()) {
+                ((Player)viewer).updateInventory();
+            }
+        }
+    }
 
-    public int calculateTradeValue(Inventory inventory) {
+
+    public int calculateTradeValue(Inventory inventory, boolean finishTrade) {
         int totalValue = 0;
         if (inventory != null) {
             int i = 0;
@@ -141,19 +159,18 @@ public class NewMerchant implements Listener {
                         int oreTier = ProfessionMechanics.getOreTier(is.getType());
                         reward = 20;
                         reward = (int) ((reward * oreAmount * oreTier) * 1.23);
-                        inventory.setItem(i, null);
+                        if(finishTrade) inventory.setItem(i, null);
                     }
                     if ((Durability.isArmor(is) || Listeners.isWeapon(is)) && !is.getType().toString().contains("_PICKAXE")) {
                         Random r = new Random();
                         int t = Items.getTierFromColor(is) * 2;
                         reward = (((t / 10D) + 1D) * (t * t)) * 12D;
-                        if(is.hasItemMeta() && is.getItemMeta().hasLore()) {
+                        if (is.hasItemMeta() && is.getItemMeta().hasLore()) {
                             List<String> itemlore = is.getItemMeta().getLore();
                             int rarity = Altar.RarityToInt(itemlore.get(itemlore.size() - 1));
                             reward = (reward * rarity) - (reward * .25);
                         }
-                        reward = r.nextInt((int) reward / 3) + (int) reward;
-                        inventory.setItem(i, null);
+                        if(finishTrade) inventory.setItem(i, null);
                     }
                     totalValue += reward;
                 }
@@ -167,10 +184,7 @@ public class NewMerchant implements Listener {
         Inventory inventory = tradeMap.get(player);
         double rew = 0;
         if (inventory != null) {
-            rew = calculateTradeValue(inventory);
-            if ((ModerationMechanics.isDonator(player)) || (ModerationMechanics.isStaff(player))) {
-                rew *= 1.50D;
-            }
+            rew = calculateTradeValue(inventory, true);
             if (rew != 0) {
                 player.getInventory().addItem(Money.createBankNote((int) rew));
             }
@@ -184,7 +198,7 @@ public class NewMerchant implements Listener {
         }
         tradeMap.remove(player);
         player.closeInventory();
-        int donorAmt = (int)rew - (int)(rew * 0.5);
+        int donorAmt = (int) rew - (int) (rew * 0.5);
         String donatorAdded = ModerationMechanics.isDonator(player) ? ChatColor.GREEN + "(+" + donorAmt + " gems received from Donor Perks)" : "";
         player.sendMessage(ChatColor.GRAY + "You have accepted your merchant trade. " + donatorAdded);
     }

@@ -29,8 +29,8 @@ public class Energy implements Listener {
     private static final int MAX_ENERGY = 100;
 
     private static final float BASE_ENERGY_INCREASE = 100.0f;
-    private static final float ENERGY_PER_ARMOR_PIECE = 5.0f;
-    private static final float ENERGY_INCREASE_PER_INTEL = 0.01f;
+    private static final float ENERGY_PER_ARMOR_PIECE = 7.5f;
+    private static final float ENERGY_INCREASE_PER_INTEL = 0.02f;
     private static final int ENERGY_REDUCTION_AMOUNT = 85;
     private static final float ENERGY_REDUCTION_MULTIPLIER = 3.2f;
     private static final int ENERGY_REDUCTION_THRESHOLD = 0;

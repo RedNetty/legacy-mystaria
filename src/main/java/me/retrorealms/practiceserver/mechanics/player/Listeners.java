@@ -21,6 +21,7 @@ import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
+import me.retrorealms.practiceserver.utils.ArmorType;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
@@ -28,6 +29,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 import org.bukkit.event.EventHandler;
@@ -85,6 +87,28 @@ public class Listeners implements Listener {
 			return 0;
 		}
 	}
+	public static void frostArmorEffect(Player player, ItemStack itemStack) {
+		if (itemStack == null) return;
+		Location location = player.getLocation().clone();
+		if (itemStack.getItemMeta().hasDisplayName() && itemStack.getItemMeta().getDisplayName().contains("Frost-Wing's")) {
+			switch (ArmorType.matchType(itemStack)) {
+				case HELMET:
+					location.add(0, 2, 0);
+					break;
+				case CHESTPLATE:
+					location.add(0, 1.25, 0);
+					break;
+				case LEGGINGS:
+					location.add(0, .75, 0);
+					break;
+				case BOOTS:
+				default:
+					break;
+			}
+			Particles.SPELL_MOB.display(new Particles.OrdinaryColor(Color.WHITE), location, 30D);
+			Particles.REDSTONE.display(new Particles.OrdinaryColor(Color.YELLOW), location, 30D);
+		}
+	}
 	public static void hpCheck(Player p) {
 		if (p.isDead()) return;
 		if (p.isOp() && !ToggleGMCommand.togglegm.contains(p.getName())) {
@@ -98,6 +122,7 @@ public class Listeners implements Listener {
 		int n2 = 0;
 		while (n2 < n) {
 			ItemStack is = arritemStack[n2];
+			frostArmorEffect(p, is);
 			if (is != null && is.getType() != Material.AIR && is.hasItemMeta() && is.getItemMeta().hasLore()) {
 				double health = Damage.getHp(is);
 				int vit = Damage.getElem(is, "VIT");
@@ -147,6 +172,9 @@ public class Listeners implements Listener {
 					float x = random.nextFloat() - 0.2F;
 					float z = random.nextFloat() - 0.2F;
 
+					for (ItemStack armorContent : player.getInventory().getArmorContents()) {
+						frostArmorEffect(player, armorContent);
+					}
 					if (!ModerationMechanics.isDonator(player) ||
 							!Toggles.getToggles(player.getUniqueId()).contains("Trail")) {
 						continue;

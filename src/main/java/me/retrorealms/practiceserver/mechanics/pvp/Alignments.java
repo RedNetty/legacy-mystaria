@@ -234,12 +234,12 @@ public class Alignments implements Listener {
         ChatColor titleColor = Damage.barTitleColor(p);
         if (Toggles.hasLevelBarHP(p)) {
             if (!playerBossBars.containsKey(p)) {
-                BossBar bossBar = Bukkit.createBossBar(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth(), barColor, BarStyle.SOLID);
+                BossBar bossBar = Bukkit.createBossBar(titleColor + String.valueOf(ChatColor.BOLD) + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth() + " HP ", barColor, BarStyle.SOLID);
                 bossBar.addPlayer(p);
                 playerBossBars.put(p, bossBar);
                 playerBossBars.get(p).setProgress(pcnt);
             } else {
-                playerBossBars.get(p).setTitle(titleColor + String.valueOf(ChatColor.BOLD) + "HP " + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth());
+                playerBossBars.get(p).setTitle(titleColor + String.valueOf(ChatColor.BOLD) + titleColor + (int) p.getHealth() + titleColor + ChatColor.BOLD + " / " + titleColor + (int) p.getMaxHealth() + " HP ");
                 playerBossBars.get(p).setProgress(pcnt);
             }
         }
