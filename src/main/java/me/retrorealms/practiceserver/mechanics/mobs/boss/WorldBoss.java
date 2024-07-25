@@ -35,7 +35,7 @@ public abstract class WorldBoss {
         this.configName = configName;
         this.entityType = entityType;
 
-        bossAbilities = AbilityHandler.createAbilities(WorldBossHandler.getBossFile().getStringList(configName + ".abilities"));
+        bossAbilities = AbilityHandler.createAbilities(BossConfigHandler.getBossFile().getStringList(configName + ".abilities"));
 
     }
 
@@ -72,9 +72,9 @@ public abstract class WorldBoss {
     }
 
     public String getDisplayName() {
-        return WorldBossHandler.getBossFile().contains(configName + ".display")
+        return BossConfigHandler.getBossFile().contains(configName + ".display")
                 ? ChatColor.translateAlternateColorCodes('&',
-                WorldBossHandler.getBossFile().getString(configName + ".display"))
+                BossConfigHandler.getBossFile().getString(configName + ".display"))
                 : "";
     }
 

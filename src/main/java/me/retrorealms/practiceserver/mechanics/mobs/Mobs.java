@@ -317,7 +317,7 @@ public class Mobs implements Listener {
             int min = damageRange.get(0);
             int max = damageRange.get(1);
             int dmg = (ThreadLocalRandom.current().nextInt(max - min + 1) + min) * 3;
-            for (Entity e : l.getNearbyEntities(8.0, 8.0, 8.0)) {
+            for (Entity e : l.getNearbyEntities(7.0, 7.0, 7.0)) {
                 if (e instanceof Player) {
                     Player p = (Player) e;
                     Listeners.mobd.remove(l.getUniqueId());
@@ -330,8 +330,10 @@ public class Mobs implements Listener {
                     }
                     if (isFrozenBoss(l)) {
                         p.setVelocity(v.multiply(-3));
+                        PracticeServer.antiCheat.getPlayerData(p).setLastKnockbackTime(System.currentTimeMillis());;
                     } else {
                         p.setVelocity(v.multiply(3));
+                        PracticeServer.antiCheat.getPlayerData(p).setLastKnockbackTime(System.currentTimeMillis());;
                     }
                 }
             }
@@ -362,6 +364,9 @@ public class Mobs implements Listener {
         String name = "";
         if (l.hasMetadata("name")) {
             name = l.getMetadata("name").get(0).asString();
+        }
+        if (l.hasMetadata("LightningMob")) {
+            name = l.getMetadata("LightningMob").get(0).asString();
         }
         if (!l.getType().equals(EntityType.ARMOR_STAND)) {
             l.setCustomName(name);
@@ -517,7 +522,7 @@ public class Mobs implements Listener {
             }
             LivingEntity s = (LivingEntity) e.getEntity();
             Random random = new Random();
-            int rcrt = random.nextInt(150) + 1;
+            int rcrt = random.nextInt(250) + 1;
             if (!crit.containsKey(s) && (Mobs.getMobTier(s) == 1 && rcrt <= 5 || Mobs.getMobTier(s) == 2 && rcrt <= 7 || Mobs.getMobTier(s) == 3 && rcrt <= 10 || Mobs.getMobTier(s) == 4 && rcrt <= 13 || Mobs.getMobTier(s) >= 5 && rcrt <= 20)) {
 
                 if (!(isGolemBoss(s) && getGolemStage(s) == 3)) {
@@ -594,8 +599,10 @@ public class Mobs implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMobHitMob(EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof LivingEntity && !(e.getDamager() instanceof Player) && !(e.getEntity() instanceof Player)) {
-            e.setCancelled(true);
-            e.setDamage(0.0);
+            if(e.getDamager().isCustomNameVisible() && !e.getDamager().getCustomName().equalsIgnoreCase("Celestial Ally")) {
+                e.setCancelled(true);
+                e.setDamage(0.0);
+            }
         }
     }
 
@@ -654,6 +661,9 @@ public class Mobs implements Listener {
             }
             if (dmg < 1) {
                 dmg = 1;
+            }
+            if(s.hasMetadata("LightningMultiplier")) {
+                dmg *= s.getMetadata("LightningMultiplier").get(0).asInt();
             }
             e.setDamage(dmg);
         }

@@ -1,7 +1,10 @@
 package me.retrorealms.practiceserver.utils.SQLUtil;
 
+import me.retrorealms.practiceserver.PracticeServer;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class SQLCreate {
     private static final String[] CREATE_TABLE_QUERIES = {
@@ -27,7 +30,7 @@ public class SQLCreate {
                     + "T4Kills INT,"
                     + "T5Kills INT,"
                     + "T6Kills INT,"
-                    + "GlowAPI.Color.s INT,"
+                    + "Deaths INT,"
                     + "PlayerKills INT,"
                     + "OreMined INT,"
                     + "ChestsOpened INT,"
@@ -75,6 +78,8 @@ public class SQLCreate {
                     + "KitChest INT,"
                     + "KitLegs INT,"
                     + "KitBoots INT,"
+                    + "CurrentQuest VARCHAR(100),"
+                    + "DailyQuestsCompleted INT DEFAULT 0,"
                     + "PRIMARY KEY (UUID));",
 
             "CREATE TABLE IF NOT EXISTS Banks ("
@@ -116,14 +121,35 @@ public class SQLCreate {
     };
 
     public static void createTables(Connection con) {
-        try {
-            for (String query : CREATE_TABLE_QUERIES) {
-                try (PreparedStatement stmt = con.prepareStatement(query)) {
-                    stmt.execute();
-                }
+        for (String sql : CREATE_TABLE_QUERIES) {
+            try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+                pstmt.execute();
+                PracticeServer.log.info("[RetroDB] Successfully created or verified table: " + sql.split(" ")[5]);
+            } catch (SQLException e) {
+                PracticeServer.log.severe("[RetroDB] Error creating table: " + e.getMessage());
+                PracticeServer.log.severe("[RetroDB] SQL statement: " + sql);
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+    }
+
+    public static void addMissingColumns(Connection con) {
+        String[] newColumns = {
+                "CurrentQuest VARCHAR(100)",
+                "DailyQuestsCompleted INT DEFAULT 0"
+        };
+        String table = "PersistentData";
+
+        for (String column : newColumns) {
+            String columnName = column.split(" ")[0];
+            String sql = "ALTER TABLE " + table + " ADD COLUMN IF NOT EXISTS " + column;
+            try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+                pstmt.execute();
+                PracticeServer.log.info("[RetroDB] Successfully added or verified column: " + columnName);
+            } catch (SQLException e) {
+                PracticeServer.log.severe("[RetroDB] Error adding column: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 }

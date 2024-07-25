@@ -252,7 +252,7 @@ public class ChatMechanics implements Listener {
     }
 
     private boolean isAllowedCommand(String command, Player player) {
-        List<String> allowedCommands = new ArrayList<>(Arrays.asList("guildshow", "ginfo", "gwho", "guildpromote", "gpromote", "gdemote", "guilddemote", "orbs", "guildwho", "guildinfo", "gshow", "guildquit", "gquit", "guildcreate", "gaccept", "guildaccept", "gcreate", "ginvite", "guildinvite", "gkick", "guildkick", "guilddecline", "gdecline", "guild", "g"));
+        List<String> allowedCommands = new ArrayList<>(Arrays.asList("leaderboard", "guildshow", "ginfo", "gwho", "guildpromote", "gpromote", "gdemote", "guilddemote", "orbs", "guildwho", "guildinfo", "gshow", "guildquit", "gquit", "guildcreate", "gaccept", "guildaccept", "gcreate", "ginvite", "guildinvite", "gkick", "guildkick", "guilddecline", "gdecline", "guild", "g"));
 
         if (!player.isOp() && PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) {
             allowedCommands.addAll(Arrays.asList("patch", "pet", "shard", "mount", "tags", "mount", "roll", "toggletrading", "gl", "toggle", "toggles", "togglepvp", "togglechaos", "toggledebug", "Debug", "toggleff", "add", "del", "delete", "message", "msg", "m", "whisper", "w", "tell", "t", "reply", "r", "logout", "sync", "reboot", "pinvite", "paccept", "pquit", "pkick", "pdecline", "p", "g", "guilds", "guilds", "abandon", "create", "guildcreate", "gcreate", "join", "gi", "report", "editreport"));
@@ -299,7 +299,7 @@ public class ChatMechanics implements Listener {
     }
 
     private boolean isPlayerMutedAndNotInPlay(Player player) {
-        return muted.containsKey(player) && !GemGambling.inPlayGem.contains(player.getName()) && !OrbGambling.chatHandling.contains(player.getUniqueId()) && !OreMerchant.chatInteractive.containsKey(player.getUniqueId()) && !Banks.withdraw.contains(player.getName());
+        return muted.containsKey(player) && !GemGambling.inPlayGem.contains(player.getName()) && !OrbGambling.chatHandling.contains(player.getUniqueId()) && !OreMerchant.chatInteractive.containsKey(player.getUniqueId()) && !Banks.WITHDRAW_PROMPT.contains(player.getName());
     }
 
     private void sendMuteMessage(Player player) {

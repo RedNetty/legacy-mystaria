@@ -49,7 +49,7 @@ public class ReplyCommand implements CommandExecutor {
                         ChatMechanics.sendShowString(reciever, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM " + p.getName(), message, reciever);
                         ChatMechanics.sendShowString(p, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "TO " + reciever.getName(), message, p);
                     } else {
-                        if (Toggles.hasPMEnabled(reciever)) {
+                        if (Toggles.isToggled(reciever, "Player Messages")) {
                             String playerPrefix = ChatMechanics.getDisplayNameFor(p, reciever);
                             String senderPrefix = ChatMechanics.getDisplayNameFor(reciever, p);
                             reciever.sendMessage(ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM " + playerPrefix + ": " + ChatColor.WHITE + message);

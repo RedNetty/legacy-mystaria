@@ -6,6 +6,7 @@ import me.retrorealms.practiceserver.mechanics.enchants.Enchants;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBoss;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBossHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
@@ -21,6 +22,7 @@ public class WorldBossDrops {
 
     public static ItemStack createDrop(int itemType, String worldbossName) {
         WorldBoss boss = WorldBossHandler.bossFromString(worldbossName);
+        Bukkit.getLogger().info("Creating drop for " + worldbossName + " of type " + itemType);
 
 
         Random r = new Random();
@@ -50,6 +52,7 @@ public class WorldBossDrops {
 
 
         int hp = BossGearGenerator.getHealth(itemType, worldbossName);
+        Bukkit.getLogger().info("Generated HP for " + worldbossName + ": " + hp);
 
 
         int nrghp = ThreadLocalRandom.current().nextInt(3);

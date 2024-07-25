@@ -1,9 +1,8 @@
 package me.retrorealms.practiceserver.mechanics.party;
 
-import lombok.Getter;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
-import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceMinigame;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

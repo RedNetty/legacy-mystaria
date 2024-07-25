@@ -251,8 +251,8 @@ public class TabMenu {
                         int ping = ((CraftPlayer) p).getHandle().ping;
                         bugFixTab(p, 17, 1, ChatColor.DARK_AQUA + "World Boss:", false);
                         if (worldBoss != null) {
-                            bugFixTab(p, 18, 1, ChatColor.YELLOW + boss, false);
-                            bugFixTab(p, 19, 1, ChatColor.GRAY + location, false);
+                            bugFixTab(p, 18, 1, boss, false);
+                            bugFixTab(p, 19, 1, location, false);
                         } else {
                             bugFixTab(p, 18, 1, ChatColor.GRAY + "T5 mobs left", false);
                             bugFixTab(p, 19, 1, ChatColor.GRAY + String.valueOf(450 - bossKillsRequired), false);

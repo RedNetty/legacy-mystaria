@@ -11,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
-import org.inventivetalent.glow.GlowAPI;
 
 
 public class ToggleAlignmentGlowCommand implements CommandExecutor {

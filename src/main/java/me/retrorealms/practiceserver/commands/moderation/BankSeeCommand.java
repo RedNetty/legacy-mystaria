@@ -22,7 +22,7 @@ public class BankSeeCommand implements CommandExecutor {
             if (args.length == 1 || args.length == 2) {
                 if(PracticeServer.DATABASE){
                     Inventory inv = SQLMain.getBank(Bukkit.getOfflinePlayer(args[0]).getUniqueId(), 1);
-                    Banks.banksee.put(p, Bukkit.getOfflinePlayer(args[0]).getUniqueId());
+                    Banks.BANK_SEE.put(p.getUniqueId(), Bukkit.getOfflinePlayer(args[0]).getUniqueId());
                     p.openInventory(inv);
                 }else {
                     File file = new File(PracticeServer.plugin.getDataFolder() + "/banks", String.valueOf(args[0]) + ".yml");
@@ -32,7 +32,7 @@ public class BankSeeCommand implements CommandExecutor {
                             page = Integer.valueOf(args[1]);
                         }
                         Inventory inv = Banks.getBank(p, page);
-                        Banks.banksee.put(p, Bukkit.getOfflinePlayer(args[0]).getUniqueId());
+                        Banks.BANK_SEE.put(p.getUniqueId(), Bukkit.getOfflinePlayer(args[0]).getUniqueId());
                         if (inv == null) {
                             inv = Bukkit.createInventory(null, 63, "Bank Chest (1/1)");
                         }

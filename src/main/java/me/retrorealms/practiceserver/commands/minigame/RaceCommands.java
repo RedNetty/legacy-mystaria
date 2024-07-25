@@ -1,10 +1,10 @@
 package me.retrorealms.practiceserver.commands.minigame;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import me.retrorealms.practiceserver.mechanics.drops.buff.BuffHandler;
 
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
-import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceSettingsMenu;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,8 +18,10 @@ public class RaceCommands implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         if(sender instanceof Player && !sender.isOp()) return false;
         if(args.length < 1){
-            sender.sendMessage(ChatColor.RED + "Usage: /racegame <end/start/grace/pvp/deathmatch>");
-            return false;
+            assert sender instanceof Player;
+            Player player = (Player)sender;
+            RaceSettingsMenu.openMenu(player);
+            return true;
         }
         if(args[0].equalsIgnoreCase("end") || args[0].equalsIgnoreCase("stop")){
             if(raceMinigame.getGameState() == MinigameState.NONE){
@@ -55,6 +57,38 @@ public class RaceCommands implements CommandExecutor {
                 sender.sendMessage(ChatColor.YELLOW + "You have set the max party size to " + teamSize + ".");
                 return true;
             }
+        }
+        if (args[0].equalsIgnoreCase("incursion")) {
+            if (args.length < 2) {
+
+                sender.sendMessage(ChatColor.RED + "Usage: /racegame incursion <on/off> [Multiplier]");
+                return false;
+            }
+            if(args[1].equalsIgnoreCase("rate")) {
+                double spawnRate = 0.15;
+                try {
+                    spawnRate = Double.parseDouble(args[2]);
+                    raceMinigame.setIncursionSpawnRate(spawnRate);
+                    return true;
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(ChatColor.RED + "Invalid Rate. Using default value of 15.");
+                }
+                return false;
+            }
+
+            boolean enabled = args[1].equalsIgnoreCase("on");
+            double healthMultiplier = 15; // Default value
+
+            if (args.length > 2) {
+                try {
+                    healthMultiplier = Double.parseDouble(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(ChatColor.RED + "Invalid multiplier. Using default value of 15.");
+                }
+            }
+
+            raceMinigame.toggleIncursionMode(enabled, healthMultiplier);
+            return true;
         }
         if(args[0].equalsIgnoreCase("timer")){
             if(args.length != 3 || raceMinigame.getGameState() != MinigameState.NONE){

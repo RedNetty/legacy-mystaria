@@ -14,115 +14,125 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-// Author: Red
 public class DropPriority implements Listener {
 
-    static ConcurrentHashMap<LivingEntity, ConcurrentHashMap<Player, Integer>> mobs = new ConcurrentHashMap();
-    static ConcurrentHashMap<Item,Integer> droppedTime = new ConcurrentHashMap();
-    static ConcurrentHashMap<Item , Player> playerRegistry = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<UUID, Map<UUID, Double>> mobDamageTracking = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<UUID, DropInfo> itemDropInfo = new ConcurrentHashMap<>();
+
+    private static class DropInfo {
+        final UUID playerUUID;
+        int timeRemaining;
+
+        DropInfo(UUID playerUUID, int timeRemaining) {
+            this.playerUUID = playerUUID;
+            this.timeRemaining = timeRemaining;
+        }
+    }
 
     public void onEnable() {
         PracticeServer.log.info("[Drop Priority] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
 
         new BukkitRunnable() {
-
+            @Override
             public void run() {
-                for(Item i : droppedTime.keySet()){
-                    if(droppedTime.get(i) > 0){
-                        droppedTime.put(i, droppedTime.get(i)-1);
-                    }else{
-                        droppedTime.remove(i);
-                        playerRegistry.remove(i);
-                    }
-                }
+                updateDropTimers();
             }
         }.runTaskTimerAsynchronously(PracticeServer.plugin, 0, 20);
     }
-
 
     public void onDisable() {
         PracticeServer.log.info("[DropPriority] has been disabled.");
     }
 
-    public static Item DropItem(Entity killer, LivingEntity mob, Location location, ItemStack is){
-        Item i = mob.getWorld().dropItemNaturally(location, is);
-        if(mobs.containsKey(mob)){
-            Player current = null;
-            for(Player p : mobs.get(mob).keySet()){
-                if(current == null || mobs.get(mob).get(current) < mobs.get(mob).get(p)){
-                    current = p;
+    public static Item dropItem(LivingEntity entity, Location location, ItemStack itemStack) {
+        Item droppedItem = entity.getWorld().dropItemNaturally(location, itemStack);
+        UUID entityUUID = entity.getUniqueId();
+
+        if (mobDamageTracking.containsKey(entityUUID)) {
+            Map<UUID, Double> damageMap = mobDamageTracking.get(entityUUID);
+            UUID topDamagerUUID = damageMap.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
+
+            if (topDamagerUUID != null) {
+                Player topDamager = Bukkit.getPlayer(topDamagerUUID);
+                if (topDamager != null && topDamager.isOnline()) {
+                    registerDropForPlayer(droppedItem, topDamager);
+                    if (itemStack.getType() != Material.EMERALD) {
+                        Mobdrops.dropShowString(topDamager, itemStack, entity);
+                    }
                 }
             }
-            if(current != null){
-                playerRegistry.put(i, current);
-                droppedTime.put(i, rankTime(current));
-            }
-
-        }else{
-            if(killer instanceof Player) {
-                playerRegistry.put(i, (Player) killer);
-                droppedTime.put(i, rankTime((Player) killer));
-            }
         }
 
-        if(killer instanceof Player && is.getType() != Material.EMERALD)
-        Mobdrops.dropShowString((Player) killer, is, mob);
-        return i;
+        return droppedItem;
+    }
+
+    private static void registerDropForPlayer(Item item, Player player) {
+        int protectionTime = calculateProtectionTime(player);
+        itemDropInfo.put(item.getUniqueId(), new DropInfo(player.getUniqueId(), protectionTime));
     }
 
     @EventHandler
-    void onPickup(PlayerPickupItemEvent e){
-//        Player p = e.getPlayer();
-//        Item i = e.getItem();
-//        if(droppedTime.containsKey(i)){
-//            if(playerRegistry.get(i) == p) {
-//                droppedTime.remove(i);
-//                playerRegistry.remove(i);
-//            }else{
-//                e.setCancelled(true);
-//            }
-//        }
-    }
+    public void onPickup(PlayerPickupItemEvent event) {
+        Player player = event.getPlayer();
+        Item item = event.getItem();
+        UUID itemUUID = item.getUniqueId();
 
-    @EventHandler
-    void onDamage(EntityDamageByEntityEvent e){
-        if(!(e.getEntity() instanceof LivingEntity)) return;
-        if(e.getEntity() instanceof Player) return;
-        if(!(e.getDamager() instanceof Player)) return;
-        LivingEntity mob = (LivingEntity) e.getEntity();
-        Player damager = (Player) e.getDamager();
-        if(!mobs.containsKey(e.getEntity())){
-            mobs.put(mob, new ConcurrentHashMap());
-        }else {
-            ConcurrentHashMap<Player, Integer> damages = mobs.get(mob);
-            if (damages.containsKey(damager)) {
-                damages.put(damager, damages.get(damager) + (int) e.getDamage());
+        if (itemDropInfo.containsKey(itemUUID)) {
+            DropInfo dropInfo = itemDropInfo.get(itemUUID);
+            if (!dropInfo.playerUUID.equals(player.getUniqueId())) {
+                event.setCancelled(true);
             } else {
-                damages.put(damager, (int) e.getDamage());
+                itemDropInfo.remove(itemUUID);
             }
         }
     }
 
     @EventHandler
-    void onDrop(PlayerDropItemEvent e){
-//        if(Toggles.getToggleStatus(e.getPlayer(), "Drop Protection")){
-//            droppedTime.put(e.getItemDrop(), rankTime(e.getPlayer()));
-//            playerRegistry.put(e.getItemDrop(), e.getPlayer());
-//        }
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity) || event.getEntity() instanceof Player) return;
+        if (!(event.getDamager() instanceof Player)) return;
+
+        LivingEntity mob = (LivingEntity) event.getEntity();
+        Player damager = (Player) event.getDamager();
+        UUID mobUUID = mob.getUniqueId();
+        UUID damagerUUID = damager.getUniqueId();
+
+        mobDamageTracking.computeIfAbsent(mobUUID, k -> new HashMap<>());
+        Map<UUID, Double> damageMap = mobDamageTracking.get(mobUUID);
+        damageMap.merge(damagerUUID, event.getFinalDamage(), Double::sum);
     }
 
-    static int rankTime(Player p){
-        RankEnum rank = ModerationMechanics.getRank(p);
-        switch(rank){
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        mobDamageTracking.remove(event.getEntity().getUniqueId());
+    }
+
+    @EventHandler
+    public void onPlayerDrop(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        if (Toggles.isToggled(player, "Drop Protection")) {
+            registerDropForPlayer(event.getItemDrop(), player);
+        }
+    }
+
+    private static int calculateProtectionTime(Player player) {
+        RankEnum rank = ModerationMechanics.getRank(player);
+        switch (rank) {
             case DEFAULT:
                 return 2;
             case SUB:
@@ -131,7 +141,16 @@ public class DropPriority implements Listener {
                 return 8;
             case SUB2:
                 return 15;
+            default:
+                return 30;
         }
-        return 30;
+    }
+
+    private void updateDropTimers() {
+        itemDropInfo.entrySet().removeIf(entry -> {
+            DropInfo info = entry.getValue();
+            info.timeRemaining--;
+            return info.timeRemaining <= 0;
+        });
     }
 }

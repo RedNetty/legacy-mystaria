@@ -3,21 +3,27 @@ package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.bosses;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBoss;
 
 public enum BossEnum {
-    FROSTWING("Frost-Wing", new Frostwing());
+    FROSTWING("Frost-Wing", Frostwing.class),
+    CHRONOS("Chronos", Chronos.class);
 
-    private WorldBoss worldBoss;
+    private final String displayName;
+    private final Class<? extends WorldBoss> bossClass;
 
-    private String displayName;
-
-    public WorldBoss getWorldBoss() {
-        return worldBoss;
+    BossEnum(String displayName, Class<? extends WorldBoss> bossClass) {
+        this.displayName = displayName;
+        this.bossClass = bossClass;
     }
+
     public String getDisplayName() {
         return displayName;
     }
 
-    private BossEnum(String displayName, WorldBoss worldBoss) {
-        this.displayName = displayName;
-        this.worldBoss  = worldBoss;
+    public WorldBoss getWorldBoss() {
+        try {
+            return bossClass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

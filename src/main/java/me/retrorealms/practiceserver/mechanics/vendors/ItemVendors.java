@@ -36,6 +36,7 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGUI;
 import me.retrorealms.practiceserver.mechanics.loot.contract.ContractHandler;
 import me.retrorealms.practiceserver.mechanics.loot.contract.ContractMenu;
+import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.money.Money;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
@@ -404,44 +405,135 @@ public class ItemVendors
     }
 
     private Inventory openItemVendorInventory(Player player) {
-        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
-        inv.addItem(Items.orb(true));
-        inv.addItem(Items.legendaryOrb(true));
-        inv.addItem(Items.enchant(1, 0, true).clone());
-        inv.addItem(Items.enchant(1, 1, true).clone());
-        inv.addItem(Items.enchant(2, 0, true).clone());
-        inv.addItem(Items.enchant(2, 1, true).clone());
-        inv.addItem(Items.enchant(3, 0, true).clone());
-        inv.addItem(Items.enchant(3, 1, true).clone());
-        inv.addItem(Items.enchant(4, 0, true).clone());
-        inv.addItem(Items.enchant(4, 1, true).clone());
-        inv.addItem(Items.enchant(5, 0, true).clone());
-        inv.addItem(Items.enchant(5, 1, true).clone());
+        Inventory inv = Bukkit.getServer().createInventory(null, 54, "Item Vendor");
+
+        // Category Labels
+        inv.setItem(0, createCategoryLabel("Orbs & Pouches", Material.ENDER_PEARL));
+        inv.setItem(18, createCategoryLabel("Weapon Enchants", Material.DIAMOND_SWORD));
+        inv.setItem(36, createCategoryLabel("Armor Enchants", Material.DIAMOND_CHESTPLATE));
+
+        // Orbs and Pouches (Row 1)
+        inv.setItem(2, Items.orb(true));
+        inv.setItem(3, Items.legendaryOrb(true));
+        inv.setItem(5, GemPouches.gemPouch(3, true).clone());
+        inv.setItem(6, GemPouches.gemPouch(4, true).clone());
+        inv.setItem(7, GemPouches.gemPouch(5, true).clone());
+
+        // Weapon Enchants (Row 3)
+        inv.setItem(20, Items.enchant(1, 0, true).clone());
+        inv.setItem(21, Items.enchant(2, 0, true).clone());
+        inv.setItem(22, Items.enchant(3, 0, true).clone());
+        inv.setItem(23, Items.enchant(4, 0, true).clone());
+        inv.setItem(24, Items.enchant(5, 0, true).clone());
         if (PracticeServer.t6) {
-            inv.addItem(Items.enchant(6, 0, true));
-            inv.addItem(Items.enchant(6, 1, true));
+            inv.setItem(24, Items.enchant(6, 0, true));
         }
+
+        // Armor Enchants (Row 5)
+        inv.setItem(38, Items.enchant(1, 1, true).clone());
+        inv.setItem(39, Items.enchant(2, 1, true).clone());
+        inv.setItem(40, Items.enchant(3, 1, true).clone());
+        inv.setItem(41, Items.enchant(4, 1, true).clone());
+        inv.setItem(42, Items.enchant(5, 1, true).clone());
+        if (PracticeServer.t6) {
+            inv.setItem(43, Items.enchant(6, 1, true));
+        }
+
+        // Add colored separators
+        fillRow(inv, 1, (byte) 3);  // Light Blue
+        fillRow(inv, 3, (byte) 4);  // Yellow
+        fillRow(inv, 5, (byte) 5);  // Lime
+
+        // Close button
+        inv.setItem(53, createCloseButton());
+
         return inv;
     }
 
+    private ItemStack createCategoryLabel(String name, Material icon) {
+        ItemStack label = new ItemStack(icon);
+        ItemMeta meta = label.getItemMeta();
+        meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + name);
+        meta.setLore(Arrays.asList(ChatColor.GRAY + "Click on an item", ChatColor.GRAY + "below to purchase it!"));
+        label.setItemMeta(meta);
+        return label;
+    }
+
+    private void fillRow(Inventory inv, int row, byte color) {
+        for (int i = row * 9; i < (row + 1) * 9; i++) {
+            if (inv.getItem(i) == null) {
+                inv.setItem(i, createSeparator(color));
+            }
+        }
+    }
+
+    private ItemStack createSeparator(byte color) {
+        ItemStack separator = new ItemStack(Material.STAINED_GLASS_PANE, 1, color);
+        ItemMeta meta = separator.getItemMeta();
+        meta.setDisplayName(" ");
+        separator.setItemMeta(meta);
+        return separator;
+    }
+
+    private ItemStack createCloseButton() {
+        ItemStack closeButton = new ItemStack(Material.BARRIER);
+        ItemMeta meta = closeButton.getItemMeta();
+        meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Close");
+        closeButton.setItemMeta(meta);
+        return closeButton;
+    }
+
     private Inventory openFishermanInventory(Player player) {
-        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Item Vendor");
-        inv.addItem(Speedfish.fish(2, true).clone());
-        inv.addItem(Speedfish.fish(3, true).clone());
-        inv.addItem(Speedfish.fish(4, true).clone());
-        inv.addItem(Speedfish.fish(5, true).clone());
+        Inventory inv = Bukkit.getServer().createInventory(null, 27, "Fisherman");
+
+        // Category Label
+        inv.setItem(4, createCategoryLabel("Magical Fish", Material.FISHING_ROD));
+
+        // Magical Fish
+        inv.setItem(10, Speedfish.fish(2, true).clone());
+        inv.setItem(12, Speedfish.fish(3, true).clone());
+        inv.setItem(14, Speedfish.fish(4, true).clone());
+        inv.setItem(16, Speedfish.fish(5, true).clone());
+
+        // Add colored separators
+        fillRow(inv, 0, (byte) 3);  // Light Blue
+        fillRow(inv, 2, (byte) 3);  // Light Blue
+
+        // Close button
+        inv.setItem(26, createCloseButton());
+
         return inv;
     }
 
     private Inventory openBookVendorInventory(Player player) {
-        Inventory inv = Bukkit.getServer().createInventory(null, 18, "Book Vendor");
-        inv.addItem(TeleportBooks.deadpeaksBook(true).clone());
-        inv.addItem(TeleportBooks.tripoliBook(true).clone());
-        inv.addItem(TeleportBooks.avalonBook(true).clone());
+        Inventory inv = Bukkit.getServer().createInventory(null, 27, "Book Vendor");
+
+        // Category Label
+        inv.setItem(4, createCategoryLabel("Teleport Books", Material.WRITTEN_BOOK));
+
+        // Teleport Books
+        inv.setItem(11, TeleportBooks.deadpeaks_book(true).clone());
+        inv.setItem(13, TeleportBooks.tripoli_book(true).clone());
+        inv.setItem(15, TeleportBooks.avalonBook(true).clone());
+
+        // Add colored separators
+        fillRow(inv, 0, (byte) 3);  // Light Blue
+        fillRow(inv, 2, (byte) 3);  // Light Blue
+
+        // Fill empty slots
+        for (int i = 0; i < inv.getSize(); i++) {
+            if (inv.getItem(i) == null) {
+                inv.setItem(i, createSeparator((byte) 7)); // Gray
+            }
+        }
+
+        // Close button
+        inv.setItem(26, createCloseButton());
+
         return inv;
     }
 
-    private Inventory openUpgradeVendorInventory(Player player) {
+    public static Inventory openUpgradeVendorInventory(Player player) {
         Inventory inv = Bukkit.getServer().createInventory(null, 18, "Upgrade Vendor");
         PersistentPlayer pp = PersistentPlayers.persistentPlayers.get(player.getUniqueId());
         inv.addItem(PersistentPlayers.getItem("Mount", pp.mount));
@@ -476,7 +568,9 @@ public class ItemVendors
             return;
         }
 
-        if (inventory.getTitle().equalsIgnoreCase("Item Vendor") || inventory.getTitle().equalsIgnoreCase("Fisherman") || inventory.getTitle().equalsIgnoreCase("Book Vendor")) {
+        if (inventory.getTitle().equals("Item Vendor") ||
+                inventory.getTitle().equals("Fisherman") ||
+                inventory.getTitle().equals("Book Vendor")) {
             handleInventoryClick(event, player);
         }
     }
@@ -485,23 +579,29 @@ public class ItemVendors
     private void handleInventoryClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
         ItemStack item = event.getCurrentItem();
-        if (item == null) {
+        if (item == null || item.getType() == Material.AIR || item.getType() == Material.STAINED_GLASS_PANE) {
             return;
         }
 
+        if (item.equals(createCloseButton())) {
+            player.closeInventory();
+            return;
+        }
+        if (item.getType() == Material.STAINED_GLASS_PANE && item.getDurability() == 14) {
+            player.closeInventory();
+            return;
+        }
         ItemMeta meta = item.getItemMeta();
         if (meta == null) {
             return;
         }
 
         List<String> lore = meta.getLore();
-
         if (lore == null) {
             return;
         }
 
         int price = getPriceFromLore(item);
-
         if (price < 0) {
             return;
         }
@@ -512,15 +612,14 @@ public class ItemVendors
             player.closeInventory();
             return;
         }
-        lore.remove(lore.size() - 1);
 
+        lore.remove(lore.size() - 1);
         meta.setLore(lore);
         item.setItemMeta(meta);
         buyingitem.put(player.getName(), item);
         buyingprice.put(player.getName(), price);
         player.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
         player.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-        event.setCancelled(true);
         player.closeInventory();
     }
 

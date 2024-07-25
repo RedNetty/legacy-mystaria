@@ -317,19 +317,18 @@ public class Horses implements Listener {
                 Entity entity = horse.getPassenger();
                 if (event instanceof EntityDamageByEntityEvent && (entityDamageByEntityEvent = (EntityDamageByEntityEvent) event).getDamager() instanceof Player && entity instanceof Player) {
                     Player damager = (Player) entityDamageByEntityEvent.getDamager();
-                    ArrayList<String> toggles = Toggles.getToggles(damager.getUniqueId());
                     ArrayList<String> buddies = Buddies.getBuddies(damager.getName());
-                    if (buddies.contains(entity.getName().toLowerCase()) && !toggles.contains("Friendly Fire")) {
+                    if (buddies.contains(entity.getName().toLowerCase()) && !Toggles.isToggled(damager,"Friendly Fire")) {
                         event.setDamage(0.0);
                         event.setCancelled(true);
                         return;
                     }
-                    if (toggles.contains("Anti PVP")) {
+                    if (Toggles.isToggled(damager, "Anti PVP")) {
                         event.setDamage(0.0);
                         event.setCancelled(true);
                         return;
                     }
-                    if (!Alignments.neutral.containsKey(entity.getName()) && !Alignments.chaotic.containsKey(entity.getName()) && toggles.contains("Chaotic")) {
+                    if (!Alignments.neutral.containsKey(entity.getName()) && !Alignments.chaotic.containsKey(entity.getName()) && Toggles.isToggled(damager,"Chaotic")) {
                         event.setDamage(0.0);
                         event.setCancelled(true);
                         return;

@@ -35,36 +35,44 @@ public class GemPouches
         PracticeServer.log.info("[GemPouches] has been disabled.");
     }
 
-    public static ItemStack gemPouch(int tier) {
+    public static ItemStack gemPouch(final int tier, final boolean shop) {
         String name = "";
         String lore = "";
         if (tier == 1) {
             name = ChatColor.WHITE + "Small Gem Pouch" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
-            lore = ChatColor.GRAY + "A small linen pouch that holds " + ChatColor.BOLD + "100g";
-        } else if (tier == 2) {
+            lore = ChatColor.GRAY + "A small linen pouch that holds " + ChatColor.BOLD + "200g";
+        }
+        else if (tier == 2) {
             name = ChatColor.GREEN + "Medium Gem Sack" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
-            lore = ChatColor.GRAY + "A medium wool sack that holds " + ChatColor.BOLD + "150g";
-        } else if (tier == 3) {
+            lore = ChatColor.GRAY + "A medium wool sack that holds " + ChatColor.BOLD + "350g";
+        }
+        else if (tier == 3) {
             name = ChatColor.AQUA + "Large Gem Satchel" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
-            lore = ChatColor.GRAY + "A large leather satchel that holds " + ChatColor.BOLD + "200g";
-        } else if (tier == 4) {
+            lore = ChatColor.GRAY + "A large leather satchel that holds " + ChatColor.BOLD + "500g";
+        }
+        else if (tier == 4) {
             name = ChatColor.LIGHT_PURPLE + "Gigantic Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
-            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "300g";
-        } else if (tier == 5) {
+            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "3000g";
+        }
+        else if (tier == 5) {
             name = ChatColor.YELLOW + "Legendary Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
-            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "500g";
-        } else if (tier == 6) {
+            lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "8000g";
+        }
+        else if (tier == 6) {
             name = ChatColor.RED + "Insane Gem Container" + ChatColor.GREEN + ChatColor.BOLD + " 0g";
             lore = ChatColor.GRAY + "A giant container that holds " + ChatColor.BOLD + "100000g";
         }
-        ItemStack is = new ItemStack(Material.INK_SACK);
-        ItemMeta im = is.getItemMeta();
+        final int shopPrice = tier * 3 * 750;
+        final String shopLore = shop ? (ChatColor.GREEN + "Price: " + ChatColor.WHITE + shopPrice + "g") : "";
+        final ItemStack is = new ItemStack(Material.INK_SACK);
+        final ItemMeta im = is.getItemMeta();
         im.setDisplayName(name);
-
-        if (name.contains("Insane"))
-            im.setLore(Arrays.asList(lore, "", ChatColor.RED + "Soulbound"));
-        else im.setLore(Collections.singletonList(lore));
-
+        if (name.contains("Insane")) {
+            im.setLore((List)Arrays.asList(lore, "", ChatColor.RED + "Soulbound", shopLore));
+        }
+        else {
+            im.setLore((List)Arrays.asList(lore, shopLore));
+        }
         is.setItemMeta(im);
         return is;
     }
@@ -161,9 +169,9 @@ public class GemPouches
             return;
         }
         int add = e.getItem().getItemStack().getAmount();
-        if (Toggles.getToggles(p.getUniqueId()).contains("Gems")) {
+        if (Toggles.isToggled(p, "Gems")) {
             Economy.depositPlayer(p.getUniqueId(), add);
-            if (Toggles.getToggles(p.getUniqueId()).contains("Debug")) {
+            if (Toggles.isToggled(p, "Debug")) {
                 p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD.toString() + "                    +" + ChatColor.GREEN.toString() + add + ChatColor.GREEN.toString() + ChatColor.BOLD.toString() + "G");
 
             }
@@ -210,7 +218,7 @@ public class GemPouches
     //yeah this is absolute garbage but w/e it works
     public static void onItemPickup(Player p, ItemStack itemStack) {
         int add = itemStack.getAmount();
-        if (Toggles.getToggles(p.getUniqueId()).contains("Gems")) {
+        if (Toggles.isToggled(p, "Gems")) {
             Economy.depositPlayer(p.getUniqueId(), add);
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
             return;

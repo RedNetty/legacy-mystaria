@@ -26,6 +26,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Orbs implements Listener {
 
@@ -429,7 +430,8 @@ public class Orbs implements Listener {
                 lore.add(ChatColor.RED + "PURE DMG: +" + pureamt);
                 name = "Pure " + name;
             }
-            if (item == 2 && acc == 1) {
+            if (acc == 1) {
+                if(item == 3 && accamt > 15) accamt = ThreadLocalRandom.current().nextInt(15,21);
                 lore.add(ChatColor.RED + "ACCURACY: " + accamt + "%");
                 name = "Accurate " + name;
             }
@@ -505,34 +507,16 @@ public class Orbs implements Listener {
 
 
         lore.addAll(rare);
-        if (tier == 1) {
-            name = ChatColor.WHITE + name;
-        }
-        if (tier == 2) {
-            name = ChatColor.GREEN + name;
-        }
-        if (tier == 3) {
-            name = ChatColor.AQUA + name;
-        }
-        if (tier == 4) {
-            name = ChatColor.LIGHT_PURPLE + name;
-        }
-        if (tier == 5) {
-            name = ChatColor.YELLOW + name;
-        }
-        if (tier == 6) {
-            name = ChatColor.BLUE + name;
-        }
+        name = applyColorBasedOnTier(name, tier);
+        name = applyPlusToName(name, plus, false);
 
-        if (ChatColor.stripColor(name).contains("[+")) {
-            name = name.replace("[+" + plus + "]", "[+" + plus + "]");
-        } else if (!ChatColor.stripColor(name).contains("[+") && plus >= 1) {
-            name = ChatColor.RED + "[+" + Enchants.getPlus(is) + "] " + name;
-        }
         final ItemMeta im = is.getItemMeta();
         im.setDisplayName(name);
         im.setLore(lore);
         is.setItemMeta(im);
+
+        validateItemName(is, oldName);
+
         return is;
     }
 
@@ -561,7 +545,7 @@ public class Orbs implements Listener {
         final int pure = random.nextInt(2) + 1;
         final int life = random.nextInt(2) + 1;
         final int crit = random.nextInt(1) + 1;
-        final int acc = random.nextInt(2) + 1;
+        int acc = random.nextInt(2) + 1;
         final int dodge = random.nextInt(2) + 1;
         final int block = random.nextInt(2) + 1;
         final int vit = random.nextInt(2) + 1;
@@ -1171,7 +1155,8 @@ public class Orbs implements Listener {
                 lore.add(ChatColor.RED + "PURE DMG: +" + pureamt);
                 name = "Pure " + name;
             }
-            if (item == 2 && acc == 1) {
+            if (acc == 1) {
+                if(item == 3 && accamt > 15) accamt = ThreadLocalRandom.current().nextInt(15,21);
                 lore.add(ChatColor.RED + "ACCURACY: " + accamt + "%");
                 name = "Accurate " + name;
             }
@@ -1250,39 +1235,16 @@ public class Orbs implements Listener {
 
 
         lore.addAll(rare);
-        if (tier == 1) {
-            name = ChatColor.WHITE + name;
-        }
-        if (tier == 2) {
-            name = ChatColor.GREEN + name;
-        }
-        if (tier == 3) {
-            name = ChatColor.AQUA + name;
-        }
-        if (tier == 4) {
-            name = ChatColor.LIGHT_PURPLE + name;
-        }
-        if (tier == 5) {
-            name = ChatColor.YELLOW + name;
-        }
-        if (tier == 6) {
-            name = ChatColor.BLUE + name;
-        }
-        int newPlus = 0;
-        if (plus <= 4) newPlus = 4;
-        if (plus > 4) newPlus = plus;
-        if (ChatColor.stripColor(name).contains("[+")) {
-            name = name.replace("[+" + plus + "]", "[+" + newPlus + "]");
-        } else if (!ChatColor.stripColor(name).contains("[+") && newPlus >= 4) {
-            name = ChatColor.RED + "[+" + newPlus + "] " + name;
-        } else {
-            name = ChatColor.RED + "[+4] " + name;
-        }
+        name = applyColorBasedOnTier(name, tier);
+        name = applyPlusToName(name, plus, true);
 
         final ItemMeta im = is.getItemMeta();
         im.setDisplayName(name);
         im.setLore(lore);
         is.setItemMeta(im);
+
+        validateItemName(is, oldName);
+
         return is;
     }
 
@@ -1368,4 +1330,44 @@ public class Orbs implements Listener {
             }
         }
     }
+    private static String applyColorBasedOnTier(String name, int tier) {
+        switch (tier) {
+            case 1:
+                return ChatColor.WHITE + name;
+            case 2:
+                return ChatColor.GREEN + name;
+            case 3:
+                return ChatColor.AQUA + name;
+            case 4:
+                return ChatColor.LIGHT_PURPLE + name;
+            case 5:
+                return ChatColor.YELLOW + name;
+            case 6:
+                return ChatColor.BLUE + name;
+            default:
+                return name;
+        }
+    }
+    private static String applyPlusToName(String name, int plus, boolean isLegendaryOrb) {
+        int newPlus = plus;
+        if (isLegendaryOrb) {
+            newPlus = Math.max(plus, 4);
+        }
+
+        if (ChatColor.stripColor(name).contains("[+")) {
+            return name.replaceAll("\\[\\+\\d+\\]", "[+" + newPlus + "]");
+        } else if (!ChatColor.stripColor(name).contains("[+") && newPlus >= 1) {
+            return ChatColor.RED + "[+" + newPlus + "] " + name;
+        }
+        return name;
+    }
+
+    private static void validateItemName(ItemStack is, String oldName) {
+        ItemMeta im = is.getItemMeta();
+        if (oldName != null && oldName.equals(im.getDisplayName())) {
+            im.setDisplayName(oldName); // Ensure custom name remains unchanged
+            is.setItemMeta(im);
+        }
+    }
+
 }

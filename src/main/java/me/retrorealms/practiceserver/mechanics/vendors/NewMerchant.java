@@ -154,14 +154,18 @@ public class NewMerchant implements Listener {
                 if (inventory.getItem(i) != null && inventory.getItem(i).getType() != Material.AIR) {
                     ItemStack is = inventory.getItem(i);
                     double reward = 0;
-                    if (!is.getType().toString().contains("_PICKAXE") && is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
+                    if (is.getType() == Material.MAGMA_CREAM &&
+                            is.getItemMeta().getDisplayName().equals(ChatColor.LIGHT_PURPLE + "Orb of Alteration")) {
+                        // Handle normal orb trade-in
+                        reward = 500 * is.getAmount();
+                        if (finishTrade) inventory.setItem(i, null);
+                    } else if (!is.getType().toString().contains("_PICKAXE") && is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
                         int oreAmount = is.getAmount();
                         int oreTier = ProfessionMechanics.getOreTier(is.getType());
                         reward = 20;
                         reward = (int) ((reward * oreAmount * oreTier) * 1.23);
-                        if(finishTrade) inventory.setItem(i, null);
-                    }
-                    if ((Durability.isArmor(is) || Listeners.isWeapon(is)) && !is.getType().toString().contains("_PICKAXE")) {
+                        if (finishTrade) inventory.setItem(i, null);
+                    } else if ((Durability.isArmor(is) || Listeners.isWeapon(is)) && !is.getType().toString().contains("_PICKAXE")) {
                         Random r = new Random();
                         int t = Items.getTierFromColor(is) * 2;
                         reward = (((t / 10D) + 1D) * (t * t)) * 12D;
@@ -170,7 +174,7 @@ public class NewMerchant implements Listener {
                             int rarity = Altar.RarityToInt(itemlore.get(itemlore.size() - 1));
                             reward = (reward * rarity) - (reward * .25);
                         }
-                        if(finishTrade) inventory.setItem(i, null);
+                        if (finishTrade) inventory.setItem(i, null);
                     }
                     totalValue += reward;
                 }

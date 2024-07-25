@@ -73,7 +73,7 @@ public class Deadman implements Listener{
         if (isSafeZone(e.getFrom()) && !isSafeZone(e.getTo())) {
             p.sendMessage(ChatColor.RED + "You cannot exit deadpeaks until the event begins.");
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 0.25f, 0.3f);
-            p.teleport(TeleportBooks.stonePeaks);
+            p.teleport(TeleportBooks.DeadPeaks);
         }
     }
 

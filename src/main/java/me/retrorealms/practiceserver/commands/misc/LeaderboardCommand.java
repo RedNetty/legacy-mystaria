@@ -235,17 +235,16 @@ public class LeaderboardCommand implements CommandExecutor, Listener {
 
     private void openLeaderboard(Player player, String areaName, List<String> leaderboard, int startingRank) {
         int rank = startingRank;
-        int inventorySize = Math.min(leaderboard.size(), 27);
+        int inventorySize = 27; // Set a fixed size that's a multiple of 9
         Inventory inventory = Bukkit.createInventory(null, inventorySize, ChatColor.YELLOW + areaName + " Leaderboard");
 
         for (String entry : leaderboard) {
-            ItemStack playerHead = createPlayerHead(entry, rank);
-            inventory.addItem(playerHead);
-            rank++;
-
             if (rank > inventorySize) {
                 break;
             }
+            ItemStack playerHead = createPlayerHead(entry, rank);
+            inventory.addItem(playerHead);
+            rank++;
         }
 
         player.openInventory(inventory);

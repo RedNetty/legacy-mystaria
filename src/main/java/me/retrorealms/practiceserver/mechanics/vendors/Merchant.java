@@ -84,23 +84,29 @@ public class Merchant implements Listener {
 
     public void scrapGear(Player p, ItemStack is) {
         double reward = 0;
-        if (is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
+        String strippedItemName = ChatColor.stripColor(is.getItemMeta().getDisplayName());
+        if (is.getType() == Material.MAGMA_CREAM && is.getItemMeta().getDisplayName().equalsIgnoreCase("Orb of Alteration")) {
+            // Handle normal orb trade-in
+            int orbAmount = is.getAmount();
+            reward = 500 * orbAmount;
+        } else if (is.getType().toString().contains("_ORE") && ProfessionMechanics.getOreTier(is.getType()) > 0) {
             int oreAmount = is.getAmount();
             int oreTier = ProfessionMechanics.getOreTier(is.getType());
             reward = 20;
             reward = (int) ((reward * oreAmount * oreTier) * 1.23);
-        }else {
+        } else {
             Random r = new Random();
-            int t = Items.getTierFromColor(p.getItemInHand());
+            int t = Items.getTierFromColor(is);
             reward = (((t / 10D) + 1D) * (t * t)) * 12D;
             reward = r.nextInt((int) reward / 3) + (int) reward;
         }
         if ((ModerationMechanics.isDonator(p)) || (ModerationMechanics.isStaff(p))){
             double rew = (double) reward * 1.20D;
             p.getInventory().addItem(Money.createBankNote((int)rew));
-        }else{
+        } else {
             p.getInventory().addItem(Money.createBankNote((int)reward));
         }
+        p.sendMessage(ChatColor.GREEN + "You received " + ChatColor.BOLD + reward + " gems" + ChatColor.GREEN + " for your trade.");
     }
 
     public void onEnable(){

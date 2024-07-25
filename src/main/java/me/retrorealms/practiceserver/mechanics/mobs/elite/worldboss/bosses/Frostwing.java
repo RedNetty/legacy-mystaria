@@ -1,34 +1,32 @@
 package me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.bosses;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import me.retrorealms.practiceserver.apis.HashMapSorter;
-import me.retrorealms.practiceserver.mechanics.drops.Mobdrops;
-import me.retrorealms.practiceserver.mechanics.item.Items;
-import me.retrorealms.practiceserver.mechanics.item.scroll.ScrollGenerator;
 import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
-import me.retrorealms.practiceserver.mechanics.mobs.Mobs;
 import me.retrorealms.practiceserver.mechanics.mobs.SkullTextures;
 import me.retrorealms.practiceserver.mechanics.mobs.Spawners;
 import me.retrorealms.practiceserver.mechanics.mobs.boss.drops.BossGearGenerator;
 import me.retrorealms.practiceserver.mechanics.mobs.boss.drops.WorldBossDrops;
 import me.retrorealms.practiceserver.mechanics.mobs.elite.worldboss.WorldBoss;
-import me.retrorealms.practiceserver.mechanics.money.GemPouches;
-import me.retrorealms.practiceserver.mechanics.money.Money;
+import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class Frostwing extends WorldBoss implements Listener {
-
 
     public BossEnum bossEnum = BossEnum.FROSTWING;
     int timeSinceLastATK = 20;
@@ -39,8 +37,17 @@ public class Frostwing extends WorldBoss implements Listener {
     Location bossLocation;
 
     int stage = 0;
-
-
+    private int phase = 1;
+    private boolean isInvulnerable = false;
+    private Map<UUID, Long> playerFrostbiteMap = new HashMap<>();
+    private List<Location> iceWalls = new ArrayList<>();
+    private int iceWallDuration = 200;
+    private boolean glacialStormActive = false;
+    private int glacialStormTicks = 0;
+    private Location lastTeleportLocation;
+    public Frostwing() {
+        super(BossEnum.FROSTWING);
+    }
     @Override
     public WorldBoss spawnBoss(Location location) {
         this.livingEntity = Spawners.spawnMob(location, "frostwing", 5, true);
@@ -52,43 +59,9 @@ public class Frostwing extends WorldBoss implements Listener {
         livingEntity.setHealth(livingEntity.getMaxHealth());
         setArmor();
 
+        startBossAI();
+        startPhaseManager();
 
-        new BukkitRunnable() {
-            public void run() {
-                try {
-                    if (livingEntity.isDead()) {
-                        minionList.forEach(livingEntity -> {
-                            if (!livingEntity.isDead()) {
-                                if (Spawners.mobs.containsKey(livingEntity)) Spawners.mobs.remove(livingEntity);
-                                livingEntity.remove();
-                            }
-                        });
-                        this.cancel();
-                    }
-                    List<Player> nearbyPlayers = livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).stream().filter(player -> player instanceof Player).map(player -> (Player) player).collect(Collectors.toList());
-                    if (nearbyPlayers.size() > 0 && timeSinceLastATK < attackFreq) timeSinceLastATK++;
-                    if (timeSinceLastATK >= attackFreq) {
-                        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
-                            if (entity instanceof Player && timeSinceLastATK >= attackFreq) {
-                                if (!healing && livingEntity.isOnGround()) doRandomAttack();
-                            }
-                        });
-                    }
-
-
-                    bossMechanic((int) (livingEntity.getHealth() / livingEntity.getMaxHealth() * 100));
-                    if ((livingEntity.getHealth() / livingEntity.getMaxHealth() * 100) < 23) {
-                        if (!bezerk) activateBezerk();
-                    }
-                    if (bezerk) {
-                        livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getEyeLocation(), 3, 0.5, 0.8, 0.5, 0.1);
-
-                    }
-                } catch (Exception e) {
-
-                }
-            }
-        }.runTaskTimer(PracticeServer.getInstance(), 20L, 20L);
         return this;
     }
 
@@ -108,7 +81,6 @@ public class Frostwing extends WorldBoss implements Listener {
         bezerk = true;
         livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 2500, 1), true);
     }
-
 
     public void bossMechanic(int percent) {
         if (healing) return;
@@ -142,7 +114,7 @@ public class Frostwing extends WorldBoss implements Listener {
                             this.cancel();
                         }
                     } catch (Exception e) {
-
+                        // Handle exception
                     }
                 }
             }.runTaskTimer(PracticeServer.getInstance(), 0L, 5L);
@@ -164,10 +136,9 @@ public class Frostwing extends WorldBoss implements Listener {
                         this.cancel();
                     }
                 } catch (Exception e) {
-
+                    // Handle exception
                 }
             }
-
         }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
         new BukkitRunnable() {
             int ticks = 0;
@@ -196,136 +167,93 @@ public class Frostwing extends WorldBoss implements Listener {
                     }
                     ticks++;
                 } catch (Exception e) {
-
+                    // Handle exception
                 }
             }
         }.runTaskTimer(PracticeServer.getInstance(), 0L, 2L);
     }
 
-    @Override
-    public void rewardLoot() {
-        ArrayList<Map.Entry<Player, Integer>> players = HashMapSorter.sortTopPlayers(getDamageDone());
-        Player winner;
-        Player second;
-        Player third;
-        int toSkip = 0;
+    private void startBossAI() {
+        new BukkitRunnable() {
+            public void run() {
+                try {
+                    if (livingEntity.isDead()) {
+                        cleanupBoss();
+                        this.cancel();
+                        return;
+                    }
+                    List<Player> nearbyPlayers = livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).stream().filter(player -> player instanceof Player).map(player -> (Player) player).collect(Collectors.toList());
+                    if (nearbyPlayers.size() > 0 && timeSinceLastATK < attackFreq) timeSinceLastATK++;
+                    if (timeSinceLastATK >= attackFreq) {
+                        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+                            if (entity instanceof Player && timeSinceLastATK >= attackFreq) {
+                                if (!healing && livingEntity.isOnGround()) doRandomAttack();
+                            }
+                        });
+                    }
 
-        if (players.size() > 0 && players.get(0).getValue() > 40000) {
-            winner = players.get(0).getKey();
-            toSkip = 1;
-        } else {
-            winner = null;
-        }
-        if (players.size() > 1 && players.get(1).getValue() > 40000) {
-            second = players.get(1).getKey();
-            toSkip = 2;
-        } else {
-            second = null;
-        }
-        if (players.size() > 2 && players.get(2).getValue() > 40000) {
-            third = players.get(2).getKey();
-            toSkip = 3;
-        } else {
-            third = null;
-        }
-
-        Bukkit.getServer().getOnlinePlayers().forEach(player -> {
-            StringUtil.sendCenteredMessage(player, "&e★☆✫ &3&l World-Boss &e✫☆★");
-            StringUtil.sendCenteredMessage(player, "&bFrost-Wing &7has been defeated!");
-            if (winner != null) {
-                StringUtil.sendCenteredMessage(player, "&e* 1. " + winner.getName() + " &7- &c" + players.get(0).getValue() + "DMG");
-            }
-            if (second != null) {
-                StringUtil.sendCenteredMessage(player, "&e* 2. " + second.getName() + " &7- &c" + players.get(1).getValue() + "DMG");
-            }
-            if (third != null) {
-                StringUtil.sendCenteredMessage(player, "&e* 3. " + third.getName() + " &7- &c" + players.get(2).getValue() + "DMG");
-            }
-            player.sendMessage("");
-        });
-
-
-        getLoot(winner, 1);
-        getLoot(second, 2);
-        getLoot(third, 3);
-        players.stream().skip(toSkip).forEach(p -> {
-            if (p.getValue() > 10000) getLoot(p.getKey(), 4);
-        });
-    }
-
-    public void getLoot(Player player, int place) {
-        if (player != null) {
-            List<ItemStack> lootDrops = new ArrayList<>();
-            int armChance = 65;
-            int wepChance = 65;
-            int legOrbAmount = 2;
-            int t5ProtAmount = 2;
-            int bankNoteAmount = 5000;
-
-            switch (place) {
-                case 1:
-                    armChance = 6;
-                    wepChance = 9;
-                    legOrbAmount = 15;
-                    t5ProtAmount = 10;
-                    bankNoteAmount = 35000;
-                    break;
-                case 2:
-                    armChance = 8;
-                    wepChance = 13;
-                    legOrbAmount = 10;
-                    t5ProtAmount = 7;
-                    bankNoteAmount = 25000;
-                    break;
-                case 3:
-                    armChance = 10;
-                    wepChance = 15;
-                    legOrbAmount = 8;
-                    t5ProtAmount = 4;
-                    bankNoteAmount = 25000;
-                    break;
-            }
-
-
-            if (ThreadLocalRandom.current().nextInt(wepChance) == 2)
-                lootDrops.add(livingEntity.getEquipment().getItemInMainHand());
-            if (ThreadLocalRandom.current().nextInt(armChance) == 2)
-                lootDrops.add(WorldBossDrops.createDrop(5, entityName));
-            if (ThreadLocalRandom.current().nextInt(armChance) == 2)
-                lootDrops.add(livingEntity.getEquipment().getChestplate());
-            if (ThreadLocalRandom.current().nextInt(armChance) == 2)
-                lootDrops.add(livingEntity.getEquipment().getLeggings());
-            if (ThreadLocalRandom.current().nextInt(armChance) == 2)
-                lootDrops.add(livingEntity.getEquipment().getBoots());
-
-            ItemStack legOrb = Items.legendaryOrb(false).clone();
-            legOrb.setAmount(ThreadLocalRandom.current().nextInt((legOrbAmount / 2) + 1, legOrbAmount + 1));
-            lootDrops.add(legOrb);
-
-            ItemStack t5Prot = new ScrollGenerator().next(4).clone();
-            t5Prot.setAmount(ThreadLocalRandom.current().nextInt((t5ProtAmount / 2) + 1, t5ProtAmount + 1));
-            lootDrops.add(t5Prot);
-
-            lootDrops.add(Money.createBankNote(ThreadLocalRandom.current().nextInt((bankNoteAmount / 2) + 1, bankNoteAmount + 1)).clone());
-
-
-            for (int i = 0; i < ThreadLocalRandom.current().nextInt(place + 1); i++) {
-                lootDrops.add(GemPouches.gemPouch(6).clone());
-            }
-
-            if (!lootDrops.isEmpty()) lootDrops.forEach(item -> {
-                Mobdrops.dropShowString(player, item, null);
-                if (player.getInventory().firstEmpty() == -1) {
-                    player.getWorld().dropItem(player.getLocation(), item);
-                } else {
-                    player.getInventory().addItem(item);
+                    updateGlacialStorm();
+                    updateIceWalls();
+                    bossMechanic((int) (livingEntity.getHealth() / livingEntity.getMaxHealth() * 100));
+                    if ((livingEntity.getHealth() / livingEntity.getMaxHealth() * 100) < 23) {
+                        if (!bezerk) activateBezerk();
+                    }
+                    if (bezerk) {
+                        livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, livingEntity.getEyeLocation(), 3, 0.5, 0.8, 0.5, 0.1);
+                    }
+                } catch (Exception e) {
+                    // Handle exception
                 }
-            });
-        }
-
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 20L, 20L);
     }
 
-    public void doRandomAttack() {
+    private void cleanupBoss() {
+        minionList.forEach(minion -> {
+            if (!minion.isDead()) {
+                if (Spawners.mobs.containsKey(minion)) Spawners.mobs.remove(minion);
+                minion.remove();
+            }
+        });
+        iceWalls.forEach(loc -> loc.getBlock().setType(Material.AIR));
+        glacialStormActive = false;
+    }
+
+    private void updateGlacialStorm() {
+        if (glacialStormActive) {
+            glacialStormTicks++;
+            if (glacialStormTicks >= 200) { // 30 seconds
+                glacialStormActive = false;
+                glacialStormTicks = 0;
+                announceToNearbyPlayers(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "The Glacial Storm subsides...");
+            } else {
+                livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 30, 30, 30).stream()
+                        .filter(e -> e instanceof Player)
+                        .forEach(e -> {
+                            Player p = (Player) e;
+                            p.damage(100);
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 1));
+                        });
+                livingEntity.getWorld().spawnParticle(Particle.SNOW_SHOVEL, livingEntity.getLocation(), 500, 15, 5, 15, 0.1);
+            }
+        }
+    }
+
+    private void updateIceWalls() {
+        iceWalls.removeIf(loc -> {
+            if (loc.getBlock().getType() == Material.ICE) {
+                if (ThreadLocalRandom.current().nextInt(100) < 5) {
+                    loc.getBlock().setType(Material.AIR);
+                    return true;
+                }
+            } else {
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void doRandomAttack() {
         timeSinceLastATK = 0;
         livingEntity.getWorld().playSound(livingEntity.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 2, 2);
         livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
@@ -342,26 +270,24 @@ public class Frostwing extends WorldBoss implements Listener {
                     case 3:
                         player.sendMessage(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "Your warmth will be extinguished, just like your life!");
                         break;
-                    case 4:
-                        player.sendMessage(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "You will be buried under an avalanche of ice!");
-                        break;
-
                 }
             }
         });
-        int ran = ThreadLocalRandom.current().nextInt(1, 6);
-        switch (ran) {
-            case 1:
-                iceBlockBarrageAttack(livingEntity, 10, ThreadLocalRandom.current().nextInt(1500, 2000), 25, 25);
-                break;
-            case 2:
-            default:
-                icyGroundAttack(livingEntity.getLocation(), 9, ThreadLocalRandom.current().nextInt(300, 370), ThreadLocalRandom.current().nextInt(4, 5), 35, 5);
-                break;
-            case 3:
-                summonMinionsAttack(livingEntity.getLocation(), ThreadLocalRandom.current().nextInt(2, 5));
-                break;
-
+        int attackChoice = ThreadLocalRandom.current().nextInt(100);
+        if (attackChoice < 20) {
+            iceBlockBarrageAttack(livingEntity, 10, ThreadLocalRandom.current().nextInt(1500, 2000), 25, 25);
+        } else if (attackChoice < 40) {
+            icyGroundAttack(livingEntity.getLocation(), 9, ThreadLocalRandom.current().nextInt(300, 370), ThreadLocalRandom.current().nextInt(4, 5), 35, 5);
+        } else if (attackChoice < 55) {
+            summonMinionsAttack(livingEntity.getLocation(), ThreadLocalRandom.current().nextInt(2, 5));
+        } else if (attackChoice < 70) {
+            frostNova();
+        } else if (attackChoice < 85) {
+            blizzardStorm();
+        } else if (attackChoice < 95) {
+            frostbiteAura();
+        } else {
+            glacialCataclysm();
         }
     }
 
@@ -382,7 +308,6 @@ public class Frostwing extends WorldBoss implements Listener {
                 }
             }
             new BukkitRunnable() {
-
                 public void run() {
                     try {
                         if (ticks[0] >= duration) {
@@ -397,13 +322,12 @@ public class Frostwing extends WorldBoss implements Listener {
                         }
                         ticks[0]++;
                     } catch (Exception e) {
-
+                        // Handle exception
                     }
                 }
             }.runTaskTimer(PracticeServer.getInstance(), 0L, 20L);
         }
         new BukkitRunnable() {
-
             public void run() {
                 try {
                     if (ticks[0] >= duration) {
@@ -426,10 +350,9 @@ public class Frostwing extends WorldBoss implements Listener {
                         }
                     }
                 } catch (Exception e) {
-
+                    // Handle exception
                 }
             }
-
         }.runTaskTimer(PracticeServer.getInstance(), 0L, 20L);
     }
 
@@ -441,7 +364,7 @@ public class Frostwing extends WorldBoss implements Listener {
             double z = Math.sin(angle) * 3;
             int elite = ThreadLocalRandom.current().nextInt(1, 7);
 
-            boolean isElite = elite == 1 ? true : false;
+            boolean isElite = elite == 1;
             Location minionLocation = bossLoc.clone().add(x, 1, z);
             LivingEntity livingEntity = Spawners.spawnMob(minionLocation, "skeleton", 5, isElite);
             minionList.add(livingEntity);
@@ -462,7 +385,6 @@ public class Frostwing extends WorldBoss implements Listener {
                         new BukkitRunnable() {
                             public void run() {
                                 try {
-
                                     for (int i = 0; i < numberOfIceBlocks; i++) {
                                         final int[] currentRadius = {3};
                                         final int[] currentDuration = {0};
@@ -486,7 +408,6 @@ public class Frostwing extends WorldBoss implements Listener {
                                                 } else {
                                                     currentDuration[0]++;
                                                 }
-
                                             }
                                         }.runTaskTimer(PracticeServer.getInstance(), 20L, 5L);
                                         new BukkitRunnable() {
@@ -510,13 +431,13 @@ public class Frostwing extends WorldBoss implements Listener {
                                                         }
                                                     }
                                                 } catch (Exception e) {
-
+                                                    // Handle exception
                                                 }
                                             }
                                         }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
                                     }
                                 } catch (Exception e) {
-
+                                    // Handle exception
                                 }
                             }
                         }.runTaskLater(PracticeServer.getInstance(), 5L);
@@ -525,19 +446,340 @@ public class Frostwing extends WorldBoss implements Listener {
                     tick++;
                     entity.getWorld().playEffect(entity.getLocation().clone().add(0, 2, 0), Effect.STEP_SOUND, Material.FROSTED_ICE);
                 } catch (Exception e) {
-
+                    // Handle exception
                 }
             }
-
         }.runTaskTimerAsynchronously(PracticeServer.getInstance(), 0L, 10L);
     }
 
-    public void setArmor() {
-        livingEntity.getEquipment().setBoots(WorldBossDrops.createDrop(8, "frostwing"));
-        livingEntity.getEquipment().setLeggings(WorldBossDrops.createDrop(7, "frostwing"));
-        livingEntity.getEquipment().setChestplate(WorldBossDrops.createDrop(6, "frostwing"));
-        livingEntity.getEquipment().setHelmet(SkullTextures.FROST.getSkullByURL());
-        livingEntity.getEquipment().setItemInMainHand(WorldBossDrops.createDrop(BossGearGenerator.getWeaponType("frostwing"), "frostwing"));
+
+    private long lastAnnouncementTime = 0;
+    private static final long ANNOUNCEMENT_COOLDOWN = 10000; // 10 seconds in milliseconds
+
+    private void frostNova() {
+        if (System.currentTimeMillis() - lastAnnouncementTime > ANNOUNCEMENT_COOLDOWN) {
+            announceAbility("Frost Nova", "The air crystallizes around you!");
+            lastAnnouncementTime = System.currentTimeMillis();
+        }
+
+        Location center = livingEntity.getLocation();
+        new BukkitRunnable() {
+            double radius = 1;
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 40) {
+                    this.cancel();
+                    return;
+                }
+
+                // Create expanding ice circle
+                for (double angle = 0; angle < 360; angle += 5) {
+                    double x = radius * Math.cos(Math.toRadians(angle));
+                    double z = radius * Math.sin(Math.toRadians(angle));
+                    Location particleLoc = center.clone().add(x, 0, z);
+                    center.getWorld().spawnParticle(Particle.END_ROD, particleLoc, 5, 0.1, 0.1, 0.1, 0);
+                    center.getWorld().spawnParticle(Particle.SNOW_SHOVEL, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+                }
+
+                // Create ice spikes effect
+                if (ticks % 5 == 0) {
+                    for (int i = 0; i < 3; i++) {
+                        double angle = Math.random() * 360;
+                        double distance = Math.random() * radius;
+                        double x = distance * Math.cos(Math.toRadians(angle));
+                        double z = distance * Math.sin(Math.toRadians(angle));
+                        Location spikeLoc = center.clone().add(x, 0, z);
+                        createIceSpikeEffect(spikeLoc);
+                    }
+                }
+
+                radius += 0.5;
+                ticks++;
+
+                // Damage players, but give them a chance to avoid it
+                for (Entity entity : center.getWorld().getNearbyEntities(center, radius, 5, radius)) {
+                    if (entity instanceof Player) {
+                        Player player = (Player) entity;
+                        double distanceFromCenter = player.getLocation().distance(center);
+                        if (distanceFromCenter < radius - 1.5 && canDamagePlayer(player)) { // Added cooldown check
+                            double damage = 30 * phase * (1 - (distanceFromCenter / radius));
+                            player.damage(damage);
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 1));
+                        }
+                    }
+                }
+
+                center.getWorld().playSound(center, Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
     }
 
+    private void createIceSpikeEffect(Location location) {
+        for (int y = 0; y < 3; y++) {
+            Location spikePart = location.clone().add(0, y, 0);
+            spikePart.getWorld().spawnParticle(Particle.END_ROD, spikePart, 10, 0.2, 0.2, 0.2, 0);
+            spikePart.getWorld().spawnParticle(Particle.SNOW_SHOVEL, spikePart, 5, 0.1, 0.1, 0.1, 0);
+        }
+    }
+
+    private void blizzardStorm() {
+        if (System.currentTimeMillis() - lastAnnouncementTime > ANNOUNCEMENT_COOLDOWN) {
+            announceAbility("Blizzard Storm", "Nature's fury unleashed!");
+            lastAnnouncementTime = System.currentTimeMillis();
+        }
+
+        glacialStormActive = true;
+        glacialStormTicks = 0;
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!glacialStormActive || glacialStormTicks >= 200) {
+                    glacialStormActive = false;
+                    glacialStormTicks = 0;
+                    if (System.currentTimeMillis() - lastAnnouncementTime > ANNOUNCEMENT_COOLDOWN) {
+                        announceAbility("Blizzard Storm", "The storm calms...");
+                        lastAnnouncementTime = System.currentTimeMillis();
+                    }
+                    this.cancel();
+                    return;
+                }
+
+                Location center = livingEntity.getLocation();
+
+                // Create swirling snow particles
+                for (int i = 0; i < 5; i++) {
+                    double angle = (glacialStormTicks * 5 + i * 72) % 360;
+                    double x = 10 * Math.cos(Math.toRadians(angle));
+                    double z = 10 * Math.sin(Math.toRadians(angle));
+                    Location particleLoc = center.clone().add(x, 5 * Math.sin(Math.toRadians(glacialStormTicks * 10)), z);
+                    center.getWorld().spawnParticle(Particle.SNOW_SHOVEL, particleLoc, 10, 1, 1, 1, 0);
+                    center.getWorld().spawnParticle(Particle.END_ROD, particleLoc, 5, 0.5, 0.5, 0.5, 0);
+                }
+
+                // Periodically summon ice shards effect
+                if (glacialStormTicks % 20 == 0) {
+                    summonIceShardsEffect(center);
+                }
+
+                // Affect nearby players
+                for (Entity entity : center.getWorld().getNearbyEntities(center, 25, 25, 25)) {
+                    if (entity instanceof Player) {
+                        Player player = (Player) entity;
+                        if (Math.random() < 0.1 && canDamagePlayer(player)) { // 10% chance to apply effects each tick, with cooldown check
+                            player.damage(5 * phase);
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 1));
+                        }
+
+                        // Gentle push towards the center
+                        Vector push = center.toVector().subtract(player.getLocation().toVector()).normalize().multiply(0.05);
+                        player.setVelocity(player.getVelocity().add(push));
+                    }
+                }
+
+                glacialStormTicks++;
+                if (glacialStormTicks % 20 == 0) { // Play sound every second
+                    center.getWorld().playSound(center, Sound.WEATHER_RAIN, 1.0f, 0.5f);
+                }
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
+    }
+
+    private void summonIceShardsEffect(Location center) {
+        for (int i = 0; i < 3; i++) { // Reduced number of shards
+            Location shardLoc = center.clone().add(Math.random() * 20 - 10, 10, Math.random() * 20 - 10);
+            Vector direction = center.toVector().subtract(shardLoc.toVector()).normalize();
+
+            new BukkitRunnable() {
+                int ticks = 0;
+                @Override
+                public void run() {
+                    if (ticks >= 20) {
+                        this.cancel();
+                        return;
+                    }
+                    shardLoc.add(direction.clone().multiply(0.5));
+                    shardLoc.getWorld().spawnParticle(Particle.END_ROD, shardLoc, 10, 0.1, 0.1, 0.1, 0);
+                    shardLoc.getWorld().spawnParticle(Particle.SNOW_SHOVEL, shardLoc, 5, 0.1, 0.1, 0.1, 0);
+
+                    for (Entity entity : shardLoc.getWorld().getNearbyEntities(shardLoc, 1, 1, 1)) {
+                        if (entity instanceof Player) {
+                            Player player = (Player) entity;
+                            player.damage(10 * phase);
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 1));
+                        }
+                    }
+
+                    ticks++;
+                }
+            }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
+        }
+    }
+
+    private void announceAbility(String abilityName, String message) {
+        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
+                player.sendMessage(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "[" + abilityName + "] " + message);
+            }
+        });
+    }
+
+    private void frostbiteAura() {
+        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
+                player.sendMessage(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "Your flesh will freeze and shatter!");
+            }
+        });
+        new BukkitRunnable() {
+            int duration = 0;
+
+            @Override
+            public void run() {
+                if (duration >= 120) {
+                    this.cancel();
+                    return;
+                }
+                for (Entity entity : livingEntity.getNearbyEntities(20, 20, 20)) {
+                    if (entity instanceof Player) {
+                        Player player = (Player) entity;
+                        if (!playerFrostbiteMap.containsKey(player.getUniqueId())) {
+                            playerFrostbiteMap.put(player.getUniqueId(), System.currentTimeMillis());
+                        } else if (System.currentTimeMillis() - playerFrostbiteMap.get(player.getUniqueId()) > 1000) {
+                            player.damage(200 * phase);
+                            playerFrostbiteMap.put(player.getUniqueId(), System.currentTimeMillis());
+                        }
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 2));
+                    }
+                }
+                livingEntity.getWorld().spawnParticle(Particle.SNOW_SHOVEL, livingEntity.getLocation(), 100, 7, 1, 7, 0.1);
+                duration++;
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
+    }
+
+    private void glacialCataclysm() {
+        announceToNearbyPlayers(ChatColor.AQUA.toString() + ChatColor.BOLD + "Frost-Wing The Frozen Titan: " + ChatColor.YELLOW + "Behold the power of a Glacial Cataclysm!");
+        isInvulnerable = true;
+        new BukkitRunnable() {
+            int ticks = 0;
+            @Override
+            public void run() {
+                if (ticks >= 300) { // 15 seconds
+                    isInvulnerable = false;
+                    this.cancel();
+                    return;
+                }
+                if (ticks % 40 == 0) { // Every 2 seconds
+                    frostNova();
+                }
+                if (ticks % 20 == 0) { // Every 1 second
+                    livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 50, 50, 50).stream()
+                            .filter(e -> e instanceof Player)
+                            .forEach(e -> ((Player) e).damage(250 * phase));
+                }
+                livingEntity.getWorld().spawnParticle(Particle.SNOWBALL, livingEntity.getLocation(), 100, 10, 10, 10, 0.1);
+                ticks++;
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 0L, 1L);
+    }
+
+
+    private void teleportToNearestPlayer() {
+        if (lastTeleportLocation != null && livingEntity.getLocation().distance(lastTeleportLocation) < 10) {
+            return; // Prevent frequent teleportation to the same area
+        }
+
+        Optional<Entity> nearestPlayer = livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 100, 100, 100).stream()
+                .filter(e -> e instanceof Player)
+                .min(Comparator.comparingDouble(e -> e.getLocation().distanceSquared(livingEntity.getLocation())));
+
+        nearestPlayer.ifPresent(player -> {
+            Location teleportLocation = player.getLocation().add(ThreadLocalRandom.current().nextDouble(-5, 5), 0, ThreadLocalRandom.current().nextDouble(-5, 5));
+            livingEntity.teleport(teleportLocation);
+            lastTeleportLocation = teleportLocation;
+            announceToNearbyPlayers("Frost-Wing suddenly appears nearby!");
+            livingEntity.getWorld().playSound(teleportLocation, Sound.ENTITY_ENDERMEN_TELEPORT, 1.0f, 0.5f);
+            livingEntity.getWorld().spawnParticle(Particle.DRAGON_BREATH, teleportLocation, 100, 1, 1, 1, 0.1);
+        });
+    }
+    private void announceToNearbyPlayers(String message) {
+        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 50, 50, 50).stream()
+                .filter(e -> e instanceof Player)
+                .forEach(e -> ((Player) e).sendMessage(ChatColor.AQUA + message));
+    }
+    private void startPhaseManager() {
+        new BukkitRunnable() {
+            public void run() {
+                if (livingEntity.isDead()) {
+                    this.cancel();
+                    return;
+                }
+
+                double healthPercentage = livingEntity.getHealth() / livingEntity.getMaxHealth();
+                if (healthPercentage <= 0.25 && phase < 4) {
+                    phase = 4;
+                    announcePhaseChange();
+                } else if (healthPercentage <= 0.5 && phase < 3) {
+                    phase = 3;
+                    announcePhaseChange();
+                } else if (healthPercentage <= 0.75 && phase < 2) {
+                    phase = 2;
+                    announcePhaseChange();
+                }
+            }
+        }.runTaskTimer(PracticeServer.getInstance(), 20L, 20L);
+    }
+
+    private void announcePhaseChange() {
+        livingEntity.getWorld().getNearbyEntities(livingEntity.getLocation(), 25, 25, 25).forEach(entity -> {
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
+                StringUtil.sendCenteredMessage(player, ChatColor.AQUA + "Frost-Wing enters phase " + phase + "!");
+                StringUtil.sendCenteredMessage(player, ChatColor.GRAY + "The air becomes even colder!");
+            }
+        });
+        livingEntity.getWorld().playSound(livingEntity.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.5f);
+        livingEntity.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, livingEntity.getLocation(), 10, 1, 1, 1, 0.1);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDamage(EntityDamageByEntityEvent e) {
+        if (e.getEntity().equals(livingEntity)) {
+            if (isInvulnerable) {
+                e.setCancelled(true);
+                if (e.getDamager() instanceof Player) {
+                    ((Player) e.getDamager()).sendMessage(ChatColor.AQUA + "Your attacks cannot penetrate Frost-Wing's icy shield!");
+                }
+            } else {
+                // Chance to counterattack
+                if (ThreadLocalRandom.current().nextDouble() < 0.2) {
+                    if (e.getDamager() instanceof Player) {
+                        Player attacker = (Player) e.getDamager();
+                        attacker.damage(e.getDamage() * 0.5, livingEntity);
+                        attacker.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
+                        attacker.sendMessage(ChatColor.AQUA + "Frost-Wing's icy aura damages you!");
+                        livingEntity.getWorld().spawnParticle(Particle.SNOW_SHOVEL, attacker.getLocation(), 50, 0.5, 1, 0.5, 0.1);
+                    }
+                }
+            }
+        }
+    }
+    public void setArmor() {
+        try {
+            livingEntity.getEquipment().setBoots(WorldBossDrops.createDrop(8, entityName));
+            livingEntity.getEquipment().setLeggings(WorldBossDrops.createDrop(7, entityName));
+            livingEntity.getEquipment().setChestplate(WorldBossDrops.createDrop(6, entityName));
+            livingEntity.getEquipment().setHelmet(SkullTextures.FROST.getSkullByURL());
+            int weaponType = BossGearGenerator.getWeaponType(entityName);
+            livingEntity.getEquipment().setItemInMainHand(WorldBossDrops.createDrop(weaponType, entityName));
+            Bukkit.getLogger().info("Armor set successfully for " + entityName);
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("Error setting armor for " + entityName + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

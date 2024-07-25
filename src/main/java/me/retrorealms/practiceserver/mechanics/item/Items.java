@@ -22,7 +22,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.inventivetalent.glow.GlowAPI;
 
 
 import java.util.ArrayList;
@@ -44,6 +43,12 @@ public class Items {
         return orb;
     }
 
+    public static boolean isPolearm(ItemStack itemStack) {
+        return itemStack.getType().name().contains("_SPADE");
+    }
+    public static boolean isStaff(ItemStack itemStack) {
+        return itemStack.getType().name().contains("_HOE");
+    }
     public static ItemStack legendaryOrb(boolean inshop) {
         ItemStack orb = new ItemStack(Material.MAGMA_CREAM);
         ItemMeta orbmeta = orb.getItemMeta();
@@ -60,17 +65,17 @@ public class Items {
         return orb;
     }
 
-    public static org.inventivetalent.glow.GlowAPI.Color getColorFromTier(int tier) {
-        org.inventivetalent.glow.GlowAPI.Color color = null;
+    public static ChatColor getColorFromTier(int tier) {
+        ChatColor color = null;
         switch (tier) {
             case 0:
-                return GlowAPI.Color.WHITE;
+                return ChatColor.WHITE;
             case 1:
-                return GlowAPI.Color.GREEN;
+                return ChatColor.GREEN;
             case 2:
-                return GlowAPI.Color.AQUA;
+                return ChatColor.AQUA;
             case 3:
-                return GlowAPI.Color.YELLOW;
+                return ChatColor.YELLOW;
         }
         return color;
     }

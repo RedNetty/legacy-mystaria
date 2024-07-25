@@ -280,7 +280,7 @@ public class Elytras implements Listener {
 
 								summoning.remove(player);
 								player.setVelocity(new Vector(0, 2, 0));
-
+								PracticeServer.antiCheat.getPlayerData(player).setLastAttackTime(System.currentTimeMillis());
 								launched = true;
 
 								new BukkitRunnable() {

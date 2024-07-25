@@ -1,41 +1,23 @@
 package me.retrorealms.practiceserver.mechanics.vendors;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import me.retrorealms.practiceserver.mechanics.altars.Altar;
 import me.retrorealms.practiceserver.mechanics.item.Durability;
 import me.retrorealms.practiceserver.mechanics.item.Items;
-import me.retrorealms.practiceserver.mechanics.item.Repairing;
-import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.Money;
-import me.retrorealms.practiceserver.mechanics.player.Listeners;
-import me.retrorealms.practiceserver.mechanics.player.Trading;
-import me.retrorealms.practiceserver.mechanics.profession.ProfessionMechanics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Logger;
 
 public class MerchantMechanics implements Listener {

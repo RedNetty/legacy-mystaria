@@ -18,7 +18,7 @@ import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
-import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceMinigame;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,11 +31,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.CRC32;
 
 public class SQLMain implements Listener {
     private static final RaceMinigame raceMinigame = PracticeServer.getRaceMinigame();
@@ -88,10 +91,9 @@ public class SQLMain implements Listener {
         itemList.removeAll(Collections.singleton(null));
         for (ItemStack itemStack : itemList) {
             player.getInventory().addItem(itemStack);
-
         }
-
     }
+
     private static void savePlayerDataOnce(Player player) {
         UUID uuid = player.getUniqueId();
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username) VALUES (?, ?)")) {
@@ -118,9 +120,9 @@ public class SQLMain implements Listener {
         }
         return false;
     }
+
     public static boolean updatePlayerStats(Player player) {
         if (raceMinigame.getGameState() != MinigameState.NONE) {
-            // Allow saving at least once if game state is not NONE
             if (!playerDataExists(player.getUniqueId())) {
                 savePlayerDataOnce(player);
             }
@@ -133,7 +135,46 @@ public class SQLMain implements Listener {
         UUID uuid = player.getUniqueId();
         String[] pinv = BukkitSerialization.playerInventoryToBase64(player.getInventory());
         GuildPlayers gp = GuildPlayers.getInstance();
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " + "Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, HorseTier, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, " + "T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " + "ON CONFLICT (UUID) DO UPDATE SET " + "Username = excluded.Username, " + "XCoord = excluded.XCoord, " + "YCoord = excluded.YCoord, " + "ZCoord = excluded.ZCoord, " + "Yaw = excluded.Yaw, " + "Pitch = excluded.Pitch, " + "Inventory = excluded.Inventory, " + "Armor = excluded.Armor, " + "MaxHP = excluded.MaxHP, " + "Gems = excluded.Gems, " + "GuildName = excluded.GuildName, " + "Alignment = excluded.Alignment, " + "AlignTime = excluded.AlignTime, " + "HorseTier = excluded.HorseTier, " + "T1Kills = excluded.T1Kills, " + "T2Kills = excluded.T2Kills, " + "T3Kills = excluded.T3Kills, " + "T4Kills = excluded.T4Kills, " + "T5Kills = excluded.T5Kills, " + "T6Kills = excluded.T6Kills, " + "Deaths = excluded.Deaths, " + "PlayerKills = excluded.PlayerKills, " + "OreMined = excluded.OreMined, " + "ChestsOpened = excluded.ChestsOpened, " + "RespawnData = excluded.RespawnData")) {
+        GuildPlayer guildPlayer = gp.get(uuid);
+
+        if (guildPlayer == null) {
+            Bukkit.getLogger().warning("GuildPlayer is null for " + player.getName() + ". Skipping updatePlayerStats.");
+            return false;
+        }
+
+        String query = "INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, " +
+                "Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, HorseTier, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, " +
+                "T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                "ON CONFLICT (UUID) DO UPDATE SET " +
+                "Username = EXCLUDED.Username, " +
+                "XCoord = EXCLUDED.XCoord, " +
+                "YCoord = EXCLUDED.YCoord, " +
+                "ZCoord = EXCLUDED.ZCoord, " +
+                "Yaw = EXCLUDED.Yaw, " +
+                "Pitch = EXCLUDED.Pitch, " +
+                "Inventory = EXCLUDED.Inventory, " +
+                "Armor = EXCLUDED.Armor, " +
+                "MaxHP = EXCLUDED.MaxHP, " +
+                "Gems = EXCLUDED.Gems, " +
+                "GuildName = EXCLUDED.GuildName, " +
+                "Alignment = EXCLUDED.Alignment, " +
+                "AlignTime = EXCLUDED.AlignTime, " +
+                "HorseTier = EXCLUDED.HorseTier, " +
+                "T1Kills = EXCLUDED.T1Kills, " +
+                "T2Kills = EXCLUDED.T2Kills, " +
+                "T3Kills = EXCLUDED.T3Kills, " +
+                "T4Kills = EXCLUDED.T4Kills, " +
+                "T5Kills = EXCLUDED.T5Kills, " +
+                "T6Kills = EXCLUDED.T6Kills, " +
+                "Deaths = EXCLUDED.Deaths, " +
+                "PlayerKills = EXCLUDED.PlayerKills, " +
+                "OreMined = EXCLUDED.OreMined, " +
+                "ChestsOpened = EXCLUDED.ChestsOpened, " +
+                "RespawnData = EXCLUDED.RespawnData";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
 
             Location loc = player.getLocation();
             pstmt.setString(1, uuid.toString());
@@ -147,41 +188,69 @@ public class SQLMain implements Listener {
             pstmt.setString(9, pinv[1]);
             pstmt.setDouble(10, player.getMaxHealth());
             pstmt.setDouble(11, Economy.getBalance(uuid));
-            pstmt.setString(12, gp.get(uuid).getGuildName());
+            pstmt.setString(12, guildPlayer.getGuildName());
             pstmt.setString(13, Alignments.get(player));
             pstmt.setInt(14, Alignments.getAlignTime(player));
-            pstmt.setInt(15, Horses.horseTier.get(player));
-            pstmt.setInt(16, gp.get(uuid).getT1Kills());
-            pstmt.setInt(17, gp.get(uuid).getT2Kills());
-            pstmt.setInt(18, gp.get(uuid).getT3Kills());
-            pstmt.setInt(19, gp.get(uuid).getT4Kills());
-            pstmt.setInt(20, gp.get(uuid).getT5Kills());
-            pstmt.setInt(21, gp.get(uuid).getT6Kills());
-            pstmt.setInt(22, gp.get(uuid).getDeaths());
-            pstmt.setInt(23, gp.get(uuid).getPlayerKills());
-            pstmt.setInt(24, gp.get(uuid).getOreMined());
-            pstmt.setInt(25, gp.get(uuid).getLootChestsOpen());
+            pstmt.setInt(15, Horses.horseTier.getOrDefault(player, 0));
+            pstmt.setInt(16, guildPlayer.getT1Kills());
+            pstmt.setInt(17, guildPlayer.getT2Kills());
+            pstmt.setInt(18, guildPlayer.getT3Kills());
+            pstmt.setInt(19, guildPlayer.getT4Kills());
+            pstmt.setInt(20, guildPlayer.getT5Kills());
+            pstmt.setInt(21, guildPlayer.getT6Kills());
+            pstmt.setInt(22, guildPlayer.getDeaths());
+            pstmt.setInt(23, guildPlayer.getPlayerKills());
+            pstmt.setInt(24, guildPlayer.getOreMined());
+            pstmt.setInt(25, guildPlayer.getLootChestsOpen());
 
             if (!player.isDead()) {
                 pstmt.setString(26, "");
             } else {
-                try (Statement selectStmt = con.createStatement(); ResultSet resultSet = selectStmt.executeQuery("SELECT RespawnData FROM PlayerData WHERE UUID = '" + uuid + "'")) {
-                    if (resultSet.next()) {
-                        String existingRespawnData = resultSet.getString("RespawnData");
-                        pstmt.setString(26, existingRespawnData);
-                    } else {
-                        pstmt.setString(26, "");
+                try (PreparedStatement selectStmt = conn.prepareStatement("SELECT RespawnData FROM PlayerData WHERE UUID = ?")) {
+                    selectStmt.setString(1, uuid.toString());
+                    try (ResultSet resultSet = selectStmt.executeQuery()) {
+                        if (resultSet.next()) {
+                            String existingRespawnData = resultSet.getString("RespawnData");
+                            pstmt.setString(26, existingRespawnData);
+                        } else {
+                            pstmt.setString(26, "");
+                        }
                     }
                 }
             }
+
             pstmt.executeUpdate();
-            PracticeServer.log.info("[RetroDB] Saved Player Data for " + player.getName());
+            Bukkit.getLogger().info("Saved Player Data for " + player.getName());
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().log(Level.SEVERE, "Error updating player stats for " + player.getName(), e);
             return false;
         }
     }
+    private void setDefaultInventory(Player player) {
+        // Implement logic to set a default inventory for the player
+        player.getInventory().clear();
+        if (raceMinigame.getGameState() == MinigameState.NONE) {
+            player.getInventory().clear();
+            Listeners.Kit(player);
+            player.teleport(TeleportBooks.DeadPeaks);
+
+            try {
+                new BukkitRunnable() {
+                    public void run() {
+                        if (ModerationMechanics.isDonator(player)) {
+                            Items.giveDonorItems(player);
+                        }
+                    }
+                }.runTaskLater(PracticeServer.getInstance(), 80L);
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 
     public static boolean updatePersistentStats(Player player) {
         if (raceMinigame.getGameState() != MinigameState.NONE) return false;
@@ -191,57 +260,58 @@ public class SQLMain implements Listener {
 
         UUID uuid = player.getUniqueId();
         PersistentPlayer pp = PersistentPlayers.get(uuid);
-        String buddies = "";
 
-        if (Buddies.buddies.get(player.getName()) != null) {
-            for (String s : Buddies.buddies.get(player.getName())) {
-                buddies += s;
-                buddies += ",";
-            }
-        }
+        String updateQuery = "UPDATE PersistentData SET " +
+                "Tokens = ?, Mount = ?, BankPages = ?, Pickaxe = ?, Farmer = ?, LastStand = ?, " +
+                "OrbRolls = ?, Luck = ?, Reaper = ?, KitWeapon = ?, KitHelm = ?, KitChest = ?, " +
+                "KitLegs = ?, KitBoots = ?, CurrentQuest = ?, DailyQuestsCompleted = ?, " +
+                "LVLHPToggle = ?, PVPToggle = ?, ChaoToggle = ?, FFToggle = ?, DebugToggle = ?, " +
+                "HologramToggle = ?, GlowToggle = ?, PMToggle = ?, TradingToggle = ?, GemsToggle = ?, " +
+                "TrailToggle = ?, DropToggle = ?, KitToggle = ? " +
+                "WHERE UUID = ?";
 
-        String rank = RankEnum.DEFAULT.toString();
-        rank = RankEnum.enumToString(ModerationMechanics.getRank(player));
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
 
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO PersistentData (UUID, Username, PlayerRank, Buddies, PVPToggle, " + "ChaoToggle, FFToggle, DebugToggle, HologramToggle, LVLHPToggle, GlowToggle, PMToggle, TradingToggle, GemsToggle, " + "TrailToggle, DropToggle, KitToggle, Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, OrbRolls, Luck, Reaper, " + "KitWeapon, KitHelm, KitChest, KitLegs, KitBoots) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " + "ON CONFLICT (UUID) DO UPDATE SET " + "Username = excluded.Username, " + "PlayerRank = excluded.PlayerRank, " + "Buddies = excluded.Buddies, " + "PVPToggle = excluded.PVPToggle, " + "ChaoToggle = excluded.ChaoToggle, " + "FFToggle = excluded.FFToggle, " + "DebugToggle = excluded.DebugToggle, " + "HologramToggle = excluded.HologramToggle, " + "LVLHPToggle = excluded.LVLHPToggle, " + "GlowToggle = excluded.GlowToggle, " + "PMToggle = excluded.PMToggle, " + "TradingToggle = excluded.TradingToggle, " + "GemsToggle = excluded.GemsToggle, " + "TrailToggle = excluded.TrailToggle, " + "DropToggle = excluded.DropToggle, " + "KitToggle = excluded.KitToggle, " + "Tokens = excluded.Tokens, " + "Mount = excluded.Mount, " + "BankPages = excluded.BankPages, " + "Pickaxe = excluded.Pickaxe, " + "Farmer = excluded.Farmer, " + "LastStand = excluded.LastStand, " + "OrbRolls = excluded.OrbRolls, " + "Luck = excluded.Luck, " + "Reaper = excluded.Reaper, " + "KitWeapon = excluded.KitWeapon, " + "KitHelm = excluded.KitHelm, " + "KitChest = excluded.KitChest, " + "KitLegs = excluded.KitLegs, " + "KitBoots = excluded.KitBoots")) {
+            pstmt.setInt(1, pp.tokens);
+            pstmt.setInt(2, pp.mount);
+            pstmt.setInt(3, pp.bankpages);
+            pstmt.setInt(4, pp.pickaxe);
+            pstmt.setInt(5, pp.farmer);
+            pstmt.setInt(6, pp.laststand);
+            pstmt.setInt(7, pp.orbrolls);
+            pstmt.setInt(8, pp.luck);
+            pstmt.setInt(9, pp.reaper);
+            pstmt.setInt(10, pp.kitweapon);
+            pstmt.setInt(11, pp.kithelm);
+            pstmt.setInt(12, pp.kitchest);
+            pstmt.setInt(13, pp.kitlegs);
+            pstmt.setInt(14, pp.kitboots);
+            pstmt.setString(15, pp.currentQuest);
+            pstmt.setInt(16, pp.dailyQuestsCompleted);
 
+            pstmt.setBoolean(17, Toggles.isToggled(player, "Level HP"));
+            pstmt.setBoolean(18, Toggles.isToggled(player, "Anti PVP"));
+            pstmt.setBoolean(19, Toggles.isToggled(player, "Chaotic"));
+            pstmt.setBoolean(20, Toggles.isToggled(player, "Friendly Fire"));
+            pstmt.setBoolean(21, Toggles.isToggled(player, "Debug"));
+            pstmt.setBoolean(22, Toggles.isToggled(player, "Hologram Damage"));
+            pstmt.setBoolean(23, Toggles.isToggled(player, "Glow Drops"));
+            pstmt.setBoolean(24, Toggles.isToggled(player, "Player Messages"));
+            pstmt.setBoolean(25, Toggles.isToggled(player, "Trading"));
+            pstmt.setBoolean(26, Toggles.isToggled(player, "Gems"));
+            pstmt.setBoolean(27, Toggles.isToggled(player, "Trail"));
+            pstmt.setBoolean(28, Toggles.isToggled(player, "Drop Protection"));
+            pstmt.setBoolean(29, Toggles.isToggled(player, "Disable Kit"));
 
-            pstmt.setString(1, uuid.toString());
-            pstmt.setString(2, player.getName());
-            pstmt.setString(3, rank);
-            pstmt.setString(4, buddies);
-            pstmt.setBoolean(5, Toggles.getToggleStatus(player, "Anti PVP"));
-            pstmt.setBoolean(6, Toggles.getToggleStatus(player, "Chaotic"));
-            pstmt.setBoolean(7, Toggles.getToggleStatus(player, "Friendly Fire"));
-            pstmt.setBoolean(8, Toggles.getToggleStatus(player, "Debug"));
-            pstmt.setBoolean(9, Toggles.getToggleStatus(player, "Hologram Damage"));
-            pstmt.setBoolean(10, Toggles.getToggleStatus(player, "Level HP"));
-            pstmt.setBoolean(11, Toggles.getToggleStatus(player, "Glow Drops"));
-            pstmt.setBoolean(12, Toggles.getToggleStatus(player, "Player Messages"));
-            pstmt.setBoolean(13, Toggles.getToggleStatus(player, "Trading"));
-            pstmt.setBoolean(14, Toggles.getToggleStatus(player, "Gems"));
-            pstmt.setBoolean(15, Toggles.getToggleStatus(player, "Trail"));
-            pstmt.setBoolean(16, Toggles.getToggleStatus(player, "Drop Protection"));
-            pstmt.setBoolean(17, Toggles.getToggleStatus(player, "Disable Kit"));
-            pstmt.setInt(18, pp.tokens);
-            pstmt.setInt(19, pp.mount);
-            pstmt.setInt(20, pp.bankpages);
-            pstmt.setInt(21, pp.pickaxe);
-            pstmt.setInt(22, pp.farmer);
-            pstmt.setInt(23, pp.laststand);
-            pstmt.setInt(24, pp.orbrolls);
-            pstmt.setInt(25, pp.luck);
-            pstmt.setInt(26, pp.reaper);
-            pstmt.setInt(27, pp.kitweapon);
-            pstmt.setInt(28, pp.kithelm);
-            pstmt.setInt(29, pp.kitchest);
-            pstmt.setInt(30, pp.kitlegs);
-            pstmt.setInt(31, pp.kitboots);
+            pstmt.setString(30, uuid.toString());
 
             pstmt.executeUpdate();
-            PracticeServer.log.info("[RetroDB] Saved Persistent Data for " + player.getName());
+            PracticeServer.log.info("[RetroDB] Updated Persistent Data for " + player.getName());
+
             return true;
         } catch (SQLException e) {
+            PracticeServer.log.severe("[RetroDB] Error updating persistent data: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -250,11 +320,10 @@ public class SQLMain implements Listener {
 
     public static List<ItemStack> getPlayerData(String table, String columns, Player player) {
         if (raceMinigame.getGameState() == MinigameState.SHRINK) return null;
-        if (!PracticeServer.DATABASE) {
-            return null;
-        }
+        if (!PracticeServer.DATABASE) return null;
 
-        try (PreparedStatement pstmt = con.prepareStatement("SELECT " + columns + " FROM " + table + " WHERE UUID = ?")) {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT " + columns + " FROM " + table + " WHERE UUID = ?")) {
             pstmt.setString(1, player.getUniqueId().toString());
             List<ItemStack> itemList = new ArrayList<>();
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -266,22 +335,21 @@ public class SQLMain implements Listener {
             }
             return itemList;
         } catch (SQLException | IOException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().log(Level.SEVERE, "Error getting player data for " + player.getName(), e);
             return null;
         }
     }
 
     public static ResultSet getPlayerSet(String table, String columns, Player player) {
         if (raceMinigame.getGameState() != MinigameState.NONE) return null;
-        if (!PracticeServer.DATABASE) {
-            return null;
-        }
+        if (!PracticeServer.DATABASE) return null;
 
-        try (PreparedStatement pstmt = con.prepareStatement("SELECT " + columns + " FROM " + table + " WHERE UUID = ?")) {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT " + columns + " FROM " + table + " WHERE UUID = ?")) {
             pstmt.setString(1, player.getUniqueId().toString());
             return pstmt.executeQuery();
         } catch (SQLException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().log(Level.SEVERE, "Error getting player set for " + player.getName(), e);
             return null;
         }
     }
@@ -319,25 +387,39 @@ public class SQLMain implements Listener {
         }
     }
 
-
     public static void loadGuilds() {
         if (raceMinigame.getGameState() != MinigameState.NONE) return;
-        try (ResultSet rs = con.createStatement().executeQuery("SELECT * FROM Guilds")) {
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM Guilds")) {
+
             while (rs.next()) {
                 Guild guild = new Guild(rs.getString("GuildName"));
                 guild.setTag(rs.getString("GuildTag"));
                 guild.setMotd(rs.getString("GuildMOTD"));
                 guild.setOwner(UUID.fromString(rs.getString("Owner")));
                 guild.getPlayerRoleMap().put(UUID.fromString(rs.getString("Owner")), Role.LEADER);
-                for (String s : rs.getString("Officers").split(",")) {
-                    if (!s.isEmpty()) guild.getPlayerRoleMap().put(UUID.fromString(s), Role.OFFICER);
+
+                String officers = rs.getString("Officers");
+                if (officers != null && !officers.isEmpty()) {
+                    for (String s : officers.split(",")) {
+                        guild.getPlayerRoleMap().put(UUID.fromString(s), Role.OFFICER);
+                    }
                 }
-                for (String s : rs.getString("Members").split(",")) {
-                    if (!s.isEmpty()) guild.getPlayerRoleMap().put(UUID.fromString(s), Role.MEMBER);
+
+                String members = rs.getString("Members");
+                if (members != null && !members.isEmpty()) {
+                    for (String s : members.split(",")) {
+                        guild.getPlayerRoleMap().put(UUID.fromString(s), Role.MEMBER);
+                    }
                 }
+
                 GuildManager.guildMap.put(guild.getName(), guild);
             }
-        } catch (Exception e) {
+            PracticeServer.log.info("Guilds loaded successfully.");
+        } catch (SQLException e) {
+            PracticeServer.log.severe("Error loading guilds: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -352,40 +434,53 @@ public class SQLMain implements Listener {
             e.printStackTrace();
         }
     }
-
     public static void saveBank(Inventory inv, UUID uuid, int page) {
         if (raceMinigame.getGameState() != MinigameState.NONE) return;
-        if (PracticeServer.DATABASE) {
-            String table = getTableName(page);
-            String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
-            String query = "SELECT * FROM " + table + " WHERE UUID = ?";
-            try (PreparedStatement statement = con.prepareStatement(query)) {
-                statement.setString(1, uuid.toString());
-                ResultSet resultSet = statement.executeQuery();
-                if (resultSet.next()) {
-                    // Bank record already exists, perform update
-                    String updateQuery = "UPDATE " + table + " SET Username = ?, Inventory = ? WHERE UUID = ?";
-                    try (PreparedStatement updateStatement = con.prepareStatement(updateQuery)) {
-                        updateStatement.setString(1, Bukkit.getOfflinePlayer(uuid).getName());
-                        updateStatement.setString(2, items);
-                        updateStatement.setString(3, uuid.toString());
-                        updateStatement.executeUpdate();
-                    }
-                } else {
-                    // Bank record doesn't exist, perform insert
-                    String insertQuery = "INSERT INTO " + table + " (UUID, Username, Inventory) VALUES (?, ?, ?)";
-                    try (PreparedStatement insertStatement = con.prepareStatement(insertQuery)) {
-                        insertStatement.setString(1, uuid.toString());
-                        insertStatement.setString(2, Bukkit.getOfflinePlayer(uuid).getName());
-                        insertStatement.setString(3, items);
-                        insertStatement.executeUpdate();
-                    }
+        if (!PracticeServer.DATABASE) {
+            Banks.TEMP_BANKS.put(uuid, inv);
+            return;
+        }
+
+        String table = getTableName(page).toLowerCase();
+        String items = BukkitSerialization.itemStackArrayToBase64(inv.getContents());
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Check if checksum column exists, if not, add it
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet rs = meta.getColumns(null, null, table, "checksum");
+            if (!rs.next()) {
+                try (Statement stmt = conn.createStatement()) {
+                    String addColumnSQL = "ALTER TABLE " + table + " ADD COLUMN checksum BIGINT";
+                    stmt.execute(addColumnSQL);
+                    Bukkit.getLogger().info("Added checksum column to table: " + table);
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
+
+            String query = "INSERT INTO " + table + " (uuid, username, inventory, checksum) VALUES (?, ?, ?, ?) " +
+                    "ON CONFLICT (uuid) DO UPDATE SET username = EXCLUDED.username, inventory = EXCLUDED.inventory, checksum = EXCLUDED.checksum";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                long checksum = calculateChecksum(items);
+
+                pstmt.setString(1, uuid.toString());
+                pstmt.setString(2, Bukkit.getOfflinePlayer(uuid).getName());
+                pstmt.setString(3, items);
+                pstmt.setLong(4, checksum);
+
+                pstmt.executeUpdate();
+                conn.commit();
+                Bukkit.getLogger().log(Level.INFO, "Saved bank data for player " + uuid + " in table " + table);
+            } catch (SQLException e) {
+                conn.rollback();
+                Bukkit.getLogger().log(Level.SEVERE, "Failed to save bank data for player " + uuid, e);
+            }
+        } catch (SQLException e) {
+            Bukkit.getLogger().log(Level.SEVERE, "Database connection error while saving bank data for player " + uuid, e);
         }
     }
+
 
     public static void saveGuildBank(Inventory inv, Guild guild) {
         if (raceMinigame.getGameState() != MinigameState.NONE) return;
@@ -422,28 +517,164 @@ public class SQLMain implements Listener {
         }
     }
 
-
     public static Inventory getBank(UUID uuid, int page) {
         if (page < 1 || page > 5) return null;
         String table = getTableName(page);
         PersistentPlayer pp = PersistentPlayers.get(uuid);
-        Inventory inv = Bukkit.createInventory(null, Banks.banksize, "Bank Chest (" + page + "/" + pp.bankpages + ")");
-        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM " + table + " WHERE UUID = ?")) {
-            stmt.setString(1, uuid.toString());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(rs.getString("Inventory"));
-                inv.setContents(items);
-            } else {
-                return inv;
+        Inventory inv = Bukkit.createInventory(null, Banks.BANK_SIZE, "Bank Chest (" + page + "/" + pp.bankpages + ")");
+
+        if (!PracticeServer.DATABASE) {
+            return Banks.TEMP_BANKS.getOrDefault(uuid, inv);
+        }
+
+        try (Connection conn = getConnection()) {
+            // Check if checksum column exists
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet columnRs = meta.getColumns(null, null, table, "checksum");
+            boolean checksumExists = columnRs.next();
+
+            String query = "SELECT * FROM " + table + " WHERE uuid = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, uuid.toString());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        String inventoryData = rs.getString("inventory");
+                        Long storedChecksum = null;
+                        if (checksumExists) {
+                            try {
+                                storedChecksum = rs.getLong("checksum");
+                            } catch (SQLException e) {
+                                // Checksum column might be null, ignore this error
+                            }
+                        }
+
+                        if (inventoryData != null) {
+                            if (!checksumExists || storedChecksum == null || validateChecksum(inventoryData, storedChecksum)) {
+                                ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(inventoryData);
+                                inv.setContents(items);
+                            } else {
+                                Bukkit.getLogger().warning("Checksum validation failed for player " + uuid + " in table " + table);
+                                loadBackupInventory(inv, uuid, page);
+                            }
+                        }
+                    }
+                }
             }
         } catch (SQLException | IOException e) {
-            e.printStackTrace();
+            Bukkit.getLogger().log(Level.SEVERE, "Error loading bank data for player " + uuid, e);
+            loadBackupInventory(inv, uuid, page);
         }
         return inv;
     }
 
+    public static void checkAndUpdateBankTables() {
+        String[] tables = {"banks", "banks2", "banks3", "banks4", "banks5"};
+        for (String table : tables) {
+            try (Connection conn = getConnection()) {
+                conn.setAutoCommit(false);
+                DatabaseMetaData meta = conn.getMetaData();
 
+                // Check if table exists, if not create it
+                ResultSet tableRs = meta.getTables(null, null, table, new String[] {"TABLE"});
+                if (!tableRs.next()) {
+                    try (Statement stmt = conn.createStatement()) {
+                        String createTableSQL = "CREATE TABLE " + table + " (" +
+                                "uuid VARCHAR(36) PRIMARY KEY, " +
+                                "username VARCHAR(16), " +
+                                "inventory TEXT, " +
+                                "checksum BIGINT" +
+                                ")";
+                        stmt.execute(createTableSQL);
+                        Bukkit.getLogger().info("Created table: " + table);
+                    }
+                }
+
+                // Check for each required column and add if missing
+                String[] requiredColumns = {"uuid", "username", "inventory", "checksum"};
+                String[] columnTypes = {"VARCHAR(36)", "VARCHAR(16)", "TEXT", "BIGINT"};
+
+                for (int i = 0; i < requiredColumns.length; i++) {
+                    ResultSet columnRs = meta.getColumns(null, null, table, requiredColumns[i]);
+                    if (!columnRs.next()) {
+                        try (Statement stmt = conn.createStatement()) {
+                            String addColumnSQL = "ALTER TABLE " + table + " ADD COLUMN " +
+                                    requiredColumns[i] + " " + columnTypes[i];
+                            stmt.execute(addColumnSQL);
+                            Bukkit.getLogger().info("Added column " + requiredColumns[i] + " to table: " + table);
+                        }
+                    }
+                }
+
+                // Ensure uuid is the primary key
+                try (Statement stmt = conn.createStatement()) {
+                    String checkPrimaryKeySQL = "SELECT COUNT(*) FROM information_schema.table_constraints " +
+                            "WHERE table_name = '" + table + "' AND constraint_type = 'PRIMARY KEY'";
+                    ResultSet pkRs = stmt.executeQuery(checkPrimaryKeySQL);
+                    if (pkRs.next() && pkRs.getInt(1) == 0) {
+                        String addPrimaryKeySQL = "ALTER TABLE " + table + " ADD PRIMARY KEY (uuid)";
+                        stmt.execute(addPrimaryKeySQL);
+                        Bukkit.getLogger().info("Added primary key constraint to uuid column in table: " + table);
+                    }
+                }
+
+                conn.commit();
+                Bukkit.getLogger().info("Successfully checked and updated table: " + table);
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Error checking/updating table " + table, e);
+            }
+        }
+    }
+    private static void loadBackupInventory(Inventory inv, UUID uuid, int page) {
+        String backupTable = getTableName(page) + "_Backup";
+        String query = "SELECT Inventory FROM " + backupTable + " WHERE UUID = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String inventoryData = rs.getString("Inventory");
+                    ItemStack[] items = BukkitSerialization.itemStackArrayFromBase64(inventoryData);
+                    inv.setContents(items);
+                    Bukkit.getLogger().info("Loaded backup inventory for player " + uuid + " on page " + page);
+                } else {
+                    Bukkit.getLogger().warning("No backup found for player " + uuid + " on page " + page + ". Using empty inventory.");
+                    inv.clear();
+                }
+            }
+        } catch (SQLException | IOException e) {
+            Bukkit.getLogger().log(Level.SEVERE, "Error loading backup inventory for player " + uuid, e);
+            inv.clear();
+        }
+    }
+    public static void backupBankData() {
+        if (!PracticeServer.DATABASE) return;
+
+        for (int page = 1; page <= 5; page++) {
+            String sourceTable = getTableName(page);
+            String backupTable = sourceTable + "_Backup";
+            String query = "INSERT INTO " + backupTable + " SELECT * FROM " + sourceTable +
+                    " ON CONFLICT (UUID) DO UPDATE SET Username = EXCLUDED.Username, " +
+                    "Inventory = EXCLUDED.Inventory, Checksum = EXCLUDED.Checksum";
+
+            try (Connection conn = getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(query)) {
+                int rowsAffected = pstmt.executeUpdate();
+                Bukkit.getLogger().info("Backed up " + rowsAffected + " records from " + sourceTable + " to " + backupTable);
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Failed to backup bank data for " + sourceTable, e);
+            }
+        }
+    }
+    private static long calculateChecksum(String data) {
+        CRC32 crc = new CRC32();
+        crc.update(data.getBytes());
+        return crc.getValue();
+    }
+
+    private static boolean validateChecksum(String data, long storedChecksum) {
+        return calculateChecksum(data) == storedChecksum;
+    }
     public static String getTableName(int page) {
         switch (page) {
             case 1:
@@ -503,7 +734,6 @@ public class SQLMain implements Listener {
         }
     }
 
-
     public static void clonePlayer(Player p, String target) {
         try {
             PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PlayerData WHERE Username = ?");
@@ -513,7 +743,8 @@ public class SQLMain implements Listener {
                 p.kickPlayer(ChatColor.GREEN + "Cloning " + target);
                 new AsyncTask(() -> {
                     try {
-                        PreparedStatement stmt2 = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        PreparedStatement stmt2 = con.prepareStatement("INSERT INTO PlayerData (UUID, Username, XCoord, YCoord, ZCoord, Yaw, Pitch, Inventory, Armor, MaxHP, Gems, GuildName, Alignment, AlignTime, T1Kills, T2Kills, T3Kills, T4Kills, T5Kills, T6Kills, Deaths, PlayerKills, OreMined, ChestsOpened, RespawnData) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         stmt2.setString(1, p.getUniqueId().toString());
                         stmt2.setString(2, p.getName());
                         stmt2.setInt(3, rs.getInt("XCoord"));
@@ -554,10 +785,11 @@ public class SQLMain implements Listener {
 
     public static ResultSet getPlayerData(String table, String columns) {
         if (raceMinigame.getGameState() == MinigameState.SHRINK) return null;
-        if (PracticeServer.DATABASE) {
+        if (PracticeServer.DATABASE && con != null) {
             try {
                 return con.createStatement().executeQuery("SELECT " + columns + " FROM " + table);
             } catch (SQLException e) {
+                PracticeServer.log.severe("[RetroDB] Error executing query: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -567,50 +799,74 @@ public class SQLMain implements Listener {
     public void onEnable() {
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         if (PracticeServer.DATABASE) {
-            PracticeServer.log.info("[RetroDB] has been Enabled");
             try {
                 Class.forName("org.postgresql.Driver");
+                con = getConnection();
+                if (con != null) {
+                    Bukkit.getLogger().info("Database connection established");
 
-                Properties props = new Properties();
-                FileInputStream in = new FileInputStream(PracticeServer.plugin.getDataFolder() + "/db.properties");
-                props.load(in);
-                in.close();
+                    // Ensure tables are created
+                    SQLCreate.createTables(con);
+                    SQLCreate.addMissingColumns(con);
 
-                String url = props.getProperty("jdbc.url");
-                String username = props.getProperty("jdbc.username");
-                String password = props.getProperty("jdbc.password");
-
-                // Set connection properties using the Properties object
-                Properties connectionProps = new Properties();
-                connectionProps.put("user", username);
-                connectionProps.put("password", password);
-
-                con = DriverManager.getConnection(url, connectionProps);
-                System.out.println("[RetroDB] Connection Established");
-
-                new BukkitRunnable() {
-                    public void run() {
-                        try {
-                            if (con.isClosed()) {
-                                con = DriverManager.getConnection(url, connectionProps);
-                                System.out.println("[RetroDB] Connection Reestablished");
-                            }
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
+                    createBackupTables();
+                    checkAndUpdateBankTables();
+                    updateGuildsSchema();
+                    startConnectionKeepAlive();
+                    if (raceMinigame.getGameState() == MinigameState.NONE) {
+                        loadPersistentData();
+                        loadGems();
                     }
-                }.runTaskTimer(PracticeServer.plugin, 20, 6000);
-
-                SQLCreate.createTables(con);
+                } else {
+                    Bukkit.getLogger().severe("Failed to establish database connection!");
+                }
+            } catch (ClassNotFoundException e) {
+                Bukkit.getLogger().severe("PostgreSQL JDBC Driver not found!");
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "SQL Error during initialization", e);
             } catch (Exception e) {
-                e.printStackTrace();
+                Bukkit.getLogger().log(Level.SEVERE, "Unexpected error during initialization", e);
             }
-
-            if (raceMinigame.getGameState() == MinigameState.NONE) {
-                loadPersistentData();
-                loadGems();
-            }
+        } else {
+            Bukkit.getLogger().info("Database functionality is disabled.");
         }
+    }
+    public static void updateMountData(Player player) {
+        if (!PracticeServer.DATABASE) return;
+
+        UUID uuid = player.getUniqueId();
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("UPDATE PlayerData SET Mount = ? WHERE UUID = ?")) {
+            pstmt.setInt(1, Horses.horseTier.getOrDefault(player, 0));
+            pstmt.setString(2, uuid.toString());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static boolean columnExists(DatabaseMetaData meta, String table, String column) throws SQLException {
+        try (ResultSet rs = meta.getColumns(null, null, table, column)) {
+            return rs.next();
+        }
+    }
+    private void startConnectionKeepAlive() {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(PracticeServer.plugin, () -> {
+            try {
+                if (con != null && !con.isClosed()) {
+                    try (Statement stmt = con.createStatement()) {
+                        stmt.execute("SELECT 1");
+                    }
+                    Bukkit.getLogger().fine("Keep-alive query executed successfully");
+                } else {
+                    con = getConnection();
+                    Bukkit.getLogger().info("Database connection re-established");
+                }
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Error in keep-alive task", e);
+            }
+        }, 20 * 60, 20 * 60); // Run every minute
     }
 
 
@@ -624,7 +880,25 @@ public class SQLMain implements Listener {
             e.printStackTrace();
         }
     }
-
+    private void createBackupTables() {
+        String[] tables = {"Banks", "Banks2", "Banks3", "Banks4", "Banks5"};
+        for (String table : tables) {
+            String backupTable = table + "_Backup";
+            String createTableQuery = "CREATE TABLE IF NOT EXISTS " + backupTable + " (" +
+                    "UUID VARCHAR(36) PRIMARY KEY, " +
+                    "Username VARCHAR(16), " +
+                    "Inventory TEXT, " +
+                    "Checksum BIGINT" +
+                    ")";
+            try (Connection conn = getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute(createTableQuery);
+                Bukkit.getLogger().info("Created or verified backup table: " + backupTable);
+            } catch (SQLException e) {
+                Bukkit.getLogger().log(Level.SEVERE, "Error creating backup table " + backupTable, e);
+            }
+        }
+    }
     private List<ItemStack> getPlayerInventory(Player player) {
         List<ItemStack> inventory = new ArrayList<>();
 
@@ -640,11 +914,10 @@ public class SQLMain implements Listener {
         return inventory;
     }
 
-    @EventHandler()
+    @EventHandler
     void onLogout(PlayerQuitEvent e) {
         updatePersistentStats(e.getPlayer());
         Player p = e.getPlayer();
-        List<ItemStack> inventory = getPlayerInventory(p);
         if ((!Alignments.isSafeZone(p.getLocation()) && Alignments.tagged.containsKey(p.getName()) && System.currentTimeMillis() - Alignments.tagged.get(p.getName()) < 10000) || !Alignments.isSafeZone(p.getLocation()) && Listeners.combat.containsKey(p.getName()) && System.currentTimeMillis() - Listeners.combat.get(p.getName()) < 10000) {
             Alignments.logout = true;
             p.setHealth(0.0);
@@ -660,14 +933,16 @@ public class SQLMain implements Listener {
 
     @EventHandler
     void onKick(PlayerKickEvent e) {
+        Alignments.tagged.remove(e.getPlayer().getName());
+        Listeners.combat.remove(e.getPlayer().getName());
         updatePlayerStats(e.getPlayer());
         updatePersistentStats(e.getPlayer());
     }
 
-
     public void loadData(Player player) {
-        try (PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PersistentData WHERE Username = ?"); PreparedStatement stmt2 = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
-            stmt1.setString(1, player.getName());
+        try (PreparedStatement stmt1 = con.prepareStatement("SELECT * FROM PersistentData WHERE UUID = ?");
+             PreparedStatement stmt2 = con.prepareStatement("SELECT * FROM PlayerData WHERE UUID = ?")) {
+            stmt1.setString(1, player.getUniqueId().toString());
             stmt2.setString(1, player.getUniqueId().toString());
             ResultSet rs1 = stmt1.executeQuery();
             ResultSet rs2 = stmt2.executeQuery();
@@ -675,11 +950,8 @@ public class SQLMain implements Listener {
             handlePlayerData(player, rs2);
         } catch (SQLException ex) {
             ex.printStackTrace();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
         }
     }
-
     @EventHandler
     void onPlayerJoin(PlayerJoinEvent e) {
         if (!PracticeServer.DATABASE) {
@@ -689,133 +961,325 @@ public class SQLMain implements Listener {
         Player player = e.getPlayer();
         loadData(player);
     }
-
-    private void handlePersistentData(Player player, ResultSet rs) throws SQLException {
-        if (rs.next()) {
-            if (ModerationMechanics.rankHashMap.get(player.getUniqueId()) != null) {
-                String playerRank = rs.getString("PlayerRank");
-                if (RankEnum.fromString(playerRank) != RankEnum.DEFAULT) {
-                    ModerationMechanics.rankHashMap.put(player.getUniqueId(), RankEnum.fromString(playerRank));
-                }
-            }
-            int mount = rs.getInt("Mount") + 1;
-            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) Horses.horseTier.put(player, mount);
-            getTogglesFromSQL(player.getUniqueId(), rs);
-        } else {
-            ModerationMechanics.rankHashMap.put(player.getUniqueId(), RankEnum.DEFAULT);
-            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
-                Horses.horseTier.put(player, 0);
-            }else{
-                if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
-            }
-        }
-    }
-
-    private void handlePlayerData(Player player, ResultSet rs) throws SQLException, IOException {
-        if (raceMinigame.getGameState() != MinigameState.NONE) return;
-        if (rs.next()) {
-            String guildName = rs.getString("GuildName");
-            int playerKills = rs.getInt("PlayerKills");
-            int t1Kills = rs.getInt("T1Kills");
-            int t2Kills = rs.getInt("T2Kills");
-            int t3Kills = rs.getInt("T3Kills");
-            int t4Kills = rs.getInt("T4Kills");
-            int t5Kills = rs.getInt("T5Kills");
-            int t6Kills = rs.getInt("T6Kills");
-            int lootChestsOpen = rs.getInt("ChestsOpened");
-            int deaths = rs.getInt("Deaths");
-            int oreMined = rs.getInt("OreMined");
-            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), guildName, playerKills, t1Kills, t2Kills, t3Kills, t4Kills, t5Kills, t6Kills, lootChestsOpen, oreMined, deaths, 0));
-            int horsetier = rs.getInt("HorseTier");
-            if (horsetier > Horses.horseTier.get(player)) {
-                Horses.horseTier.put(player, horsetier);
-            }
-            String alignment = rs.getString("Alignment");
-            int aligntime = rs.getInt("AlignTime");
-            if (alignment.contains("CHAOTIC")) {
-                Alignments.chaotic.put(player.getName(), aligntime);
-            }
-            if (alignment.contains("NEUTRAL")) {
-                Alignments.neutral.put(player.getName(), aligntime);
-            }
-            player.getInventory().clear();
-            ItemStack[] is = BukkitSerialization.itemStackArrayFromBase64(rs.getString("Inventory"));
-            player.getInventory().setContents(is);
-            ItemStack[] as = BukkitSerialization.itemStackArrayFromBase64(rs.getString("Armor"));
-            player.getInventory().setArmorContents(as);
-            double xcoord = rs.getFloat("XCoord");
-            double ycoord = rs.getFloat("YCoord");
-            double zcoord = rs.getFloat("ZCoord");
-            float yaw = rs.getFloat("Yaw");
-            float pitch = rs.getFloat("Pitch");
-            if (!player.isDead()) player.teleport(new Location(player.getWorld(), xcoord, ycoord, zcoord, yaw, pitch));
-        } else {
-            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-            if (raceMinigame.getGameState() == MinigameState.NONE) {
-                player.getInventory().clear();
-                Listeners.Kit(player);
-                player.teleport(TeleportBooks.stonePeaks);
-
-            try {
-                new BukkitRunnable() {
-                    public void run() {
-                        if (ModerationMechanics.isDonator(player)) {
-                            Items.giveDonorItems(player);
-                        }
-                    }
-                }.runTaskLater(PracticeServer.getInstance(), 80L);
-            } catch (Exception ex) {
-                // Handle the exception appropriately, e.g., log it
-            }
-            }
-
-
-        }
-    }
-
-    public void getTogglesFromSQL(UUID uuid, ResultSet rs) throws SQLException {
-        ArrayList<String> toggles = new ArrayList<>();
-        String[] toggleColumns = {"LVLHPToggle", "PVPToggle", "ChaoToggle", "FFToggle", "DebugToggle", "HologramToggle", "GlowToggle", "PMToggle", "TradingToggle", "GemsToggle", "TrailToggle", "DropToggle", "KitToggle"};
-
+    public static void getTogglesFromSQL(UUID uuid, ResultSet rs) throws SQLException {
+        Set<String> toggles = new HashSet<>();
+        Set<String> toggleColumns = Toggles.getToggleColumns();
         for (String column : toggleColumns) {
             if (rs.getBoolean(column)) {
                 toggles.add(getToggleNameFromColumn(column));
             }
         }
 
-        Toggles.toggles.put(uuid, toggles);
+        Toggles.getToggles(uuid).addAll(toggles);
+    }
+    private void handlePersistentData(Player player, ResultSet rs) throws SQLException {
+        UUID uuid = player.getUniqueId();
+        PersistentPlayer pp;
+
+        if (rs.next()) {
+            // Data exists, load it
+            pp = new PersistentPlayer(
+                    rs.getInt("Tokens"),
+                    rs.getInt("Mount"),
+                    rs.getInt("Pickaxe"),
+                    rs.getInt("Farmer"),
+                    rs.getInt("LastStand"),
+                    rs.getInt("BankPages"),
+                    rs.getInt("OrbRolls"),
+                    rs.getInt("Luck"),
+                    rs.getInt("Reaper"),
+                    rs.getInt("KitWeapon"),
+                    rs.getInt("KitHelm"),
+                    rs.getInt("KitChest"),
+                    rs.getInt("KitLegs"),
+                    rs.getInt("KitBoots"),
+                    rs.getInt("DailyQuestsCompleted"),
+                    rs.getString("CurrentQuest")
+            );
+
+            String playerRank = rs.getString("PlayerRank");
+            RankEnum rank = (playerRank != null) ? RankEnum.fromString(playerRank) : RankEnum.DEFAULT;
+            ModerationMechanics.rankHashMap.put(uuid, rank);
+
+            int mount = rs.getInt("Mount") + 1;
+            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
+                Horses.horseTier.put(player, mount);
+            }
+
+            Toggles.loadTogglesFromSQL(uuid, rs);
+        } else {
+            // Data doesn't exist, create default values
+            pp = new PersistentPlayer(
+                    50, // Default tokens
+                    0, // Default mount
+                    0, // Default pickaxe
+                    0, // Default farmer
+                    0, // Default laststand
+                    1, // Default bank pages
+                    0, // Default orb rolls
+                    0, // Default luck
+                    0, // Default reaper
+                    1, // Default kit weapon
+                    0, // Default kit helm
+                    0, // Default kit chest
+                    0, // Default kit legs
+                    0, // Default kit boots
+                    0, // Default daily quests completed
+                    null // Default current quest
+            );
+
+            ModerationMechanics.rankHashMap.put(uuid, RankEnum.DEFAULT);
+            if(PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
+                Horses.horseTier.put(player, 0);
+            } else {
+                if(!Horses.horseTier.containsKey(player)) {
+                    Horses.horseTier.put(player, 3);
+                }
+            }
+
+            Toggles.getToggles(uuid).clear(); // Initialize with no toggles
+
+            // Save the default data to the database
+            saveDefaultPersistentData(player, pp);
+        }
+
+        PersistentPlayers.put(uuid, pp);
+
+        PracticeServer.log.info("Loaded persistent data for " + player.getName());
     }
 
-    private String getToggleNameFromColumn(String column) {
+    private void saveDefaultPersistentData(Player player, PersistentPlayer pp) {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "INSERT INTO PersistentData (UUID, Username, Tokens, Mount, BankPages, Pickaxe, Farmer, LastStand, " +
+                             "OrbRolls, Luck, Reaper, KitWeapon, KitHelm, KitChest, KitLegs, KitBoots, CurrentQuest, DailyQuestsCompleted, PlayerRank) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+
+            pstmt.setString(1, player.getUniqueId().toString());
+            pstmt.setString(2, player.getName());
+            pstmt.setInt(3, pp.tokens);
+            pstmt.setInt(4, pp.mount);
+            pstmt.setInt(5, pp.bankpages);
+            pstmt.setInt(6, pp.pickaxe);
+            pstmt.setInt(7, pp.farmer);
+            pstmt.setInt(8, pp.laststand);
+            pstmt.setInt(9, pp.orbrolls);
+            pstmt.setInt(10, pp.luck);
+            pstmt.setInt(11, pp.reaper);
+            pstmt.setInt(12, pp.kitweapon);
+            pstmt.setInt(13, pp.kithelm);
+            pstmt.setInt(14, pp.kitchest);
+            pstmt.setInt(15, pp.kitlegs);
+            pstmt.setInt(16, pp.kitboots);
+            pstmt.setString(17, pp.currentQuest);
+            pstmt.setInt(18, pp.dailyQuestsCompleted);
+            pstmt.setString(19, RankEnum.DEFAULT.toString());
+
+            pstmt.executeUpdate();
+
+            PracticeServer.log.info("Saved default persistent data for " + player.getName());
+        } catch (SQLException e) {
+            PracticeServer.log.severe("Error saving default persistent data for " + player.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    private void initializeNewPlayer(Player player) {
+        PracticeServer.log.info("Initializing new player data for " + player.getName());
+        try {
+            GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+
+            if (raceMinigame.getGameState() == MinigameState.NONE) {
+                setDefaultInventory(player);
+                player.teleport(TeleportBooks.DeadPeaks);
+
+            }
+
+            // Initialize other default values
+            Horses.horseTier.put(player, 0);
+            Economy.depositPlayer(player.getUniqueId(), 0); // Set initial balance to 0 or any default value
+
+            // Save the initial player data
+            updatePlayerStats(player);
+
+            PracticeServer.log.info("Successfully initialized new player data for " + player.getName());
+        } catch (Exception e) {
+            PracticeServer.log.severe("Error initializing new player data for " + player.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    private void handlePlayerData(Player player, ResultSet rs) {
+        if (raceMinigame.getGameState() != MinigameState.NONE) {
+            PracticeServer.log.info("Skipping handlePlayerData for " + player.getName() + " due to race minigame state.");
+            return;
+        }
+
+        PracticeServer.log.info("Preparing data for delayed loading for player: " + player.getName());
+
+        final Map<String, Object> playerData = new HashMap<>();
+        try {
+            if (rs.next()) {
+                playerData.put("GuildName", rs.getString("GuildName"));
+                playerData.put("PlayerKills", rs.getInt("PlayerKills"));
+                playerData.put("T1Kills", rs.getInt("T1Kills"));
+                playerData.put("T2Kills", rs.getInt("T2Kills"));
+                playerData.put("T3Kills", rs.getInt("T3Kills"));
+                playerData.put("T4Kills", rs.getInt("T4Kills"));
+                playerData.put("T5Kills", rs.getInt("T5Kills"));
+                playerData.put("T6Kills", rs.getInt("T6Kills"));
+                playerData.put("ChestsOpened", rs.getInt("ChestsOpened"));
+                playerData.put("Deaths", rs.getInt("Deaths"));
+                playerData.put("OreMined", rs.getInt("OreMined"));
+                playerData.put("HorseTier", rs.getInt("HorseTier"));
+                playerData.put("Alignment", rs.getString("Alignment"));
+                playerData.put("AlignTime", rs.getInt("AlignTime"));
+                playerData.put("Inventory", rs.getString("Inventory"));
+                playerData.put("Armor", rs.getString("Armor"));
+                playerData.put("XCoord", rs.getDouble("XCoord"));
+                playerData.put("YCoord", rs.getDouble("YCoord"));
+                playerData.put("ZCoord", rs.getDouble("ZCoord"));
+                playerData.put("Yaw", rs.getFloat("Yaw"));
+                playerData.put("Pitch", rs.getFloat("Pitch"));
+            }
+        } catch (SQLException e) {
+            PracticeServer.log.severe("Error reading player data from ResultSet for " + player.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        // Schedule the data loading task with a 2-second delay
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    loadPlayerDataWithDelay(player, playerData);
+                } catch (Exception e) {
+                    PracticeServer.log.severe("Error in delayed player data loading for " + player.getName() + ": " + e.getMessage());
+                    e.printStackTrace();
+                    player.kickPlayer("Error loading player data. Please try again later.");
+                }
+            }
+        }.runTaskLater(PracticeServer.getInstance(), 1L); // 40 ticks = 2 seconds
+    }
+
+
+    private void loadPlayerDataWithDelay(Player player, Map<String, Object> playerData) {
+        PracticeServer.log.info("Starting delayed data loading for player: " + player.getName());
+
+        try {
+            if (playerData.containsKey("GuildName")) {
+                String guildName = (String) playerData.get("GuildName");
+                int playerKills = (int) playerData.get("PlayerKills");
+                int t1Kills = (int) playerData.get("T1Kills");
+                int t2Kills = (int) playerData.get("T2Kills");
+                int t3Kills = (int) playerData.get("T3Kills");
+                int t4Kills = (int) playerData.get("T4Kills");
+                int t5Kills = (int) playerData.get("T5Kills");
+                int t6Kills = (int) playerData.get("T6Kills");
+                int lootChestsOpen = (int) playerData.get("ChestsOpened");
+                int deaths = (int) playerData.get("Deaths");
+                int oreMined = (int) playerData.get("OreMined");
+
+                GuildPlayers.add(new GuildPlayer(player.getUniqueId(), player.getName(), guildName,
+                        playerKills, t1Kills, t2Kills, t3Kills, t4Kills, t5Kills, t6Kills, lootChestsOpen,
+                        oreMined, deaths, 0));
+
+                int horseTier = (int) playerData.get("HorseTier");
+                if (horseTier > Horses.horseTier.get(player)) {
+                    Horses.horseTier.put(player, horseTier);
+                }
+
+                String alignment = (String) playerData.get("Alignment");
+                int alignTime = (int) playerData.get("AlignTime");
+                if (alignment != null) {
+                    if (alignment.contains("CHAOTIC")) {
+                        Alignments.chaotic.put(player.getName(), alignTime);
+                    } else if (alignment.contains("NEUTRAL")) {
+                        Alignments.neutral.put(player.getName(), alignTime);
+                    }
+                }
+
+                player.getInventory().clear();
+                String inventoryBase64 = (String) playerData.get("Inventory");
+                String armorBase64 = (String) playerData.get("Armor");
+                if (inventoryBase64 != null && armorBase64 != null) {
+                    try {
+                        ItemStack[] inventoryItems = BukkitSerialization.itemStackArrayFromBase64(inventoryBase64);
+                        ItemStack[] armorItems = BukkitSerialization.itemStackArrayFromBase64(armorBase64);
+                        player.getInventory().setContents(inventoryItems);
+                        player.getInventory().setArmorContents(armorItems);
+                    } catch (IllegalArgumentException | IOException e) {
+                        PracticeServer.log.warning("Error deserializing inventory for " + player.getName() + ": " + e.getMessage());
+                        setDefaultInventory(player);
+                    }
+                } else {
+                    PracticeServer.log.warning("Null inventory or armor data for player: " + player.getName());
+                    setDefaultInventory(player);
+                }
+
+                if (!player.isDead()) {
+                    double xCoord = (double) playerData.get("XCoord");
+                    double yCoord = (double) playerData.get("YCoord");
+                    double zCoord = (double) playerData.get("ZCoord");
+                    float yaw = (float) playerData.get("Yaw");
+                    float pitch = (float) playerData.get("Pitch");
+                    Location loc = new Location(player.getWorld(), xCoord, yCoord, zCoord, yaw, pitch);
+                    if (loc.getWorld() != null && loc.getWorld().isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
+                        player.teleport(loc);
+                    } else {
+                        PracticeServer.log.warning("Invalid or unloaded location for " + player.getName() + ". Using default spawn.");
+                        player.teleport(player.getWorld().getSpawnLocation());
+                    }
+                }
+
+                PracticeServer.log.info("Successfully loaded data for " + player.getName());
+            } else {
+                PracticeServer.log.info("No existing data found for " + player.getName() + ". Initializing new player data.");
+                initializeNewPlayer(player);
+            }
+        } catch (Exception e) {
+            PracticeServer.log.severe("Unexpected error while handling player data for " + player.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            player.kickPlayer("Error loading player data. Please try again later.");
+        }
+    }
+
+    public static Set<String> getToggleColumns() {
+        return new HashSet<>(Arrays.asList(
+                "LVLHPToggle",
+                "PVPToggle",
+                "ChaoToggle",
+                "FFToggle",
+                "DebugToggle",
+                "HologramToggle",
+                "GlowToggle",
+                "PMToggle",
+                "TradingToggle",
+                "GemsToggle",
+                "TrailToggle",
+                "DropToggle",
+                "KitToggle"
+        ));
+    }
+
+
+    private static String getToggleNameFromColumn(String column) {
         switch (column) {
-            case "LVLHPToggle":
-                return "Level HP";
-            case "PVPToggle":
-                return "Anti PVP";
-            case "ChaoToggle":
-                return "Chaotic";
-            case "FFToggle":
-                return "Friendly Fire";
-            case "DebugToggle":
-                return "Debug";
-            case "HologramToggle":
-                return "Hologram Damage";
-            case "GlowToggle":
-                return "Glow Drops";
-            case "PMToggle":
-                return "Player Messages";
-            case "TradingToggle":
-                return "Trading";
-            case "GemsToggle":
-                return "Gems";
-            case "TrailToggle":
-                return "Trail";
-            case "DropToggle":
-                return "Drop Protection";
-            case "KitToggle":
-                return "Disable Kit";
-            default:
-                return "";
+            case "LVLHPToggle": return "Level HP";
+            case "PVPToggle": return "Anti PVP";
+            case "ChaoToggle": return "Chaotic";
+            case "FFToggle": return "Friendly Fire";
+            case "DebugToggle": return "Debug";
+            case "HologramToggle": return "Hologram Damage";
+            case "GlowToggle": return "Glow Drops";
+            case "PMToggle": return "Player Messages";
+            case "TradingToggle": return "Trading";
+            case "GemsToggle": return "Gems";
+            case "TrailToggle": return "Trail";
+            case "DropToggle": return "Drop Protection";
+            case "KitToggle": return "Disable Kit";
+            default: return "";
         }
     }
 
@@ -823,56 +1287,143 @@ public class SQLMain implements Listener {
         if (PracticeServer.DATABASE) {
             try {
                 ResultSet rs = SQLMain.getPlayerData("PersistentData", "*");
-                while (rs.next()) {
-                    UUID uuid = UUID.fromString(rs.getString("UUID"));
-                    ArrayList<String> toggle = new ArrayList<String>();
-                    getTogglesFromSQL(uuid, rs);
-                    ModerationMechanics.rankHashMap.put(uuid, RankEnum.fromString(rs.getString("PlayerRank")));
-                    Toggles.toggles.put(uuid, toggle);
-                    ArrayList<String> buddies = new ArrayList<>();
-                    for (String s : rs.getString("Buddies").split(",")) {
-                        if (s.length() > 30) buddies.add(s);
+                if (rs != null) {
+                    while (rs.next()) {
+                        String uuidString = rs.getString("UUID");
+                        if (uuidString == null) {
+                            PracticeServer.log.severe("[RetroDB] UUID is null in PersistentData.");
+                            continue;
+                        }
+                        UUID uuid = UUID.fromString(uuidString);
+
+                        String playerRankString = rs.getString("PlayerRank");
+                        if (playerRankString == null) {
+                            PracticeServer.log.warning("[RetroDB] PlayerRank is null for UUID: " + uuid);
+                        } else {
+                            RankEnum playerRank = RankEnum.fromString(playerRankString);
+                            ModerationMechanics.rankHashMap.put(uuid, playerRank);
+                        }
+
+                        getTogglesFromSQL(uuid, rs);
+
+                        String buddiesString = rs.getString("Buddies");
+                        ArrayList<String> buddies = new ArrayList<>();
+                        if (buddiesString != null) {
+                            for (String s : buddiesString.split(",")) {
+                                if (s.length() > 30) buddies.add(s);
+                            }
+                        }
+                        Buddies.buddies.put(rs.getString("Username"), buddies);
+
+                        int tokens = rs.getInt("Tokens");
+                        int mount = rs.getInt("Mount");
+                        int pickaxe = rs.getInt("Pickaxe");
+                        int farmer = rs.getInt("Farmer");
+                        int laststand = rs.getInt("LastStand");
+                        int bankpages = rs.getInt("BankPages");
+                        int orbrolls = rs.getInt("OrbRolls");
+                        int luck = rs.getInt("Luck");
+                        int reaper = rs.getInt("Reaper");
+                        int kitweapon = rs.getInt("KitWeapon");
+                        int kithelm = rs.getInt("KitHelm");
+                        int kitchest = rs.getInt("KitChest");
+                        int kitlegs = rs.getInt("KitLegs");
+                        int kitboots = rs.getInt("KitBoots");
+                        String currentQuest = rs.getString("CurrentQuest");
+                        int dailyQuestsCompleted = rs.getInt("DailyQuestsCompleted");
+
+                        PersistentPlayer persistentPlayer = new PersistentPlayer(
+                                tokens, mount, pickaxe, farmer, laststand, bankpages, orbrolls, luck,
+                                reaper, kitweapon, kithelm, kitchest, kitlegs, kitboots,
+                                dailyQuestsCompleted, currentQuest
+                        );
+
+                        PersistentPlayers.put(uuid, persistentPlayer);
                     }
-                    Buddies.buddies.put(rs.getString("Username"), buddies);
-                    Integer tokens = rs.getInt("Tokens");
-                    int mount = rs.getInt("Mount");
-                    int pickaxe = rs.getInt("Pickaxe");
-                    int farmer = rs.getInt("Farmer");
-                    int laststand = rs.getInt("LastStand");
-                    int bankpages = rs.getInt("BankPages");
-                    int orbrolls = rs.getInt("OrbRolls");
-                    int luck = rs.getInt("Luck");
-                    int reaper = rs.getInt("Reaper");
-                    int kitweapon = rs.getInt("KitWeapon");
-                    int kithelm = rs.getInt("KitHelm");
-                    int kitchest = rs.getInt("KitChest");
-                    int kitlegs = rs.getInt("KitLegs");
-                    int kitboots = rs.getInt("KitBoots");
-                    if (tokens == null || kitweapon < 1) {
-                        if (!PersistentPlayers.persistentPlayers.containsKey(uuid))
-                            PersistentPlayers.put(uuid, new PersistentPlayer(50, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0));
-                    } else {
-                        PersistentPlayers.put(uuid, new PersistentPlayer(tokens, mount, pickaxe, farmer, laststand, bankpages, orbrolls, luck, reaper, kitweapon, kithelm, kitchest, kitlegs, kitboots));
-                    }
+                } else {
+                    PracticeServer.log.warning("[RetroDB] No persistent data found.");
                 }
             } catch (SQLException e) {
+                PracticeServer.log.severe("[RetroDB] SQL Error during loading persistent data: " + e.getMessage());
+                e.printStackTrace();
+            } catch (Exception e) {
+                PracticeServer.log.severe("[RetroDB] Unexpected error during loading persistent data: " + e.getMessage());
                 e.printStackTrace();
             }
         }
     }
 
+    public static void updateGuildsSchema() {
+        String createGuildsTable = "CREATE TABLE IF NOT EXISTS Guilds (" +
+                "GuildName VARCHAR(255) PRIMARY KEY," +
+                "GuildTag VARCHAR(10)," +
+                "GuildMOTD TEXT," +
+                "Owner UUID," +
+                "Officers TEXT," +
+                "Members TEXT" +
+                ")";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createGuildsTable);
+            PracticeServer.log.info("Guilds table created or verified.");
+        } catch (SQLException e) {
+            PracticeServer.log.severe("Error creating Guilds table: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        Properties props = new Properties();
+        File propertiesFile = new File(PracticeServer.plugin.getDataFolder(), "db.properties");
+        if (!propertiesFile.exists()) {
+            PracticeServer.log.severe("[RetroDB] db.properties file not found!");
+            throw new SQLException("Database configuration file not found.");
+        }
+
+        try (FileInputStream in = new FileInputStream(propertiesFile)) {
+            props.load(in);
+        } catch (IOException e) {
+            PracticeServer.log.severe("[RetroDB] Error reading db.properties file: " + e.getMessage());
+            throw new SQLException("Error reading database configuration file.", e);
+        }
+
+        String url = props.getProperty("db.url");
+        String username = props.getProperty("db.username");
+        String password = props.getProperty("db.password");
+
+        if (url == null || username == null || password == null) {
+            PracticeServer.log.severe("[RetroDB] Missing database configuration in db.properties!");
+            throw new SQLException("Incomplete database configuration.");
+        }
+
+        Properties connectionProps = new Properties();
+        connectionProps.put("user", username);
+        connectionProps.put("password", password);
+
+        Connection connection = DriverManager.getConnection(url, connectionProps);
+        if (connection == null) {
+            PracticeServer.log.severe("[RetroDB] Failed to establish database connection!");
+            throw new SQLException("Failed to establish database connection.");
+        }
+
+        return connection;
+    }
+
     public static void loadGems() {
-        if (PracticeServer.DATABASE) {
-            ResultSet rs = SQLMain.getPlayerData("PlayerData", "UUID, Gems");
-            try {
-                while (rs.next()) {
-                    int gems = rs.getInt("Gems");
-                    UUID uuid = UUID.fromString(rs.getString("UUID"));
-                    Economy.currentBalance.put(uuid, gems);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+        if (!PracticeServer.DATABASE) return;
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT UUID, Gems FROM PlayerData")) {
+            while (rs.next()) {
+                UUID uuid = UUID.fromString(rs.getString("UUID"));
+                int gems = rs.getInt("Gems");
+                Economy.currentBalance.put(uuid, gems);
             }
+            Bukkit.getLogger().info("Loaded gem balances for all players");
+        } catch (SQLException e) {
+            Bukkit.getLogger().log(Level.SEVERE, "Error loading gem balances", e);
         }
     }
 }

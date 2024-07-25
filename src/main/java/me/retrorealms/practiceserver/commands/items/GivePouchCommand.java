@@ -14,10 +14,10 @@ public class GivePouchCommand implements CommandExecutor {
         Player p = Bukkit.getPlayer(args[0]);
         if (p != null && p.isOnline()) {
             if (args.length < 3) {
-                p.getInventory().addItem(GemPouches.gemPouch(Integer.parseInt(args[1])));
+                p.getInventory().addItem(GemPouches.gemPouch(Integer.parseInt(args[1]), false));
             } else {
                 for (int i = 0; i < Integer.parseInt(args[2]); i++) {
-                    p.getInventory().addItem(GemPouches.gemPouch(Integer.parseInt(args[1])));
+                    p.getInventory().addItem(GemPouches.gemPouch(Integer.parseInt(args[1]), false));
                 }
             }
         }

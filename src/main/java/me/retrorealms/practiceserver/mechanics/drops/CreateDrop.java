@@ -31,6 +31,23 @@ public class CreateDrop {
 
     public static ItemStack createDrop(int tier, int item, int rarity) {
 
+        if (item == 9999) {
+            String name = ChatColor.DARK_RED + "" + ChatColor.BOLD + "Developer's Wrath";
+            ItemStack godWeapon = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta meta = godWeapon.getItemMeta();
+            meta.setDisplayName(name);
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.RED + "DMG: 100000 - 1000000");
+            lore.add(ChatColor.GOLD + "A weapon of unimaginable power.");
+            lore.add(ChatColor.GOLD + "Use with extreme caution!");
+            lore.add(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + "Mythical");
+            meta.setLore(lore);
+            for (ItemFlag flag : ItemFlag.values()) {
+                meta.addItemFlags(flag);
+            }
+            godWeapon.setItemMeta(meta);
+            return godWeapon;
+        }
 
         Random r = new Random();
         //Initialize Variables
@@ -75,6 +92,10 @@ public class CreateDrop {
             min = max;
             max = newMax;
         }
+        if(item ==4) {
+            min *= 1.2;
+            max *= 1.2;
+        }
         min *= PracticeServer.MIN_DAMAGE_MULTIPLIER;
         max *= PracticeServer.MAX_DAMAGE_MULTIPLIER;
         double base_hp = 0;
@@ -105,7 +126,10 @@ public class CreateDrop {
             if (nrg == 0) nrg += 1;
             if (nrg > 6) nrg = 6;
         }else if(nrghp == 0) {
-            hps = (int)(hp / 6.145);
+            int minHps = Math.max(1, (int) (hp * 0.19));
+            int maxHps = Math.max(minHps + 1, (int) (hp * 0.21));
+            hps = ThreadLocalRandom.current().nextInt(minHps, maxHps);
+
         }
 
         int dpsi = (int)dpsmin;

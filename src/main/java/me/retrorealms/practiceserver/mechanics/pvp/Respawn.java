@@ -7,6 +7,7 @@ import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
 import me.retrorealms.practiceserver.mechanics.player.Toggles;
 import me.retrorealms.practiceserver.mechanics.teleport.Hearthstone;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
+import me.retrorealms.practiceserver.utils.GlowAPI;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,7 +23,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.inventivetalent.glow.GlowAPI;
 
 
 import java.io.File;
@@ -150,34 +150,19 @@ public class Respawn implements Listener {
             Bukkit.getOnlinePlayers().stream().filter(entity -> entity instanceof Item).map(entity -> (Item) entity).forEach(item -> {
                 ItemStack itemStack = item.getItemStack();
                 if (itemStack != null && (itemStack.getType() != Material.AIR) && (itemStack.hasItemMeta()) && (itemStack.getItemMeta().hasLore())) {
-                    GlowAPI.Color color = groupOf(itemStack);
+                    ChatColor color = Listeners.groupOf(itemStack);
                     if (color != null) {
                         List<Player> playerList = new ArrayList<>();
                         for (Player player : Bukkit.getOnlinePlayers()) {
-                            if (Toggles.hasGlowOnDrops(player)) {
+                            if (Toggles.isToggled(player, "Glow Drops")) {
                                 playerList.add(player);
                             }
                         }
-                        GlowAPI.setGlowing(item, groupOf(item.getItemStack()), Bukkit.getOnlinePlayers());
+                        GlowAPI.setGlowing(item, Listeners.groupOf(item.getItemStack()));
                     }
                 }
             });
         }
-    }
-    private GlowAPI.Color groupOf(ItemStack itemStack) {
-        for (String string : itemStack.getItemMeta().getLore()) {
-            if (string.contains("Common")) {
-                return GlowAPI.Color.WHITE;
-            } else if (string.contains("Uncommon")) {
-                return GlowAPI.Color.GREEN;
-            } else if (string.contains("Rare")) {
-                return GlowAPI.Color.AQUA;
-            } else if (string.contains("Unique")) {
-                return GlowAPI.Color.YELLOW;
-            }
-        }
-
-        return GlowAPI.Color.WHITE;
     }
 
     @EventHandler

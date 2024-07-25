@@ -2,6 +2,7 @@ package me.retrorealms.practiceserver.mechanics.inventory;
 
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagList;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
@@ -44,10 +45,12 @@ public class Icon {
         nmsStack.setTag(tag);
         itemStack = CraftItemStack.asBukkitCopy(nmsStack);
 
-        ItemMeta meta = itemStack.getItemMeta();
-        meta.setDisplayName(name);
-        meta.setLore(lore);
-        itemStack.setItemMeta(meta);
+        if(itemStack.hasItemMeta()) {
+            ItemMeta meta = itemStack.getItemMeta();
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&',name));
+            meta.setLore(lore);
+            itemStack.setItemMeta(meta);
+        }
         return itemStack;
     }
 

@@ -114,9 +114,11 @@ public class GolemElite implements Listener {
             }
             Player p = (Player) e;
             p.damage(s.getLastDamage(), s);
+            PracticeServer.antiCheat.getPlayerData(p).setLastKnockbackTime(System.currentTimeMillis());
             Vector v = p.getLocation().toVector().subtract(s.getLocation().toVector());
             if (v.getX() != 0.0 || v.getY() != 0.0 || v.getZ() != 0.0) v.normalize();
             p.setVelocity(v.multiply(3));
+            PracticeServer.antiCheat.getPlayerData(p).setLastKnockbackTime(System.currentTimeMillis());;
 
         }
 

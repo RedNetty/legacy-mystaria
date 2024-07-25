@@ -1,36 +1,52 @@
 package me.retrorealms.practiceserver.mechanics.mobs.boss.drops;
 
 import me.retrorealms.practiceserver.mechanics.drops.CreateDrop;
-import me.retrorealms.practiceserver.mechanics.mobs.boss.WorldBossHandler;
+import me.retrorealms.practiceserver.mechanics.mobs.boss.BossConfigHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class BossGearGenerator {
-    private static final FileConfiguration config = WorldBossHandler.getBossFile();
+    private static final FileConfiguration config = BossConfigHandler.getBossFile();
 
     public static int getWeaponType(String boss) {
+        if (config == null) {
+            Bukkit.getLogger().warning("Config is null in BossGearGenerator");
+            return 2; // Default to polearm if config is null
+        }
         String configString = boss.toLowerCase() + ".";
-        if (config.contains(configString + "1")) {
-            return 1;
+        for (int i = 1; i <= 4; i++) {
+            if (config.contains(configString + i)) {
+                return i;
+            }
         }
-        if (config.contains(configString + "2")) {
-            return 2;
-        }
-        if (config.contains(configString + "3")) {
-            return 3;
-        }
-        if (config.contains(configString + "4")) {
-            return 4;
-        }
-        return 1;
+        Bukkit.getLogger().warning("No valid weapon type found for " + boss + ", defaulting to 2 (polearm)");
+        return 2; // Default to polearm if no valid type is found
     }
-
     public static int getHealth(int piece, String boss) {
         if (!CreateDrop.isWeapon(piece)) {
             String healthString = getString(piece, "health", boss);
-            String[] valueStrings = healthString.split("-", 0);
-            return ThreadLocalRandom.current().nextInt(Integer.parseInt(valueStrings[0]), Integer.parseInt(valueStrings[1]));
+            Bukkit.getLogger().info("Health string for " + boss + " piece " + piece + ": " + healthString);
+
+            String[] valueStrings = healthString.split("-");
+            Bukkit.getLogger().info("Split values: " + Arrays.toString(valueStrings));
+
+            if (valueStrings.length >= 2) {
+                try {
+                    int minHealth = Integer.parseInt(valueStrings[0].trim());
+                    int maxHealth = Integer.parseInt(valueStrings[1].trim());
+                    int randomHealth = ThreadLocalRandom.current().nextInt(minHealth, maxHealth + 1);
+                    return randomHealth;
+                } catch (NumberFormatException e) {
+                    Bukkit.getLogger().warning("Invalid health values for " + boss + " piece " + piece + ": " + healthString);
+                    return 1000; // Default value
+                }
+            } else {
+                Bukkit.getLogger().warning("Invalid health string format for " + boss + " piece " + piece + ": " + healthString);
+                return 1000; // Default value
+            }
         }
         return 0;
     }
@@ -70,7 +86,7 @@ public class BossGearGenerator {
     public static boolean isArmor(int piece, String boss) {
         if (config != null) {
             String configString = boss.toLowerCase() + "." + piece + ".armor-dps";
-            return config.contains(configString) && config.getString(configString) == "armor";
+            return config.contains(configString) && config.getString(configString).equalsIgnoreCase("armor");
         }
         return false;
     }

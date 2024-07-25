@@ -33,7 +33,7 @@ public class MessageCommand implements CommandExecutor {
                     p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + args[0] + ChatColor.RED + " is OFFLINE.");
                 } else {
 
-                    if (Toggles.hasPMEnabled(reciever)) {
+                    if (Toggles.isToggled(reciever, "Player Messages")) {
                         String playerPrefix = ChatMechanics.getTag(p) + ChatMechanics.getDisplayNameFor(p, reciever);
                         String senderPrefix = ChatMechanics.getTag(reciever) + ChatMechanics.getDisplayNameFor(reciever, p);
                         reciever.sendMessage(ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM " + playerPrefix + ": " + ChatColor.WHITE + "/" + label + " " + args[0]);
@@ -61,7 +61,7 @@ public class MessageCommand implements CommandExecutor {
                         ChatMechanics.sendShowString(p, p.getInventory().getItemInMainHand(), ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "TO " + reciever.getName(), message, p);
                     } else {
 
-                        if (Toggles.hasPMEnabled(reciever)) {
+                        if (Toggles.isToggled(reciever, "Player Messages")) {
                             reciever.sendMessage(ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "FROM " + p.getDisplayName() + ": " + ChatColor.WHITE + message);
                             p.sendMessage(ChatColor.DARK_GRAY.toString() + ChatColor.BOLD + "TO " + reciever.getDisplayName() + ": " + ChatColor.WHITE + message);
                         } else {

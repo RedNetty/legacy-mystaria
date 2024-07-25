@@ -1,7 +1,6 @@
 package me.retrorealms.practiceserver.mechanics.money;
 
 import me.retrorealms.practiceserver.PracticeServer;
-import me.retrorealms.practiceserver.commands.moderation.BankSeeCommand;
 import me.retrorealms.practiceserver.commands.moderation.DeployCommand;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
@@ -11,11 +10,7 @@ import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import me.retrorealms.practiceserver.utils.StringUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,262 +22,107 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Banks implements Listener {
-    public static HashMap<Player, UUID> banksee = new HashMap<>();
-    public static List<String> withdraw = new ArrayList<String>();
-    public static final int banksize = 54;
-    public static HashMap<Player, Inventory> tempBanks = new HashMap<>();
+    public static final int BANK_SIZE = 54;
+    public static final Map<UUID, UUID> BANK_SEE = new ConcurrentHashMap<>();
+    public static final Set<UUID> WITHDRAW_PROMPT = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    public static final Map<UUID, Inventory> TEMP_BANKS = new ConcurrentHashMap<>();
 
     public void onEnable() {
         PracticeServer.log.info("[Banks] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
-        if (PracticeServer.DATABASE) return;
-        File file = new File(PracticeServer.plugin.getDataFolder(), "banks");
-        if (!file.exists()) {
-            file.mkdirs();
-        }
     }
 
     public void onDisable() {
         PracticeServer.log.info("[Banks] has been disabled.");
-        if (PracticeServer.DATABASE) return;
-        File file = new File(PracticeServer.plugin.getDataFolder(), "banks");
-        if (!file.exists()) {
-            file.mkdirs();
+        saveBanks();
+    }
+
+    private void saveBanks() {
+        for (Map.Entry<UUID, Inventory> entry : TEMP_BANKS.entrySet()) {
+            saveBank(entry.getValue(), entry.getKey(), 1);
         }
+        TEMP_BANKS.clear();
     }
 
     @EventHandler
-    public void onClick(PlayerInteractEvent e) {
-        if (DeployCommand.patchlockdown) {
-            e.setCancelled(true);
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        if (DeployCommand.patchlockdown || e.getAction() != Action.RIGHT_CLICK_BLOCK
+                || e.getClickedBlock().getType() != Material.ENDER_CHEST || Duels.duelers.containsKey(e.getPlayer())) {
             return;
         }
+
+        e.setCancelled(true);
         Player p = e.getPlayer();
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.ENDER_CHEST && !Duels.duelers.containsKey(p)) {
-            e.setCancelled(true);
-            if (!e.getPlayer().getOpenInventory().getTitle().contains("Bank Chest")) {
-                Inventory inv = Banks.getBank(p, 1);
-                if (inv == null) {
-                    PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-                    inv = Bukkit.createInventory(null, banksize, "Bank Chest (1/" + pp.bankpages + ")");
-                }
-                p.openInventory(inv);
-                p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
-            }
+        if (!p.getOpenInventory().getTitle().contains("Bank Chest")) {
+            Inventory inv = getBank(p, 1);
+            p.openInventory(inv);
+            p.playSound(p.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
         }
     }
 
     @EventHandler
-    public void onClose(InventoryCloseEvent e) {
-        Player p = (Player) e.getPlayer();
-        if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
-            int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
-            new BukkitRunnable() {
-                public void run() {
-                    saveBank(e.getInventory(), p, page);
-                }
-            }.runTaskLaterAsynchronously(PracticeServer.getInstance(), 2L);
-            if (Banks.banksee.containsKey(p)) {
-                Banks.banksee.remove(p);
-            }
+    public void onInventoryClose(InventoryCloseEvent e) {
+        if (e.getInventory().getTitle().contains("Bank Chest") && !e.getInventory().getTitle().contains("Guild")) {
+            Player p = (Player) e.getPlayer();
+            int page = Integer.parseInt(e.getInventory().getTitle().substring(12, 13));
+            Bukkit.getScheduler().runTaskAsynchronously(PracticeServer.getInstance(), () -> saveBank(e.getInventory(), p.getUniqueId(), page));
+            BANK_SEE.remove(p.getUniqueId());
         }
     }
 
-//    @EventHandler
-//    public void onClickSave(InventoryClickEvent e) {
-//        Player p = (Player) e.getWhoClicked();
-//        if (e.getInventory().getName().equals("Bank Chest (1/1)")) {
-//            this.saveBank(e.getInventory(), p);
-//            new BukkitRunnable() {
-//
-//                public void run() {
-//                    Banks.this.saveBank(e.getInventory(), p);
-//                }
-//            }.runTaskLater(PracticeServer.plugin, 1);
-//        }
-//    }
-
-    public static ItemStack makeGems(final int amount) {
-        final ItemStack i = new ItemStack(Material.EMERALD, amount);
-        final List<String> new_lore = new ArrayList<String>(
-                Arrays.asList(String.valueOf(ChatColor.GRAY.toString()) + "The currency of Andalucia"));
-        final ItemMeta im = i.getItemMeta();
-        im.setLore(new_lore);
-        im.setDisplayName(String.valueOf(ChatColor.WHITE.toString()) + "Gem");
-        i.setItemMeta(im);
-        i.setAmount(amount);
-        return i;
-    }
-
-    public void saveBank(Inventory inv, Player p, int page) {
-        UUID name = p.getUniqueId();
-        if (banksee.containsKey(p)) {
-            name = banksee.get(p);
-        }
+    private void saveBank(Inventory inv, UUID playerUUID, int page) {
         if (PracticeServer.DATABASE) {
-            SQLMain.saveBank(inv, name, page);
-            return;
-        }
-        File file = new File(PracticeServer.plugin.getDataFolder() + "/banks", String.valueOf(name) + ".yml");
-        YamlConfiguration config = new YamlConfiguration();
-        int i = 0;
-        while (i < inv.getSize()) {
-            if (inv.getItem(i) != null) {
-                config.set("" + i, inv.getItem(i));
-            }
-            ++i;
-        }
-        try {
-            config.save(file);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            SQLMain.saveBank(inv, playerUUID, page);
+        } else {
+            TEMP_BANKS.put(playerUUID, inv);
         }
     }
 
     public static void resetTempBanks() {
-        tempBanks = new HashMap<>();
+        TEMP_BANKS.clear();
     }
+
     public static Inventory getBank(Player p, int page) {
-        UUID name = p.getUniqueId();
-        if (banksee.containsKey(p)) {
-            name = banksee.get(p);
-        }
+        UUID playerUUID = BANK_SEE.getOrDefault(p.getUniqueId(), p.getUniqueId());
+
         if (PracticeServer.DATABASE && PracticeServer.getRaceMinigame().getGameState() == MinigameState.NONE) {
-            return SQLMain.getBank(name, page);
+            return SQLMain.getBank(playerUUID, page);
         }
-        if(tempBanks.containsKey(p)) return tempBanks.get(p);
-/*        File file;
-        if (!(file = new File(PracticeServer.plugin.getDataFolder() + "/banks", String.valueOf(name) + ".yml")).exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        YamlConfiguration config = new YamlConfiguration();
-        try {
-            config.load(file);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }*/
-        Inventory inv = Bukkit.createInventory(null, banksize, "Bank Chest (1/1)");
-        if(!tempBanks.containsKey(p)) tempBanks.put(p, inv);
-        return tempBanks.get(p);
-    }
 
-    public static ItemStack getGemBankItem(Player player) {
-        ItemStack gem = new ItemStack(Material.EMERALD);
-        ItemMeta im = gem.getItemMeta();
-        im.setDisplayName(ChatColor.GREEN.toString() + Economy.getBalance(player.getUniqueId())
-                + ChatColor.GREEN + ChatColor.BOLD.toString() + " GEM(s)");
-        im.setLore(Arrays.asList(ChatColor.GRAY + "Right Click to create " + ChatColor.GREEN + "A GEM NOTE"));
-        gem.setItemMeta(im);
-        return gem;
+        return TEMP_BANKS.computeIfAbsent(playerUUID, k -> Bukkit.createInventory(null, BANK_SIZE, "Bank Chest (1/1)"));
     }
 
     @EventHandler
-    public void onInvOpen(InventoryOpenEvent e) {
-        if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
+    public void onInventoryOpen(InventoryOpenEvent e) {
+        if (e.getInventory().getTitle().contains("Bank Chest") && !e.getInventory().getTitle().contains("Guild")) {
             Inventory inv = e.getInventory();
-            ItemStack glass = new ItemStack(Material.THIN_GLASS);
-            ItemMeta meta = glass.getItemMeta();
-            meta.setDisplayName(" ");
-            glass.setItemMeta(meta);
-            int i = banksize - 9;
-            while (i < banksize) {
-                inv.setItem(i, glass);
-                ++i;
-            }
-            inv.setItem(banksize - 5, getGemBankItem((Player) e.getPlayer()));
-            inv.setItem(banksize - 1, pageArrow(true));
-            inv.setItem(banksize - 9, pageArrow(false));
+            setupBankInventory(inv, (Player) e.getPlayer());
         }
     }
 
-    public ItemStack pageArrow(boolean next) {
-        ItemStack is = new ItemStack(Material.ARROW);
-        ItemMeta im = is.getItemMeta();
-        if (next) {
-            im.setDisplayName(ChatColor.GREEN + "Next Page");
-        } else {
-            im.setDisplayName(ChatColor.GREEN + "Previous Page");
+    private void setupBankInventory(Inventory inv, Player player) {
+        ItemStack glass = createNamedItem(Material.THIN_GLASS, " ");
+        for (int i = BANK_SIZE - 9; i < BANK_SIZE; i++) {
+            inv.setItem(i, glass);
         }
-        is.setItemMeta(im);
-        return is;
+        inv.setItem(BANK_SIZE - 5, getGemBankItem(player));
+        inv.setItem(BANK_SIZE - 1, createNamedItem(Material.ARROW, ChatColor.GREEN + "Next Page"));
+        inv.setItem(BANK_SIZE - 9, createNamedItem(Material.ARROW, ChatColor.GREEN + "Previous Page"));
     }
 
-    int getGems(ItemStack is) {
-        List<String> lore;
-        if (is != null && is.getType() != Material.AIR && is.getType() == Material.PAPER && is.getItemMeta().hasLore()
-                && (lore = is.getItemMeta().getLore()).size() > 0 && lore.get(0).contains("Value")) {
-            try {
-                String line = ChatColor.stripColor(lore.get(0));
-                return Integer.parseInt(line.split(": ")[1].split(" Gems")[0]);
-            } catch (Exception e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPromptAmount(final AsyncPlayerChatEvent e) {
-        final Player p = e.getPlayer();
-        if (this.withdraw.contains(p.getName())) {
-            e.setCancelled(true);
-            final String message = e.getMessage();
-            if (e.getMessage().equalsIgnoreCase("cancel") && this.withdraw.contains(p.getName())) {
-                for (int i = 0; i < this.withdraw.size(); ++i) {
-                    this.withdraw.remove(p.getName());
-                }
-                StringUtil.sendCenteredMessage(p,ChatColor.RED + "Withdraw operation - " + ChatColor.BOLD + "CANCELLED");
-                return;
-            }
-            int amt = 0;
-            try {
-                amt = Integer.parseInt(message);
-                if (amt > Economy.getBalance(p.getUniqueId())) {
-                    StringUtil.spacer(p);
-                    StringUtil.sendCenteredMessage(p,ChatColor.GRAY + "You cannot withdraw more GEMS than you have stored.");
-                } else if (amt <= 0) {
-                    StringUtil.spacer(p);
-                    StringUtil.sendCenteredMessage(p,ChatColor.RED + "You must enter a POSITIVE amount.");
-                } else {
-                    for (int j = 0; j < this.withdraw.size(); ++j) {
-                        this.withdraw.remove(p.getName());
-                    }
-                    Economy.withdrawPlayer(p.getUniqueId(), amt);
-                    if (p.getInventory().firstEmpty() != -1) {
-                        p.getInventory().setItem(p.getInventory().firstEmpty(), Money.createBankNote(amt));
-                    }
-                    StringUtil.spacer(p);
-                    StringUtil.sendCenteredMessage(p, "&c-" + amt + "&c&lG &7➜ Your Bank" );
-                    StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + " &aGEM(s)");
-                    p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FLAP, 1.0f, 1.2f);
-                }
-            } catch (NumberFormatException ex) {
-                StringUtil.spacer(p);
-                StringUtil.sendCenteredMessage(p,ChatColor.RED
-                        + "Please enter a NUMBER, the amount you'd like to WITHDRAW from your bank account. Or type 'cancel' to void the withdrawl.");
-            }
-        }
-    }
-
-    @SuppressWarnings("deprecation")
     @EventHandler
-    public void onInvClick(final InventoryClickEvent e) {
-        final Player p = (Player) e.getWhoClicked();
+    public void onInventoryClick(InventoryClickEvent e) {
         if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.PAPER
                 && e.getCurrentItem().getItemMeta().hasLore() && e.getCursor().getType() == Material.PAPER
                 && e.getCursor().getItemMeta().hasLore()) {
             e.setCancelled(true);
+            final Player p = (Player) e.getWhoClicked();
+
             final int first = this.getGems(e.getCurrentItem());
             final int second = this.getGems(e.getCursor());
             final ItemStack gem = new ItemStack(Material.PAPER);
@@ -297,199 +137,267 @@ public class Banks implements Listener {
             e.setCursor(null);
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_FLAP, 1.0f, 1.2f);
         }
-        if (e.getInventory().getName().contains("Bank Chest") && !e.getInventory().getName().contains("Guild")) {
-            if (e.getClick() == ClickType.RIGHT && e.getSlot() == banksize - 5) {
+        if (!(e.getWhoClicked() instanceof Player) || !e.getInventory().getTitle().contains("Bank Chest") || e.getInventory().getTitle().contains("Guild")) {
+            return;
+        }
+
+        Player p = (Player) e.getWhoClicked();
+
+        if (e.getRawSlot() >= BANK_SIZE) {
+            // Clicked in player inventory
+            if (e.isShiftClick()) {
                 e.setCancelled(true);
-                StringUtil.spacer(p);
-                StringUtil.sendCenteredMessage(p, new StringBuilder().append(ChatColor.GREEN).append(ChatColor.BOLD)
-                        .append("Current Balance: ").append(ChatColor.GREEN)
-                        .append(Economy.getBalance(p.getUniqueId())).append(" GEM(s)").toString());
-                for (int i = 0; i < this.withdraw.size(); ++i) {
-                    this.withdraw.remove(p.getName());
-                }
-                this.withdraw.add(p.getName());
-                StringUtil.sendCenteredMessage(p,ChatColor.GRAY
-                        + "Please enter the amount you'd like To CONVERT into a gem note. Alternatively, type "
-                        + ChatColor.RED + "'cancel'" + ChatColor.GRAY + " to void this operation.");
-                new BukkitRunnable() {
-                    public void run() {
-                        p.closeInventory();
-                    }
-                }.runTaskLater(PracticeServer.plugin, 1L);
+                handleShiftClickToBank(e, p);
             }
-            if (e.getSlot() == banksize - 9) {
-                int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
-                p.closeInventory();
-                if (page - 1 < 1) {
-                    e.setCancelled(true);
-                    return;
-                }
-                p.openInventory(getBank(p, page - 1));
-                p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.25f);
+            // Normal clicks are allowed by default
+        } else if (e.getRawSlot() < BANK_SIZE - 9) {
+            // Clicked in bank inventory (excluding bottom row)
+            if (e.isShiftClick()) {
                 e.setCancelled(true);
-                return;
+                handleShiftClickFromBank(e, p);
             }
-            if (e.getSlot() == banksize - 1) {
-                int page = Integer.valueOf(e.getInventory().getName().substring(12, 13));
-                PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-                p.closeInventory();
-                if (page + 1 > pp.bankpages) {
-                    StringUtil.spacer(p);
-                    StringUtil.sendCenteredMessage(p,ChatColor.RED + "You do not have access to that many bank pages.");
-                    e.setCancelled(true);
-                    return;
-                }
-                p.openInventory(getBank(p, page + 1));
-                p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.25f);
-                e.setCancelled(true);
-                return;
-            }
-            for (int i = banksize - 9; i < banksize; ++i) {
-                if (e.getSlot() == i) {
-                    e.setCancelled(true);
-                }
-            }
-            if (e.getSlotType() == InventoryType.SlotType.OUTSIDE) {
-                return;
-            }
-            if (e.isShiftClick() && e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.EMERALD) {
-                if (e.getRawSlot() < banksize) {
-                    return;
-                }
-                final int amt = e.getCurrentItem().getAmount();
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                e.setCurrentItem(null);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
-            if (e.isShiftClick() && e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.PAPER) {
-                if (e.getRawSlot() < banksize) {
-                    return;
-                }
-                final int amt = this.getGems(e.getCurrentItem());
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                e.setCurrentItem(null);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
-            if (e.isShiftClick() && e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.INK_SACK
-                    && e.getCurrentItem().getDurability() == 0) {
-                if (e.getRawSlot() < banksize) {
-                    return;
-                }
-                final int amt = GemPouches.getCurrentValue(e.getCurrentItem());
-                if (amt < 1) {
-                    if (e.getInventory().firstEmpty() != -1) {
-                        e.getInventory().setItem(e.getInventory().firstEmpty(), e.getCurrentItem());
-                        e.setCurrentItem(null);
-                    }
-                    return;
-                }
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                GemPouches.setPouchBal(e.getCurrentItem(), 0);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
-            if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.EMERALD) {
-                if (e.getRawSlot() > banksize - 10) {
-                    return;
-                }
-                final int amt = e.getCursor().getAmount();
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                e.setCursor(null);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
-            if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.PAPER) {
-                if (e.getRawSlot() > banksize - 10) {
-                    return;
-                }
-                final int amt = this.getGems(e.getCursor());
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                e.setCursor(null);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
-            if (!e.isShiftClick() && e.getCursor() != null && e.getCursor().getType() == Material.INK_SACK
-                    && e.getCursor().getDurability() == 0) {
-                if (e.getRawSlot() > banksize - 10) {
-                    return;
-                }
-                final int amt = GemPouches.getCurrentValue(e.getCursor());
-                if (amt < 1) {
-                    return;
-                }
-                e.setCancelled(true);
-                Economy.depositPlayer(p.getUniqueId(), amt);
-                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-                e.getInventory().setItem(banksize - 5, this.gemBalance(Economy.getBalance(p.getUniqueId())));
-                p.updateInventory();
-                StringUtil.clearChat(p);
-                StringUtil.sendCenteredMessage(p, "&a+" + amt + "&a&lG &7➜  Your Bank   ");
-                StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + "&a GEM(s)");
-                GemPouches.setPouchBal(e.getCursor(), 0);
-                if (!PracticeServer.DATABASE) {
-                    nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
-                    nonStaticConfig.save();
-                }
-            }
+            // Normal clicks are allowed by default
+        } else {
+            // Clicked in bottom row of bank inventory
+            e.setCancelled(true);
+            handleBottomRowClick(e, p);
         }
     }
 
-    ItemStack gemBalance(final int amt) {
-        final ItemStack is = new ItemStack(Material.EMERALD);
-        final ItemMeta im = is.getItemMeta();
-        im.setDisplayName(new StringBuilder().append(ChatColor.GREEN).append(amt).append(ChatColor.GREEN)
-                .append(ChatColor.BOLD).append(" GEM(s)").toString());
-        im.setLore(Arrays
-                .asList(ChatColor.GRAY + "Right Click to create " + ChatColor.GREEN + "A GEM NOTE"));
-        is.setItemMeta(im);
-        return is;
+    private void handleShiftClickToBank(InventoryClickEvent e, Player p) {
+        ItemStack clickedItem = e.getCurrentItem();
+        if (clickedItem == null) return;
+
+        Inventory bankInv = e.getInventory();
+        int firstEmpty = bankInv.firstEmpty();
+
+        if (isCurrencyItem(clickedItem)) {
+            handleCurrencyDeposit(p, clickedItem);
+        } else {
+            if (firstEmpty != -1 && firstEmpty < BANK_SIZE - 9) {
+                // Move the entire stack to the bank if there's space
+                bankInv.addItem(clickedItem.clone());
+                e.setCurrentItem(null);
+            } else {
+                // Bank is full, display a message to the player
+                p.sendMessage(ChatColor.RED + "Your bank is full. Unable to deposit the item.");
+            }
+        }
+
+        p.updateInventory();
     }
 
+    private void handleShiftClickFromBank(InventoryClickEvent e, Player p) {
+        ItemStack clickedItem = e.getCurrentItem();
+        if (clickedItem == null) return;
+
+        // Try to add the item to the player's inventory
+        HashMap<Integer, ItemStack> notAdded = p.getInventory().addItem(clickedItem.clone());
+
+        if (notAdded.isEmpty()) {
+            // All items were added to the player's inventory
+            e.setCurrentItem(null);
+        } else {
+            // Some items couldn't be added, update the bank slot with the remaining items
+            clickedItem.setAmount(notAdded.get(0).getAmount());
+        }
+        p.updateInventory();
+    }
+
+    private void handleBottomRowClick(InventoryClickEvent e, Player p) {
+        if (e.getSlot() == BANK_SIZE - 5 && e.getClick() == ClickType.RIGHT) {
+            promptForWithdraw(p);
+        } else if (e.getSlot() == BANK_SIZE - 9) {
+            changeBankPage(p, -1);
+        } else if (e.getSlot() == BANK_SIZE - 1) {
+            changeBankPage(p, 1);
+        }
+    }
+
+    private void handleCurrencyDeposit(Player p, ItemStack item) {
+        int totalAmount = 0;
+
+        if (item.getType() == Material.EMERALD) {
+            totalAmount = item.getAmount();
+            p.getInventory().removeItem(item);
+        } else if (item.getType() == Material.PAPER) {
+            totalAmount = getGems(item);
+            p.getInventory().removeItem(item);
+        } else if (item.getType() == Material.INK_SACK && item.getDurability() == 0) {
+            totalAmount = handleGemSack(p, item);
+        } else {
+            return;
+        }
+
+        if (totalAmount > 0) {
+            Economy.depositPlayer(p.getUniqueId(), totalAmount);
+            updatePlayerBalance(p, totalAmount, true);
+        }
+
+        p.updateInventory();
+    }
+
+    private int handleGemSack(Player p, ItemStack sack) {
+        int currentValue = GemPouches.getCurrentValue(sack);
+        if (currentValue > 0) {
+            GemPouches.setPouchBal(sack, 0);
+            p.getInventory().setItem(p.getInventory().first(sack), sack); // Update the sack in the inventory
+            return currentValue;
+        } else if (p.getOpenInventory().getTopInventory().firstEmpty() != -1) {
+            // If the sack is empty and there's room in the bank, move it to the bank
+            p.getOpenInventory().getTopInventory().addItem(sack);
+            p.getInventory().removeItem(sack);
+        }
+        return 0;
+    }
+
+
+    private void promptForWithdraw(Player p) {
+        StringUtil.sendCenteredMessage(p, ChatColor.GREEN + "" + ChatColor.BOLD + "Current Balance: " + ChatColor.GREEN + Economy.getBalance(p.getUniqueId()) + " GEM(s)");
+        WITHDRAW_PROMPT.add(p.getUniqueId());
+        StringUtil.sendCenteredMessage(p, ChatColor.GRAY + "Please enter the amount you'd like to CONVERT into a gem note. Alternatively, type " + ChatColor.RED + "'cancel'" + ChatColor.GRAY + " to void this operation.");
+        p.closeInventory();
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent e) {
+        Player p = e.getPlayer();
+        if (!WITHDRAW_PROMPT.contains(p.getUniqueId())) {
+            return;
+        }
+
+        e.setCancelled(true);
+        String message = e.getMessage();
+
+        if (message.equalsIgnoreCase("cancel")) {
+            WITHDRAW_PROMPT.remove(p.getUniqueId());
+            StringUtil.sendCenteredMessage(p, ChatColor.RED + "Withdraw operation - " + ChatColor.BOLD + "CANCELLED");
+            return;
+        }
+
+        // Check if the player's bank balance is zero
+        if (Economy.getBalance(p.getUniqueId()) == 0) {
+            WITHDRAW_PROMPT.remove(p.getUniqueId());
+            StringUtil.sendCenteredMessage(p, ChatColor.RED + "Your bank balance is zero. Withdrawal cannot be processed.");
+            return;
+        }
+
+        try {
+            int amount = Integer.parseInt(message);
+            handleWithdraw(p, amount);
+        } catch (NumberFormatException ex) {
+            StringUtil.sendCenteredMessage(p, ChatColor.RED + "Please enter a NUMBER, the amount you'd like to WITHDRAW from your bank account. Or type 'cancel' to void the withdrawal.");
+        }
+    }
+
+    private void handleWithdraw(Player p, int amount) {
+        if (amount <= 0) {
+            StringUtil.sendCenteredMessage(p, ChatColor.RED + "You must enter a POSITIVE amount.");
+        } else if (amount > Economy.getBalance(p.getUniqueId())) {
+            StringUtil.sendCenteredMessage(p, ChatColor.GRAY + "You cannot withdraw more GEMS than you have stored.");
+        } else {
+            WITHDRAW_PROMPT.remove(p.getUniqueId());
+            Economy.withdrawPlayer(p.getUniqueId(), amount);
+            givePlayerBankNote(p, amount);
+            updatePlayerBalance(p, amount, false);
+        }
+    }
+
+    private void givePlayerBankNote(Player p, int amount) {
+        ItemStack bankNote = Money.createBankNote(amount);
+        if (p.getInventory().firstEmpty() != -1) {
+            p.getInventory().addItem(bankNote);
+        } else {
+            p.getWorld().dropItemNaturally(p.getLocation(), bankNote);
+            p.sendMessage(ChatColor.YELLOW + "Your inventory was full. The bank note was dropped at your feet.");
+        }
+    }
+
+    private void updatePlayerBalance(Player p, int amount, boolean isDeposit) {
+        String prefix = isDeposit ? "&a+" : "&c-";
+        StringUtil.sendCenteredMessage(p, prefix + amount + (isDeposit ? "&a&lG" : "&c&lG") + " &7➜ " + (isDeposit ? "Your Bank" : "Your Inventory"));
+        StringUtil.sendCenteredMessage(p, "&a&lNew Balance: &a" + Economy.getBalance(p.getUniqueId()) + " &aGEM(s)");
+        p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+        // Update the gem balance display in the bank inventory if it's open
+        if (p.getOpenInventory().getTitle().contains("Bank Chest")) {
+            p.getOpenInventory().setItem(BANK_SIZE - 5, getGemBankItem(p));
+        }
+
+        p.updateInventory();
+
+        if (!PracticeServer.DATABASE) {
+            nonStaticConfig.get().set(p.getUniqueId() + ".Economy.Money Balance", Economy.getBalance(p.getUniqueId()));
+            nonStaticConfig.save();
+        }
+    }
+
+    private void changeBankPage(Player p, int delta) {
+        int currentPage = Integer.parseInt(p.getOpenInventory().getTitle().substring(12, 13));
+        int newPage = currentPage + delta;
+        PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
+
+        if (newPage < 1 || newPage > pp.bankpages) {
+            StringUtil.sendCenteredMessage(p, ChatColor.RED + "You do not have access to that bank page.");
+            return;
+        }
+
+        p.closeInventory();
+        p.openInventory(getBank(p, newPage));
+        p.playSound(p.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.25f);
+    }
+
+    private boolean isCurrencyItem(ItemStack item) {
+        return item.getType() == Material.EMERALD ||
+                (item.getType() == Material.PAPER && item.hasItemMeta() && item.getItemMeta().hasLore() && item.getItemMeta().getLore().get(0).contains("Value")) ||
+                (item.getType() == Material.INK_SACK && item.getDurability() == 0);
+    }
+
+    private int getGems(ItemStack item) {
+        if (item != null && item.getType() == Material.PAPER && item.hasItemMeta() && item.getItemMeta().hasLore()) {
+            List<String> lore = item.getItemMeta().getLore();
+            if (!lore.isEmpty() && lore.get(0).contains("Value")) {
+                try {
+                    String line = ChatColor.stripColor(lore.get(0));
+                    return Integer.parseInt(line.split(": ")[1].split(" Gems")[0]);
+                } catch (Exception e) {
+                    return 0;
+                }
+            }
+        }
+        return 0;
+    }
+
+    public static ItemStack getGemBankItem(Player player) {
+        return createNamedItem(Material.EMERALD,
+                ChatColor.GREEN.toString() + Economy.getBalance(player.getUniqueId()) + ChatColor.GREEN + ChatColor.BOLD + " GEM(s)",
+                Arrays.asList(ChatColor.GRAY + "Right Click to create " + ChatColor.GREEN + "A GEM NOTE"));
+    }
+
+    private static ItemStack createNamedItem(Material material, String name) {
+        return createNamedItem(material, name, null);
+    }
+
+    private static ItemStack createNamedItem(Material material, String name, List<String> lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(name);
+        if (lore != null) {
+            meta.setLore(lore);
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public static ItemStack makeGems(final int amount) {
+        final ItemStack i = new ItemStack(Material.EMERALD, amount);
+        final List<String> new_lore = new ArrayList<String>(
+                Arrays.asList(String.valueOf(ChatColor.GRAY.toString()) + "The currency of Andalucia"));
+        final ItemMeta im = i.getItemMeta();
+        im.setLore(new_lore);
+        im.setDisplayName(String.valueOf(ChatColor.WHITE.toString()) + "Gem");
+        i.setItemMeta(im);
+        i.setAmount(amount);
+        return i;
+    }
 }

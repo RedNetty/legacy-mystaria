@@ -172,17 +172,17 @@ public class Energy implements Listener {
                     Material handType = itemInHand.getType();
 
                     if (handType == Material.WOOD_SWORD) {
-                        amount = 2;
+                        amount = 3;
                     } else if (handType == Material.WOOD_AXE || handType == Material.WOOD_SPADE || handType == Material.STONE_SWORD) {
                         amount = 3;
                     } else if (handType == Material.STONE_AXE || handType == Material.STONE_SPADE || handType == Material.IRON_SWORD) {
                         amount = 4;
                     } else if (handType == Material.IRON_AXE || handType == Material.IRON_SPADE || handType == Material.DIAMOND_SWORD) {
-                        amount = 5;
-                    } else if (handType == Material.DIAMOND_AXE || handType == Material.DIAMOND_SPADE || handType == Material.GOLD_SWORD) {
                         amount = 6;
-                    } else if (handType == Material.GOLD_AXE || handType == Material.GOLD_SPADE) {
-                        amount = 7;
+                    } else if (handType == Material.DIAMOND_AXE || handType == Material.GOLD_SPADE || handType == Material.DIAMOND_SPADE || handType == Material.GOLD_SWORD || handType == Material.GOLD_HOE) {
+                        amount = 8;
+                    } else if (handType == Material.GOLD_AXE) {
+                        amount = 10;
                     }
 
                     removeEnergy(player, amount);
@@ -227,19 +227,19 @@ public class Energy implements Listener {
                     Material handType = itemInHand.getType();
 
                     if (handType == Material.WOOD_HOE || handType == Material.WOOD_SPADE || handType == Material.WOOD_SWORD) {
-                        amount = 7;
-                    } else if (handType == Material.STONE_HOE || handType == Material.STONE_SPADE || handType == Material.WOOD_AXE || handType == Material.STONE_SWORD) {
                         amount = 8;
-                    } else if (handType == Material.STONE_AXE || handType == Material.IRON_HOE || handType == Material.IRON_AXE || handType == Material.IRON_SPADE) {
-                        amount = 9;
-                    } else if (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && (handType == Material.DIAMOND_SWORD || handType == Material.DIAMOND_HOE || handType == Material.DIAMOND_SPADE) || handType == Material.IRON_AXE) {
+                    } else if (handType == Material.STONE_HOE || handType == Material.STONE_SPADE || handType == Material.WOOD_AXE || handType == Material.STONE_SWORD) {
                         amount = 10;
-                    } else if (handType == Material.GOLD_HOE || handType == Material.GOLD_SPADE || handType == Material.GOLD_SWORD || (!itemInHand.getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && handType == Material.DIAMOND_AXE)) {
+                    } else if (handType == Material.STONE_AXE || handType == Material.IRON_HOE || handType == Material.IRON_AXE || handType == Material.IRON_SPADE) {
                         amount = 11;
-                    } else if (handType == Material.GOLD_AXE || handType == Material.DIAMOND_SWORD || handType == Material.DIAMOND_HOE || handType == Material.DIAMOND_SPADE) {
+                    } else if ((handType == Material.DIAMOND_SWORD || handType == Material.IRON_AXE)) {
                         amount = 12;
-                    } else if (handType == Material.DIAMOND_AXE) {
+                    } else if (handType == Material.GOLD_SWORD  || handType == Material.DIAMOND_HOE || handType == Material.DIAMOND_SPADE) {
                         amount = 13;
+                    } else if (handType == Material.GOLD_AXE) {
+                        amount = 14;
+                    }else if(handType == Material.GOLD_SPADE || handType == Material.GOLD_HOE) {
+                        amount = 16;
                     }
 
                     removeEnergy(player, amount);

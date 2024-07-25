@@ -22,6 +22,7 @@ import me.retrorealms.practiceserver.mechanics.pvp.Alignments;
 import me.retrorealms.practiceserver.mechanics.teleport.TeleportBooks;
 import me.retrorealms.practiceserver.mechanics.world.MinigameState;
 import me.retrorealms.practiceserver.utils.ArmorType;
+import me.retrorealms.practiceserver.utils.GlowAPI;
 import me.retrorealms.practiceserver.utils.Particles;
 import me.retrorealms.practiceserver.utils.StringUtil;
 import org.bukkit.*;
@@ -49,7 +50,6 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.inventivetalent.glow.GlowAPI;
 
 
 import java.util.*;
@@ -176,7 +176,7 @@ public class Listeners implements Listener {
 						frostArmorEffect(player, armorContent);
 					}
 					if (!ModerationMechanics.isDonator(player) ||
-							!Toggles.getToggles(player.getUniqueId()).contains("Trail")) {
+							!Toggles.isToggled(player, "Trail")) {
 						continue;
 					}
 
@@ -340,54 +340,71 @@ public class Listeners implements Listener {
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
-
-		e.setJoinMessage(ChatColor.AQUA + "[+] " + ChatColor.GRAY + e.getPlayer().getName());
 		Player player = e.getPlayer();
-		if (API.getPlayerRegistry().request(player) == null)
-			new PlayerEntity(player.getUniqueId());
+		e.setJoinMessage(ChatColor.AQUA + "[+] " + ChatColor.GRAY + player.getName());
 
-		player.getAttribute(Attribute.GENERIC_ATTACK_SPEED)
-				.setBaseValue(1024.0D); /* Fixes 1.9+ Combat */
+		try {
+			if (API.getPlayerRegistry().request(player) == null) {
+				new PlayerEntity(player.getUniqueId());
+			}
 
-		/* Initiates the player Login by setting the basic Data */
-		player.setHealthScale(20.0);
-		player.setHealthScaled(true);
+			player.getAttribute(Attribute.GENERIC_ATTACK_SPEED).setBaseValue(1024.0D);
 
-		/* Used to make the Clink sound on login */
+			player.setHealthScale(20.0);
+			player.setHealthScaled(true);
+
+			Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
+				try {
+					sendMotd(player);
+					if (!player.isDead()) hpCheck(player);
+					handleGMMode(player);
+					Toggles.setToggle(player, "Player Messages", true);
+
+					// Play sound in a separate task
+					Bukkit.getScheduler().runTask(PracticeServer.getInstance(), () -> {
+						try {
+							playSoundOnJoin(player);
+						} catch (Exception ex) {
+							PracticeServer.log.warning("Error playing join sound for " + player.getName() + ": " + ex.getMessage());
+						}
+					});
+				} catch (Exception ex) {
+					PracticeServer.log.severe("Error in delayed join task for " + player.getName() + ": " + ex.getMessage());
+					ex.printStackTrace();
+				}
+			}, 10L);
+		} catch (Exception ex) {
+			PracticeServer.log.severe("Error in onJoin for " + player.getName() + ": " + ex.getMessage());
+			ex.printStackTrace();
+		}
+	}
+
+	private void sendMotd(Player player) {
+		IntStream.range(0, 30).forEach(number -> player.sendMessage(" "));
+		StringUtil.sendCenteredMessage(player, ChatColor.BOLD + "Mystaria Patch " + PracticeServer.getInstance().getDescription().getVersion());
+		player.sendMessage("");
+		StringUtil.sendCenteredMessage(player, ChatColor.GRAY + "" + ChatColor.ITALIC + "This server is still in development, expect bugs.");
+		StringUtil.sendCenteredMessage(player, ChatColor.GRAY + "" + ChatColor.ITALIC + "Donate for Ranks at https://mystaria.craftingstore.net/");
+		StringUtil.sendCenteredMessage(player, ChatColor.GRAY + "" + ChatColor.ITALIC + "** Race Mode Beta Added **");
+		player.sendMessage("");
+	}
+
+	private void handleGMMode(Player player) {
+		if (player.isOp() && !player.isDead()) {
+			if (!ToggleGMCommand.togglegm.contains(player.getName())) {
+				ActionBar.sendActionBar(player, "&bYou are in GM Mode", 5);
+			}
+			player.sendMessage(ChatColor.BLUE + "You are currently not vanished! Please use /psvanish to vanish.");
+			player.setMaxHealth(10000);
+			player.setHealth(10000);
+		}
+	}
+
+	private void playSoundOnJoin(Player player) {
 		if (player.getInventory().getItem(0) != null && isWeapon(player.getInventory().getItem(0))) {
 			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.5f);
 		}
-		Bukkit.getScheduler().scheduleSyncDelayedTask(PracticeServer.getInstance(), () -> {
-			/* Message of the Day goes here */
-			IntStream.range(0, 30).forEach(number -> player.sendMessage(" "));
-
-			StringUtil.sendCenteredMessage(player,
-					ChatColor.BOLD + "Mystaria Patch " + PracticeServer.getInstance().getDescription().getVersion());
-			player.sendMessage("");
-			StringUtil.sendCenteredMessage(player,
-					ChatColor.GRAY + "" + ChatColor.ITALIC + "This server is still in development, expect bugs.");
-			StringUtil.sendCenteredMessage(player,
-					ChatColor.GRAY + "" + ChatColor.ITALIC + "** Race Mode Beta Added **");
-			player.sendMessage("");
-
-			if (!player.isDead()) hpCheck(player); /*
-			 * Updates the players HP by getting gear and
-			 * setting HP.
-			 */
-			if (player.isOp() && !player.isDead()) {
-				if (!ToggleGMCommand.togglegm.contains(player.getName()))
-					ActionBar.sendActionBar(player, "&bYou are in GM Mode", 5);
-				player.sendMessage(ChatColor.BLUE + "You are currently not vanished! Please use /psvanish to vanish.");
-				player.setMaxHealth(10000);
-				player.setHealth(10000);
-			}
-			Toggles.enablePM(
-					player); /* Enables the players PM toggle for some reason */
-			Toggles.toggles.get(player.getUniqueId()).add("Debug");
-			Toggles.toggles.get(player.getUniqueId()).add("Glow Drops");
-		}, 10L);
 	}
-
 	@EventHandler
 	public void onClickFurnace(PlayerInteractEvent event) {
 		if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
@@ -596,7 +613,7 @@ public class Listeners implements Listener {
 			if (vit > 0) {
 				sword_dmg = Math.round(vit / 50);
 				health_pcnt = (int) Math.round((double) vit * 0.05);
-				hps_pcnt = (int) Math.round((double) vit * 0.3);
+				hps_pcnt = (int) Math.round((double) vit * 0.1);
 				amt += hps_pcnt;
 
 			}
@@ -613,7 +630,7 @@ public class Listeners implements Listener {
 				dodge = (int) ((long) dodge + Math.round((double) dex * 0.015));
 				dps_pcnt = (int) Math.round(dex * 0.012);
 				dps = (int) ((long) dps + Math.round((double) dex * 0.012));
-				armpen = Math.round(dex / 50);
+				armpen = (int)Math.round(dex * 0.035);
 
 			}
 			bm.addPage(ChatColor.UNDERLINE.toString() + ChatColor.BOLD + "  Your Character  \n\n" + ChatColor.RESET
@@ -801,7 +818,7 @@ public class Listeners implements Listener {
 		if (!e.isCancelled() && itemStack.getType() == Material.EMERALD) {
 			e.getItem().remove();
 			e.setCancelled(true);
-			if (!Toggles.getToggles(p.getUniqueId()).contains("Gems")) {
+			if (!Toggles.isToggled(p, "Gems")) {
 				p.getInventory().addItem(itemStack);
 				p.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + "                    +" + ChatColor.GREEN
 						+ itemStack.getAmount() + ChatColor.GREEN + ChatColor.BOLD + "G");
@@ -878,6 +895,7 @@ public class Listeners implements Listener {
 			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
 		}
 
+		if(event.getCurrentItem() == null || event.getCurrentItem().getType() == null) return;
 		if (event.getInventory().getHolder() == player) {
 			if (event.isShiftClick() && currentItem.getType().name().contains("_HELMET") && player.getInventory().getHelmet() == null) {
 				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
@@ -953,7 +971,7 @@ public class Listeners implements Listener {
 			if (Alignments.chaotic.containsKey(player.getName())) {
 				player.teleport(TeleportBooks.generateRandomSpawnPoint(player.getName()));
 			} else {
-				// player.teleport(TeleportBooks.stonePeaks);
+				// player.teleport(TeleportBooks.DeadPeaks);
 			}
 		}
 	}
@@ -1020,24 +1038,30 @@ public class Listeners implements Listener {
 		ItemStack itemStack = event.getItemDrop().getItemStack();
 		if (itemStack != null && (itemStack.getType() != Material.AIR) && (itemStack.hasItemMeta())
 				&& (itemStack.getItemMeta().hasLore())) {
-			GlowAPI.setGlowing(event.getItemDrop(), groupOf(itemStack), Bukkit.getOnlinePlayers());
+			PracticeServer.plugin.getServer().getScheduler().scheduleSyncDelayedTask(PracticeServer.plugin,
+					new Runnable() {
+						@Override
+						public void run() {
+							GlowAPI.setGlowing(event.getItemDrop(), groupOf(itemStack));
+						}
+					}, 2L);
 		}
 	}
 
-	public static GlowAPI.Color groupOf(ItemStack itemStack) {
+	public static ChatColor groupOf(ItemStack itemStack) {
 		ItemMeta itemMeta = itemStack.getItemMeta();
 		if (itemMeta != null) {
 			List<String> lore = itemMeta.getLore();
 			if (lore != null) {
 				for (String string : lore) {
 					if (string.contains("Common")) {
-						return GlowAPI.Color.WHITE;
+						return ChatColor.WHITE;
 					} else if (string.contains("Uncommon")) {
-						return GlowAPI.Color.GREEN;
+						return ChatColor.GREEN;
 					} else if (string.contains("Rare")) {
-						return GlowAPI.Color.AQUA;
+						return ChatColor.AQUA;
 					} else if (string.contains("Unique")) {
-						return GlowAPI.Color.YELLOW;
+						return ChatColor.YELLOW;
 					}
 				}
 			}
@@ -1061,38 +1085,63 @@ public class Listeners implements Listener {
 	}
 
 	public static void Kit(Player player) {
-		if (!Toggles.getToggleStatus(player, "Disable Kit")) {
+		if (!Toggles.isToggled(player, "Disable Kit")) {
 			PlayerInventory inventory = player.getInventory();
-			Random random = new Random();
-			int min = random.nextInt(2) + 4;
-			int max = random.nextInt(2) + 8;
-			int weaponType = random.nextInt(2) + 1;
+			PersistentPlayer pp = PersistentPlayers.get(player.getUniqueId());
 
-			ItemStack weapon;
-			String weaponName;
-			if (weaponType == 1) {
-				weapon = new ItemStack(Material.WOOD_SWORD);
-				weaponName = "Training Sword";
-			} else {
-				weapon = new ItemStack(Material.WOOD_AXE);
-				weaponName = "Training Hatchet";
+			// Check for existing weapon
+			boolean hasWeapon = false;
+			for (ItemStack item : inventory.getContents()) {
+				if (item != null && (item.getType() == Material.WOOD_SWORD || item.getType() == Material.WOOD_AXE)) {
+					hasWeapon = true;
+					break;
+				}
+			}
+			if (!hasWeapon) {
+				// Weapon
+				ItemStack weapon = getUpgradedWeapon(pp.kitweapon);
+				inventory.addItem(weapon);
 			}
 
-			ItemMeta weaponMeta = weapon.getItemMeta();
-			weaponMeta.setDisplayName(ChatColor.WHITE + weaponName);
-			List<String> weaponLore = new ArrayList<>();
-			weaponLore.add(ChatColor.RED + "DMG: " + min + " - " + max);
-			weaponLore.add(ChatColor.GRAY + "Untradeable");
-			weaponMeta.setLore(weaponLore);
-			weapon.setItemMeta(weaponMeta);
-			inventory.addItem(weapon);
-		}
+			// Check for existing armor pieces
+			boolean hasHelmet = false;
+			boolean hasChestplate = false;
+			boolean hasLeggings = false;
+			boolean hasBoots = false;
 
+			for (ItemStack item : inventory.getContents()) {
+				if (item != null) {
+					Material type = item.getType();
+					if (type.toString().contains("_HELMET")) {
+						hasHelmet = true;
+					} else if (type.toString().contains("_CHESTPLATE")) {
+						hasChestplate = true;
+					} else if (type.toString().contains("_LEGGINGS")) {
+						hasLeggings = true;
+					} else if (type.toString().contains("_BOOTS")) {
+						hasBoots = true;
+					}
+				}
+			}
+
+			// Armor
+			if (pp.kithelm > 0 && !hasHelmet) {
+				inventory.setHelmet(createHelmetItem(pp.kithelm, 1, "Leather Coif"));
+			}
+			if (pp.kitchest > 0 && !hasChestplate) {
+				inventory.setChestplate(createGearItem(Material.LEATHER_CHESTPLATE, pp.kitchest, 1, "Leather Chestplate"));
+			}
+			if (pp.kitlegs > 0 && !hasLeggings) {
+				inventory.setLeggings(createGearItem(Material.LEATHER_LEGGINGS, pp.kitlegs, 1, "Leather Leggings"));
+			}
+			if (pp.kitboots > 0 && !hasBoots) {
+				inventory.setBoots(createGearItem(Material.LEATHER_BOOTS, pp.kitboots, 1, "Leather Boots"));
+			}
+		}
 		if (Horses.horseTier.containsKey(player)) {
 			player.getInventory().addItem(Horses.createMount(Horses.horseTier.get(player), false));
 		} else if (PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) {
 			player.getInventory().addItem(Horses.createMount(3, false).clone());
-			if(!Horses.horseTier.containsKey(player)) Horses.horseTier.put(player, 3);
 		}
 
 		player.setMaxHealth(50.0);
@@ -1100,6 +1149,69 @@ public class Listeners implements Listener {
 		player.setHealthScale(20.0);
 		player.setHealthScaled(true);
 	}
+
+	private static ItemStack getUpgradedWeapon(int level) {
+		Random random = new Random();
+		int min = random.nextInt(2) + 4 + (level * 2);  // Increase damage based on level
+		int max = random.nextInt(2) + 8 + (level * 2);
+
+		Material material = Material.WOOD_SWORD;
+		String weaponName = "Training Sword";
+
+		ItemStack weapon = new ItemStack(material);
+		ItemMeta weaponMeta = weapon.getItemMeta();
+		weaponMeta.setDisplayName(ChatColor.WHITE + weaponName);
+		List<String> weaponLore = new ArrayList<>();
+		weaponLore.add(ChatColor.RED + "DMG: " + min + " - " + max);
+		weaponLore.add(getRarity(level));
+		weaponMeta.setLore(weaponLore);
+		weapon.setItemMeta(weaponMeta);
+		Items.setUntradable(weapon);
+		return weapon;
+	}
+
+	private static ItemStack createHelmetItem(int level, int tier, String name) {
+		ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
+		ItemMeta helmetMeta = helmet.getItemMeta();
+		helmetMeta.setDisplayName(ChatColor.WHITE + name);
+		List<String> helmetLore = new ArrayList<>();
+		helmetLore.add(ChatColor.RED + "ARMOR: " + (tier * 2 + level * 3));
+		helmetLore.add(ChatColor.RED + "HP: +" + (tier * 10 + level * 15));
+		helmetLore.add(ChatColor.RED + "HP REGEN: +" + (10 + (level * 2)) + "/s");
+		helmetLore.add(getRarity(level));
+		helmetMeta.setLore(helmetLore);
+		helmet.setItemMeta(helmetMeta);
+		Items.setUntradable(helmet);
+		return helmet;
+	}
+
+	private static ItemStack createGearItem(Material material, int level, int tier, String name) {
+		ItemStack gear = new ItemStack(material);
+		ItemMeta gearMeta = gear.getItemMeta();
+		gearMeta.setDisplayName(ChatColor.WHITE + name);
+		List<String> gearLore = new ArrayList<>();
+		gearLore.add(ChatColor.RED + "ARMOR: " + (tier * 2 + level * 3));
+		gearLore.add(ChatColor.RED + "HP: +" + (tier * 10 + level * 15));
+		gearLore.add(ChatColor.RED + "ENERGY REGEN: +" + 3 + "%");
+		gearLore.add(getRarity(level));
+		gearMeta.setLore(gearLore);
+		gear.setItemMeta(gearMeta);
+		Items.setUntradable(gear);
+
+		return gear;
+	}
+
+	private static String getRarity(int level) {
+		switch (level) {
+			case 1: return ChatColor.GRAY + "Common";
+			case 2: return ChatColor.GREEN + "Uncommon";
+			case 3: return ChatColor.AQUA + "Rare";
+			case 4: return ChatColor.YELLOW + "Unique";
+			default: return ChatColor.WHITE + "Unknown";
+		}
+	}
+
+
 
 	@EventHandler
 	public void onHit(EntityDamageEvent event) {

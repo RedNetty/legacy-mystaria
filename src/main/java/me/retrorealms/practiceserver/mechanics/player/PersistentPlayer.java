@@ -1,24 +1,24 @@
 package me.retrorealms.practiceserver.mechanics.player;
 
 public class PersistentPlayer {
-
-    public int tokens; //currency
-    public int bankpages; //this is for later
-    public int mount; // starting mount tier
-    public int pickaxe; // pickaxes you buy start at x level
-    public int farmer; // damage to mobs increased by x%
-    public int laststand; // while under 30% hp, deal x% more damage
-    public int orbrolls; // adds stat rolls to legendary orbs
-    public int luck; // increases success rate of enchants and altars
+    public int tokens;
+    public int mount;
+    public int pickaxe;
+    public int farmer;
+    public int laststand;
+    public int bankpages;
+    public int orbrolls;
+    public int luck;
     public int reaper;
     public int kitweapon;
     public int kithelm;
     public int kitchest;
     public int kitlegs;
     public int kitboots;
+    public String currentQuest;
+    public int dailyQuestsCompleted;
 
-    public PersistentPlayer(int tokens, int mount, int pickaxe, int farmer, int laststand,
-                            int bankpages, int orbrolls, int luck, int reaper, int kitweapon, int kithelm, int kitchest, int kitlegs, int kitboots){
+    public PersistentPlayer(int tokens, int mount, int pickaxe, int farmer, int laststand, int bankpages, int orbrolls, int luck, int reaper, int kitweapon, int kithelm, int kitchest, int kitlegs, int kitboots, int dailyQuestsCompleted, String currentQuest) {
         this.tokens = tokens;
         this.mount = mount;
         this.pickaxe = pickaxe;
@@ -33,12 +33,12 @@ public class PersistentPlayer {
         this.kitchest = kitchest;
         this.kitlegs = kitlegs;
         this.kitboots = kitboots;
+        this.dailyQuestsCompleted = dailyQuestsCompleted;
+        this.currentQuest = currentQuest;
     }
 
-    public int getLevel(String perk){
-        switch(perk){
-            case "Reset":
-                return 1;
+    public int getLevel(String perk) {
+        switch (perk) {
             case "Mount":
                 return mount;
             case "BankPages":
@@ -65,12 +65,13 @@ public class PersistentPlayer {
                 return kitlegs;
             case "KitBoots":
                 return kitboots;
-            default: return 0;
+            default:
+                return 0;
         }
     }
 
-    public void setLevel(String perk, int level){
-        switch(perk){
+    public void setLevel(String perk, int level) {
+        switch (perk) {
             case "Mount":
                 mount = level;
                 break;
@@ -110,7 +111,6 @@ public class PersistentPlayer {
             case "KitBoots":
                 kitboots = level;
                 break;
-            default: break;
         }
     }
 }

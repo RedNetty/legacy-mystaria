@@ -39,8 +39,6 @@ public class LootDrops {
             return createScroll(tier);
         } else if (tier == 5 && dropChance <= 270) {
             return createLegendaryOrb();
-        } else if (dropChance <= 300) {
-            return createCrate(tier);
         } else {
             return createPotion(tier);
         }
@@ -90,13 +88,13 @@ public class LootDrops {
             case 1:
             case 2:
             case 3:
-                return scrollType == 0 ? TeleportBooks.deadpeaksBook(false) : TeleportBooks.tripoliBook(false);
+                return scrollType == 0 ? TeleportBooks.deadpeaks_book(false) : TeleportBooks.tripoli_book(false);
             case 4:
             case 5:
             case 6:
-                return scrollType == 0 ? TeleportBooks.avalonBook(false) : TeleportBooks.tripoliBook(false);
+                return scrollType == 0 ? TeleportBooks.avalonBook(false) : TeleportBooks.tripoli_book(false);
             default:
-                return TeleportBooks.tripoliBook(false);
+                return TeleportBooks.tripoli_book(false);
         }
     }
 

@@ -59,6 +59,9 @@ public class ModerationMechanics implements Listener {
     public static boolean isDonator(Player player) {
         if(PracticeServer.getRaceMinigame().getGameState() != MinigameState.NONE) return false;
         RankEnum rankEnum = getRank(player);
+        if (rankEnum == null) {
+            return false;
+        }
         switch (rankEnum) {
             case SUB:
             case SUB1:

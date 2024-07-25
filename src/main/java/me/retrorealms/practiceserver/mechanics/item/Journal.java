@@ -117,7 +117,7 @@ public class Journal {
         if (vit > 0) {
             sword_dmg = Math.round(vit / 50);
             health_pcnt = (int) Math.round((double) vit * 0.05);
-            hps_pcnt = (int) Math.round((double) vit * 0.3);
+            hps_pcnt = (int) Math.round((double) vit * 0.1);
             amt += hps_pcnt;
 
         }
@@ -134,7 +134,7 @@ public class Journal {
             dodge = (int) ((long) dodge + Math.round((double) dex * 0.015));
             dps_pcnt = (int) Math.round(dex * 0.012);
             dps = (int) ((long) dps + Math.round((double) dex * 0.012));
-            armpen = Math.round(dex / 50);
+            armpen = (int) (dex * 0.035);
 
         }
         bm.addPage(ChatColor.UNDERLINE.toString() + ChatColor.BOLD + "  Your Character  \n\n" + ChatColor.RESET

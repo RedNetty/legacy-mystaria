@@ -1,7 +1,9 @@
 package me.retrorealms.practiceserver;
 
-import ac.grim.grimac.GrimAbstractAPI;
+import lombok.Getter;
+import lombok.Setter;
 import me.retrorealms.practiceserver.apis.API;
+import me.retrorealms.practiceserver.apis.actionbar.ActionBar;
 import me.retrorealms.practiceserver.apis.files.MarketData;
 import me.retrorealms.practiceserver.apis.files.PlayerData;
 import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
@@ -25,8 +27,15 @@ import me.retrorealms.practiceserver.commands.party.*;
 import me.retrorealms.practiceserver.commands.toggles.*;
 import me.retrorealms.practiceserver.manager.ManagerHandler;
 import me.retrorealms.practiceserver.mechanics.altars.Altar;
+import me.retrorealms.practiceserver.mechanics.anticheat.AdvancedAntiCheat;
+import me.retrorealms.practiceserver.mechanics.anticheat.command.AntiCheatCommand;
 import me.retrorealms.practiceserver.mechanics.chat.ChatMechanics;
 import me.retrorealms.practiceserver.mechanics.chat.gui.ChatTagGUIHandler;
+import me.retrorealms.practiceserver.mechanics.crafting.CraftingHandler;
+import me.retrorealms.practiceserver.mechanics.crafting.commands.CraftingCommand;
+import me.retrorealms.practiceserver.mechanics.crafting.commands.SpawnCraftingItem;
+import me.retrorealms.practiceserver.mechanics.crafting.items.CustomItemHandler;
+import me.retrorealms.practiceserver.mechanics.crafting.items.celestialbeacon.CelestialAlly;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
 import me.retrorealms.practiceserver.mechanics.damage.Staffs;
 import me.retrorealms.practiceserver.mechanics.donations.Crates.CratesMain;
@@ -58,12 +67,12 @@ import me.retrorealms.practiceserver.mechanics.money.Banks;
 import me.retrorealms.practiceserver.mechanics.money.Economy.Economy;
 import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.party.Parties;
-import me.retrorealms.practiceserver.mechanics.patch.PatchIO;
 import me.retrorealms.practiceserver.mechanics.patch.PatchListener;
 import me.retrorealms.practiceserver.mechanics.player.*;
 import me.retrorealms.practiceserver.mechanics.player.GamePlayer.GamePlayer;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Elytras;
 import me.retrorealms.practiceserver.mechanics.player.Mounts.Horses;
+import me.retrorealms.practiceserver.mechanics.player.trading.Trading;
 import me.retrorealms.practiceserver.mechanics.profession.Enchanter;
 import me.retrorealms.practiceserver.mechanics.profession.Fishing;
 import me.retrorealms.practiceserver.mechanics.profession.Mining;
@@ -78,14 +87,15 @@ import me.retrorealms.practiceserver.mechanics.useless.command.CommandStart;
 import me.retrorealms.practiceserver.mechanics.vendors.*;
 import me.retrorealms.practiceserver.mechanics.world.Antibuild;
 import me.retrorealms.practiceserver.mechanics.world.Logout;
-import me.retrorealms.practiceserver.mechanics.world.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceMinigame;
+import me.retrorealms.practiceserver.mechanics.world.races.RaceSettingsMenu;
 import me.retrorealms.practiceserver.mechanics.world.region.RegionHandler;
 import me.retrorealms.practiceserver.utils.ArmorListener;
 import me.retrorealms.practiceserver.utils.CustomFilter;
+import me.retrorealms.practiceserver.utils.GlowAPI;
 import me.retrorealms.practiceserver.utils.SQLUtil.SQLMain;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -129,7 +139,8 @@ import java.util.logging.Logger;
  *         - MistaCat December 2018 - ????
  *         - 2022
  */
-
+@Getter
+@Setter
 public class PracticeServer extends JavaPlugin {
 
 	public static final boolean OPEN_BETA_STATS = true;
@@ -147,6 +158,7 @@ public class PracticeServer extends JavaPlugin {
 	public static boolean t6 = false;
 
 	public static PracticeServer plugin;
+	public static RaceSettingsMenu raceSettingsMenu;
 	public static Logger log;
 	private static Alignments alignments;
 	private static Antibuild antibuild;
@@ -207,7 +219,6 @@ public class PracticeServer extends JavaPlugin {
 	private static CustomFilter customFilter;
 	private static NewMerchant merchant;
 	private static GemGambling gemGambling;
-	private static GrimAbstractAPI grimAPI;
 	private static PersistentPlayers persistentPlayers;
 	private static LeaderboardCommand leaderboard;
 	public static boolean devstatus;
@@ -240,7 +251,7 @@ public class PracticeServer extends JavaPlugin {
 	public static MarketData getMarketData() {
 		return marketData;
 	}
-
+	public static AdvancedAntiCheat antiCheat;
 
 	public static PlayerData getPlayerData() {
 		return playerData;
@@ -249,8 +260,11 @@ public class PracticeServer extends JavaPlugin {
 	public static RaceMinigame getRaceMinigame() {
 		return raceMinigame;
 	}
+	private CustomItemHandler itemSystem;
+	private CraftingHandler craftingHandler;
 
 
+	public static RaceSettingsMenu getRaceSettingsMenu() {return raceSettingsMenu;}
 
 	public static SQLMain getSQL() {
 		return sqlmain;
@@ -277,8 +291,10 @@ public class PracticeServer extends JavaPlugin {
 		if (!getDataFolder().exists()) {
 			getDataFolder().mkdirs();
 		}
+		GlowAPI.initialize(this);
 		raceMinigame = new RaceMinigame();
 		marketData = new MarketData(this);
+		raceSettingsMenu = new RaceSettingsMenu();
 		playerData = new PlayerData(this);
 		Bukkit.getPluginManager().registerEvents(new ChatTagGUIHandler(), this);
 		Bukkit.getPluginManager().registerEvents(new Altar(), this);
@@ -292,18 +308,29 @@ public class PracticeServer extends JavaPlugin {
 		customFilter = new CustomFilter();
 		Bukkit.getServer().getLogger().setFilter(customFilter);
         PracticeServer.plugin.getLogger().setFilter(customFilter);
-		RegisteredServiceProvider<GrimAbstractAPI> provider = Bukkit.getServicesManager().getRegistration(GrimAbstractAPI.class);
-		if (provider != null) {
-			grimAPI = provider.getProvider();
+
+		try {
+			CelestialAlly.registerEntity();
+		} catch (Exception e) {
+			getLogger().severe("Failed to register CelestialAlly entity: " + e.getMessage());
+			e.printStackTrace();
 		}
 
+		itemSystem = new CustomItemHandler(this);
+		craftingHandler = new CraftingHandler(this, itemSystem);
+		itemSystem.registerRareItems();
+		craftingHandler.registerRecipes();
+		// Start effect application for custom items
+		itemSystem.startEffectApplication();
         log.setFilter(customFilter);
 		moderationMechanics = new ModerationMechanics();
 		cm = new CratesMain();
+		raceSettingsMenu.register();
 		craftingMenu = new CraftingMenu();
 		guildMechanics = GuildMechanics.getInstance();
 		trading = new Trading();
 		deadman = new Deadman();
+		Dash dash = new Dash();
 		nt = new Nametag();
 		wepTrak = new WepTrak();
 		pickTrak = new PickTrak();
@@ -354,7 +381,8 @@ public class PracticeServer extends JavaPlugin {
 		raceMinigame.onEnable();
 		if (PracticeServer.DATABASE)
 			sqlmain.onEnable();
-
+		ActionBar.initialize();
+		trading.onEnable();
 		moderationMechanics.onEnable();
 		alignments.onEnable();
 		antibuild.onEnable();
@@ -363,6 +391,7 @@ public class PracticeServer extends JavaPlugin {
 		chatMechanics.onEnable();
 		merchant.onEnable();
 		vendor.onEnable();
+		persistentPlayers.onEnable();
 		damage.onEnable();
 		durability.onEnable();
 		enchants.onEnable();
@@ -372,7 +401,6 @@ public class PracticeServer extends JavaPlugin {
 		wepTrak.onEnable();
 		pickTrak.onEnable();
 		energy.onEnable();
-		persistentPlayers.onEnable();
 		craftingMenu.startInitialization();
 		gemPouches.onEnable();
 		hearthstone.onEnable();
@@ -400,7 +428,6 @@ public class PracticeServer extends JavaPlugin {
 		em.onEnable();
 		toggles.onEnable();
 		guildMechanics.onEnable();
-		trading.onEnable();
 		untradeable.onEnable();
 		golemElite.onEnable();
 		leaderboard.registerEvent();
@@ -433,12 +460,11 @@ public class PracticeServer extends JavaPlugin {
 	}
 
 	public void onDisable() {
+		trading.onDisable();
 		logout.onDisable(false);
 		instance = null;
-
 		duels.onDisable();
 		managerHandler.onDisable();
-		trading.onDisable();
 		em.onDisable();
 		moderationMechanics.onDisable();
 		buddies.onDisable();
@@ -479,6 +505,7 @@ public class PracticeServer extends JavaPlugin {
 	}
 
 	public void registerCommands() {
+		getCommand("wipeserver").setExecutor(new WipeCommand());
 		getCommand("racegame").setExecutor(new RaceCommands());
 		getCommand("setrates").setExecutor(new SetRatesCommand());
 		getCommand("droprates").setExecutor(new DropRatesCommand());
@@ -488,6 +515,7 @@ public class PracticeServer extends JavaPlugin {
 		getCommand("CheckGems").setExecutor(new CheckGemsCommand()); // this
 		getCommand("giveLegendaryOrb").setExecutor(new LegendaryOrbCommand()); // this
 		getCommand("toggleff").setExecutor(new ToggleFFCommand());
+		getCommand("anticheat").setExecutor(new AntiCheatCommand(antiCheat));
 		getCommand("givetokens").setExecutor(new GiveTokensCommand());
         getCommand("awardtokens").setExecutor(new AwardTokensCommand());
 		getCommand("maxpartysize").setExecutor(new MaxPartySizeCommand());
@@ -501,7 +529,9 @@ public class PracticeServer extends JavaPlugin {
 		getCommand("market").setExecutor(new MarketCommand());
 		getCommand("lootbuff").setExecutor(new BuffCommand());
 		//getCommand("duel").setExecutor(new DuelCommand());
+		getCommand("spawnitem").setExecutor(new SpawnCraftingItem(itemSystem));
 		getCommand("daccept").setExecutor(new DuelAcceptCommand());
+		getCommand("craft").setExecutor(new CraftingCommand(craftingHandler));
 		getCommand("testcommand").setExecutor(new TestCommand());
 		getCommand("pduel").setExecutor(new PartyDuelCommand());
 		getCommand("pdaccept").setExecutor(new PartyDuelAcceptCommand());
@@ -594,9 +624,6 @@ public class PracticeServer extends JavaPlugin {
 
 	}
 
-	public static GrimAbstractAPI getGrim() {
-		return grimAPI;
-	}
 	public static void loadDefaultDevStatusConfig() {
 		plugin.getConfig().addDefault("dev-server", false);
 		plugin.getConfig().options().copyDefaults(true);

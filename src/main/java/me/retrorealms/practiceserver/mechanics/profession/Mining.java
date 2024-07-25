@@ -7,6 +7,7 @@ import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.moderation.ModerationMechanics;
 import me.retrorealms.practiceserver.mechanics.money.GemPouches;
 import me.retrorealms.practiceserver.mechanics.money.Money;
+import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -292,6 +293,9 @@ public class Mining
                         p.sendMessage("          " + ChatColor.YELLOW + ChatColor.BOLD + "TRIPLE ORE DROP" + ChatColor.YELLOW + " (3x)");
                         this.addToInv(p, Mining.ore(p, oretier));
                         this.addToInv(p, Mining.ore(p, oretier));
+                    }
+                    if(PersistentPlayers.getCurrentQuest(p).startsWith("Mine")) {
+                        PersistentPlayers.updateQuestProgress(p, 1);
                     }
                     int xp = ProfessionMechanics.getExpFromOre(oretier);
                     ProfessionMechanics.addExp(p, p.getInventory().getItemInMainHand(), xp, true);

@@ -1,64 +1,126 @@
 # for items its Item: 1(Staff), 2(Polearm), 3(Sword), 4(Axe), 5(Helmet), 6(Chestplate), 7(Pants), 8(Boots)
 # Rarity: 1(Common) 2(Uncommon) 3(Rare) 4(Unique)
 frostwing:
-    2:
-        name: "&eFrost-Wing's Frosted Pole-Axe"
-        min-min: 390
-        min-max: 420
-        max-min: 490
-        max-max: 540
-        crit: 10
-        ice: 50
-        poison: 20
-        lifesteal: 10
-        accuracy: 35
-        rarity: 4
-        lore: "Cold to the touch with a visible layer of ice surrounding it"
-    5:
-        name: "&eFrost-Wing's x Off-White Beanie"
-        health: "3700-4200"
-        armor-dps: "Armor"
-        armor-dps-amt: 12
-        energy: 8
-        vit: 350
-        dex: 350
-        block: 5
-        dodge: 9
-        rarity: 4
-        lore: "Cold to the touch with a visible layer of ice surrounding it"
-    6:
-        name: "&eFrost-Wing's Frozen Legendary Breastplate"
-        health: "6500-7200"
-        armor-dps: "Armor"
-        armor-dps-amt: 12
-        energy: 8
-        vit: 350
-        dex: 350
-        block: 8
-        dodge: 5
-        rarity: 4
-        lore: "Cold to the touch with a visible layer of ice surrounding it"
-    7:
-        name: "&eFrost-Wing's Chilled Leggings"
-        health: "6500-7200"
-        armor-dps: "Armor"
-        armor-dps-amt: 12
-        energy: 8
-        vit: 350
-        dex: 350
-        block: 7
-        dodge: 5
-        rarity: 4
-        lore: "Cold to the touch with a visible layer of ice surrounding it"
-    8:
-        name: "&eFrost-Wing's Slick Sneakers"
-        health: "3700-4200"
-        armor-dps: "Armor"
-        armor-dps-amt: 12
-        energy: 8
-        vit: 350
-        dex: 350
-        block: 7
-        dodge: 9
-        rarity: 4
-        lore: "Cold to the touch with a visible layer of ice surrounding it"
+  4:
+    name: "&eFrost-Wing's Frosted Pole-Axe"
+    min-min: 590
+    min-max: 620
+    max-min: 690
+    max-max: 760
+    crit: 10
+    ice: 50
+    poison: 20
+    life: 10
+    acc: 20
+    rarity: 4
+    lore: "Cold to the touch with a visible layer of ice surrounding it"
+  5:
+    name: "&eFrost-Wing's x Off-White Beanie"
+    health: "3700-4200"
+    armor-dps: "armor"
+    armor-dps-amt: 12
+    energy: 8
+    vit: 350
+    dex: 350
+    block: 5
+    dodge: 9
+    rarity: 4
+    lore: "Cold to the touch with a visible layer of ice surrounding it"
+  6:
+    name: "&eFrost-Wing's Frozen Legendary Breastplate"
+    health: "6500-7200"
+    armor-dps: "armor"
+    armor-dps-amt: 12
+    energy: 8
+    str: 300
+    dex: 350
+    block: 8
+    dodge: 5
+    rarity: 4
+    lore: "Cold to the touch with a visible layer of ice surrounding it"
+  7:
+    name: "&eFrost-Wing's Chilled Leggings"
+    health: "6500-7200"
+    armor-dps: "armor"
+    armor-dps-amt: 12
+    energy: 8
+    str: 300
+    dex: 350
+    block: 7
+    dodge: 5
+    rarity: 4
+    lore: "Cold to the touch with a visible layer of ice surrounding it"
+  8:
+    name: "&eFrost-Wing's Slick Sneakers"
+    health: "3700-4200"
+    armor-dps: "armor"
+    armor-dps-amt: 12
+    energy: 8
+    str: 300
+    dex: 350
+    block: 7
+    dodge: 9
+    rarity: 4
+    lore: "Cold to the touch with a visible layer of ice surrounding it"
+chronos:
+  3:
+    name: "&eChronos' Timeless Scepter"
+    min-min: 500
+    min-max: 550
+    max-min: 650
+    max-max: 740
+    crit: 8
+    fire: 40
+    ice: 45
+    life: 11
+    accuracy: 32
+    rarity: 4
+    lore: "Pulses with the energy of countless eras"
+  5:
+    name: "&eChronos' Temporal Diadem"
+    health: "3800-4300"
+    armor-dps: "armor"
+    armor-dps-amt: 13
+    energy: 10
+    int: 375
+    vit: 375
+    block: 6
+    reflection: 8
+    rarity: 4
+    lore: "Shimmers with visions of past and future"
+  6:
+    name: "&eChronos' Eternity Chestplate"
+    health: "6700-7400"
+    armor-dps: "armor"
+    armor-dps-amt: 13
+    energy: 10
+    int: 375
+    vit: 375
+    block: 9
+    reflection: 6
+    rarity: 4
+    lore: "Forged in the crucible of time itself"
+  7:
+    name: "&eChronos' Paradox Greaves"
+    health: "6700-7400"
+    armor-dps: "armor"
+    armor-dps-amt: 13
+    energy: 10
+    int: 375
+    vit: 375
+    block: 8
+    reflection: 6
+    rarity: 4
+    lore: "Exists simultaneously in multiple timelines"
+  8:
+    name: "&eChronos' Chrono-Stride Boots"
+    health: "3800-4300"
+    armor-dps: "armor"
+    armor-dps-amt: 13
+    energy: 10
+    int: 375
+    vit: 375
+    block: 8
+    reflection: 10
+    rarity: 4
+    lore: "Leaves echoes of footsteps through time"

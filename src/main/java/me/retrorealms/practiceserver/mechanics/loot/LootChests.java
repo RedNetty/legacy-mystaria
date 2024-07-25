@@ -3,8 +3,10 @@ package me.retrorealms.practiceserver.mechanics.loot;
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayer;
 import me.retrorealms.practiceserver.mechanics.guilds.player.GuildPlayers;
+import me.retrorealms.practiceserver.mechanics.world.races.ElementalArtifacts;
 import me.retrorealms.practiceserver.utils.Particles;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
@@ -18,11 +20,13 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Chest;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Random;
 
 public class LootChests implements Listener {
 
@@ -31,10 +35,83 @@ public class LootChests implements Listener {
     public static HashMap<Location, Inventory> opened = new HashMap<Location, Inventory>();
     public static HashMap<Player, Location> viewers = new HashMap<Player, Location>();
 
+    private static final int CARE_PACKAGE_TIER = 5; // Legendary tier
+    private static final int CARE_PACKAGE_SIZE = 9; // 9 slots
     public static void clearChestInventories() {
         opened.clear();
     }
+    public static void spawnCarePackage(Location location) {
+        Inventory carePackage = Bukkit.createInventory(null, CARE_PACKAGE_SIZE, "Care Package");
 
+        // Fill care package with high-tier loot
+        for (int i = 0; i < CARE_PACKAGE_SIZE; i++) {
+            ItemStack loot = LootDrops.createLootDrop(CARE_PACKAGE_TIER);
+            carePackage.setItem(i, loot);
+        }
+
+        // Create a special chest for the care package
+        Block chestBlock = location.getBlock();
+        chestBlock.setType(Material.ENDER_CHEST);
+
+        // Store the care package inventory
+        opened.put(location, carePackage);
+
+        // Spawn particles and play sound
+        location.getWorld().spawnParticle(Particle.DRAGON_BREATH, location.add(0.5, 1, 0.5), 50, 0.5, 0.5, 0.5, 0.1);
+        location.getWorld().playSound(location, Sound.ENTITY_LIGHTNING_THUNDER, 1.0f, 1.0f);
+
+        // Broadcast message
+        Bukkit.broadcastMessage(ChatColor.GOLD + "A care package has dropped at " +
+                ChatColor.YELLOW + "X: " + location.getBlockX() + ", Z: " + location.getBlockZ());
+    }
+    public static void createSpecialLootChest(Location location, int tier) {
+        // Create a virtual chest inventory
+        Inventory virtualChest = Bukkit.createInventory(null, 27, "Special Loot Chest");
+
+        // Fill the chest with special loot
+        for (int i = 0; i < 5; i++) {  // Add 5 items
+            ItemStack loot = LootDrops.createLootDrop(tier);
+            virtualChest.addItem(loot);
+        }
+
+        // Add a chance for an elemental artifact
+        if (Math.random() < 0.1) {  // 10% chance
+            ElementalArtifacts.ElementType randomElement = ElementalArtifacts.ElementType.values()[new Random().nextInt(ElementalArtifacts.ElementType.values().length)];
+            ItemStack artifact = ElementalArtifacts.createElementalArtifact(tier, new Random().nextInt(4) + 1, randomElement);
+            virtualChest.addItem(artifact);
+        }
+
+        // Add the virtual chest to the opened map
+        opened.put(location, virtualChest);
+
+        // Add the location to the loot map
+        loot.put(location, tier);
+
+        // Create a glowing block to represent the special chest
+        location.getBlock().setType(Material.GLOWSTONE);
+
+        // Schedule the chest to despawn after a certain time
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (opened.containsKey(location)) {
+                    location.getBlock().setType(Material.AIR);
+                    opened.remove(location);
+                    loot.remove(location);
+                }
+            }
+        }.runTaskLater(PracticeServer.getInstance(), 20 * 60 * 5); // 5 minutes
+    }
+    private void handleCarePackageInteraction(PlayerInteractEvent e, Player p, Location loc) {
+        e.setCancelled(true);
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (opened.containsKey(loc)) {
+                p.openInventory(opened.get(loc));
+                p.playSound(p.getLocation(), Sound.BLOCK_ENDERCHEST_OPEN, 1.0f, 1.0f);
+                viewers.put(p, loc);
+            }
+        }
+    }
     public static int getPlayerTier(Player e) {
         ItemStack is = e.getInventory().getItemInMainHand();
         if (is != null && is.getType() != Material.AIR) {

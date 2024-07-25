@@ -141,24 +141,12 @@
             <artifactId>maven-shade-plugin</artifactId>
             <version>3.5.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.inventivetalent</groupId>
-            <artifactId>glowapi4</artifactId>
-            <version>1.4.6</version>
-            <systemPath>${project.basedir}/lib/GlowAPI_v1.4.6-SNAPSHOT.jar</systemPath>
-            <scope>system</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.inventivetalent</groupId>
-            <artifactId>reflectionutil</artifactId>
-            <version>1.4.6</version>
-            <systemPath>${project.basedir}/lib/PacketListenerAPI_v3.6.0-SNAPSHOT.jar</systemPath>
-            <scope>system</scope>
+            <version>42.7.2</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -183,7 +171,7 @@
             <groupId>org.citizens</groupId>
             <artifactId>Citizens</artifactId>
             <version>1.12.2</version>
-            <systemPath>${project.basedir}/lib/Citizens-Plugin-1.13.jar</systemPath>
+            <systemPath>${project.basedir}/lib/citizens-2.0.22-SNAPSHOT.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
@@ -219,7 +207,7 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>SpigotMC</artifactId>
             <version>1.0</version>
-            <systemPath>${project.basedir}/lib/PaperMC-1.12.2.jar</systemPath>
+            <systemPath>${project.basedir}/lib/paper-1.12.2-1620.jar</systemPath>
             <scope>system</scope>
             <classifier>remapped-mojang</classifier>
         </dependency>

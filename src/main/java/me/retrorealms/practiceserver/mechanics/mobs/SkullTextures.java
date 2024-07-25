@@ -25,9 +25,10 @@ public enum SkullTextures {
     FROST("ab2344a2aace0350158750ce137ae6d337edbcaee2e894aa69eaac0bf9b5869c"),
     APPLE("cbb311f3ba1c07c3d1147cd210d81fe11fd8ae9e3db212a0fa748946c3633"),
     WITHER_KING("68c0165e9b2dbd78dac91277e97d9a02648f3059e126a5941a84d05429ce"),
-    DEMON("d2975b67c19f9ba2344f8eee956c5015ad63d9e88ad4882ae79369374fb3975"),
+    DEMON("d2975b67c19f9ba 2344f8eee956c5015ad63d9e88ad4882ae79369374fb3975"),
     DEMON_KILATAN("1464eb8e99e2878f343803a742ef57ceafacc2283e67b88edec16821316f9f"),
-    DEMON_JAYDEN("444772dc4def22219ee6d889ccdc2f9232ee23d356dd9e4adcea5f72cc0c689");
+    DEMON_JAYDEN("444772dc4def22219ee6d889ccdc2f9232ee23d356dd9e4adcea5f72cc0c689"),
+    VOID("c84bcd9ab0b02a9eaeaae2648282d3d5e90d24d483979eaffb19390243eca301");
 
     private String b64String;
 
@@ -74,6 +75,15 @@ public enum SkullTextures {
             head.setItemMeta(meta);
 
             return head;
+        }catch (Exception e) {
+            return CHERRY.getSkullByURL();
+        }
+    }
+    public ItemStack getVoidSkull() {
+        try {
+
+
+            return VOID.getSkullByURL();
         }catch (Exception e) {
             return CHERRY.getSkullByURL();
         }

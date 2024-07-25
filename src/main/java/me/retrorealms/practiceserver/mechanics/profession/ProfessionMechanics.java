@@ -50,10 +50,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -351,300 +348,260 @@ public class  ProfessionMechanics implements Listener {
 
     @EventHandler
     public void onBankClick(PlayerInteractEntityEvent e) {
-        if (e.getRightClicked() instanceof HumanEntity) {
-            HumanEntity p = (HumanEntity) e.getRightClicked();
-            if (p.getName() == null) {
-                return;
-            }
-            if (!p.hasMetadata("NPC")) {
-                return;
-            }
-            if (p.getName().equals("Skill Trainer")) {
-                Inventory inv = Bukkit.getServer().createInventory(null, 9, "Skill Trainer");
-                ItemStack P = new ItemStack(Material.WOOD_PICKAXE);
-                ItemMeta pickmeta = P.getItemMeta();
-                pickmeta.setDisplayName(ChatColor.WHITE + "Novice Pickaxe");
-                ArrayList<String> lore = new ArrayList<String>();
-                lore.add(ChatColor.GRAY + "Level: " + ChatColor.WHITE + "1");
-                lore.add(ChatColor.GRAY + "0 / 100");
-                lore.add(ChatColor.GRAY + "EXP: " + ChatColor.RED + "||||||||||||||||||||||||||||||||||||||||||||||||||");
-                lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of wood.");
-                lore.add(ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g");
-                pickmeta.setLore(lore);
-                P.setItemMeta(pickmeta);
-                inv.addItem(P);
-                e.getPlayer().openInventory(inv);
-                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
-
-                //inv.addItem(ItemVendors.createFishingPoleShop(5));
-            }
+        if (!(e.getRightClicked() instanceof HumanEntity)) {
+            return;
         }
-    }
+        HumanEntity npc = (HumanEntity) e.getRightClicked();
+        if (npc.getName() == null || !npc.hasMetadata("NPC") || !npc.getName().equals("Skill Trainer")) {
+            return;
+        }
 
+        Inventory inv = Bukkit.createInventory(null, 9, "Skill Trainer");
+        ItemStack pickaxe = createNovicePickaxe();
+        inv.addItem(pickaxe);
+        e.getPlayer().openInventory(inv);
+        e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1.0f, 1.0f);
+    }
+    private ItemStack createNovicePickaxe() {
+        ItemStack pickaxe = new ItemStack(Material.WOOD_PICKAXE);
+        ItemMeta meta = pickaxe.getItemMeta();
+        meta.setDisplayName(ChatColor.WHITE + "Novice Pickaxe");
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GRAY + "Level: " + ChatColor.WHITE + "1");
+        lore.add(ChatColor.GRAY + "0 / 100");
+        lore.add(ChatColor.GRAY + "EXP: " + ChatColor.RED + "||||||||||||||||||||||||||||||||||||||||||||||||||");
+        lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of wood.");
+        lore.add(ChatColor.GREEN + "Price: " + ChatColor.WHITE + "100g");
+        meta.setLore(lore);
+        pickaxe.setItemMeta(meta);
+        return pickaxe;
+    }
     @EventHandler
     public void onInvClick(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        if (e.getCurrentItem() != null && e.getInventory().getTitle().equals("Skill Trainer")) {
-            List<String> lore;
-            e.setCancelled(true);
-            if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.WOOD_PICKAXE && e.getCurrentItem().getItemMeta().hasLore() && (lore = e.getCurrentItem().getItemMeta().getLore()).get(lore.size() - 1).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    ItemStack is = new ItemStack(e.getCurrentItem().getType());
-                    ItemMeta im = is.getItemMeta();
-                    im.setDisplayName(e.getCurrentItem().getItemMeta().getDisplayName());
-                    lore.remove(lore.size() - 1);
-                    im.setLore(lore);
-                    is.setItemMeta(im);
-                    ItemVendors.buyingitem.put(p.getName(), is);
-                    ItemVendors.buyingprice.put(p.getName(), price);
-                    p.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
-                    p.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-                    p.closeInventory();
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + e.getCurrentItem().getItemMeta().getDisplayName());
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
-                }
-            }
-            if (e.getCurrentItem() != null && e.getCurrentItem().getType() == Material.FISHING_ROD && e.getCurrentItem().getItemMeta().hasLore() && (lore = e.getCurrentItem().getItemMeta().getLore()).get(lore.size() - 1).contains("Price:")) {
-                int price = ItemVendors.getPriceFromLore(e.getCurrentItem());
-                if (Money.hasEnoughGems(p, price)) {
-                    ItemStack is = ItemVendors.createFishingPole(1);
-                    ItemVendors.buyingitem.put(p.getName(), is);
-                    ItemVendors.buyingprice.put(p.getName(), price);
-                    p.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
-                    p.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
-                    p.closeInventory();
-                } else {
-                    p.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + e.getCurrentItem().getItemMeta().getDisplayName());
-                    p.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
-                    p.closeInventory();
-                }
+        if (!(e.getWhoClicked() instanceof Player) || !e.getInventory().getTitle().equals("Skill Trainer")) {
+            return;
+        }
+
+        e.setCancelled(true);
+        Player player = (Player) e.getWhoClicked();
+        ItemStack clickedItem = e.getCurrentItem();
+
+        if (clickedItem != null && clickedItem.getType() == Material.WOOD_PICKAXE && clickedItem.hasItemMeta()) {
+            handlePickaxePurchase(player, clickedItem);
+        }
+    }
+    private ItemStack createPurchasedPickaxe(ItemStack original) {
+        ItemStack purchased = new ItemStack(original.getType());
+        ItemMeta meta = purchased.getItemMeta();
+        meta.setDisplayName(original.getItemMeta().getDisplayName());
+        List<String> lore = new ArrayList<>(original.getItemMeta().getLore());
+        lore.remove(lore.size() - 1); // Remove price
+        meta.setLore(lore);
+        purchased.setItemMeta(meta);
+        return purchased;
+    }
+    private void handlePickaxePurchase(Player player, ItemStack pickaxe) {
+        List<String> lore = pickaxe.getItemMeta().getLore();
+        if (lore != null && lore.get(lore.size() - 1).contains("Price:")) {
+            int price = ItemVendors.getPriceFromLore(pickaxe);
+            if (Money.hasEnoughGems(player, price)) {
+                ItemStack purchasedPickaxe = createPurchasedPickaxe(pickaxe);
+                ItemVendors.buyingitem.put(player.getName(), purchasedPickaxe);
+                ItemVendors.buyingprice.put(player.getName(), price);
+                player.sendMessage(ChatColor.GREEN + "Enter the " + ChatColor.BOLD + "QUANTITY" + ChatColor.GREEN + " you'd like to purchase.");
+                player.sendMessage(ChatColor.GRAY + "MAX: 64X (" + price * 64 + "g), OR " + price + "g/each.");
+                player.closeInventory();
+            } else {
+                player.sendMessage(ChatColor.RED + "You do NOT have enough gems to purchase this " + pickaxe.getItemMeta().getDisplayName());
+                player.sendMessage(ChatColor.RED.toString() + ChatColor.BOLD + "COST: " + ChatColor.RED + price + ChatColor.BOLD + "G");
+                player.closeInventory();
             }
         }
     }
 
     public static ArrayList<Integer> getExp(ItemStack is) {
-        ArrayList<Integer> exp = new ArrayList<Integer>();
-        exp.add(0);
-        exp.add(0);
-        if (is != null && is.getType().name().contains("_PICKAXE") && is.getItemMeta().hasLore() && is.getItemMeta().getLore().size() > 1 && is.getItemMeta().getLore().get(1).contains(" / ")) {
-            String line = ChatColor.stripColor(is.getItemMeta().getLore().get(1));
-            try {
-                exp.set(0, Integer.parseInt(line.split(" / ")[0]));
-                exp.set(1, Integer.parseInt(line.split(" / ")[1]));
-            } catch (Exception e) {
-                return exp;
+        ArrayList<Integer> exp = new ArrayList<>(Arrays.asList(0, 0));
+        if (is != null && is.getType().name().contains("_PICKAXE") && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+            List<String> lore = is.getItemMeta().getLore();
+            if (lore.size() > 1 && lore.get(1).contains(" / ")) {
+                String line = ChatColor.stripColor(lore.get(1));
+                try {
+                    String[] parts = line.split(" / ");
+                    exp.set(0, Integer.parseInt(parts[0]));
+                    exp.set(1, Integer.parseInt(parts[1]));
+                } catch (NumberFormatException e) {
+                    // Keep default values
+                }
             }
         }
         return exp;
     }
 
     public static int getPickaxeLevel(ItemStack is) {
-        int level = 0;
-        if (is != null && is.getType().name().contains("_PICKAXE") && is.getItemMeta().hasLore() && is.getItemMeta().getLore().size() > 0 && is.getItemMeta().getLore().get(0).contains("Level: ")) {
-            String line = ChatColor.stripColor(is.getItemMeta().getLore().get(0));
-            try {
-                level = Integer.parseInt(line.split("Level: ")[1]);
-            } catch (Exception e) {
-                return level;
+        if (is != null && is.getType().name().contains("_PICKAXE") && is.hasItemMeta() && is.getItemMeta().hasLore()) {
+            List<String> lore = is.getItemMeta().getLore();
+            if (!lore.isEmpty() && lore.get(0).contains("Level: ")) {
+                String line = ChatColor.stripColor(lore.get(0));
+                try {
+                    return Integer.parseInt(line.split("Level: ")[1]);
+                } catch (NumberFormatException e) {
+                    // Return default value
+                }
             }
         }
-        return level;
+        return 0;
     }
 
     public static int getExpPerLevel(int level) {
+        if (level == 1) return 100;
+
         int xp = 100;
-        int divide = 5;
-        int i = 0;
-        while (i < level) {
-            if (i < 120) {
-                divide = 50;
-            }
-            if (i < 100) {
-                divide = 45;
-            }
-            if (i < 80) {
-                divide = 35;
-            }
-            if (i < 60) {
-                divide = 15;
-            }
-            if (i < 40) {
-                divide = 20;
-            }
-            if (i < 20) {
-                divide = 15;
-            }
+        for (int i = 0; i < level; i++) {
+            int divide = getDivideValue(i);
             xp += xp / divide;
-            ++i;
-        }
-        if (level == 1) {
-            xp = 100;
         }
         return xp;
+    }
+
+    private static int getDivideValue(int level) {
+        if (level < 20) return 15;
+        if (level < 40) return 20;
+        if (level < 60) return 15;
+        if (level < 80) return 35;
+        if (level < 100) return 45;
+        if (level < 120) return 50;
+        return 5;
     }
 
     public static void getDonorPicked(Player p) {
         int dblAmt = 15, gemAmt = 10, trplAmt = 10, succAmt = 20, tresAmt = 5, duraAmt = 15;
         boolean mag = false;
         RankEnum rank = ModerationMechanics.getRank(p);
-        ItemStack P = new ItemStack(Material.DIAMOND_PICKAXE);
-        ItemMeta pickmeta = P.getItemMeta();
-        pickmeta.setDisplayName(ChatColor.BLUE + "Donator Pickaxe");
-        ArrayList<String> lore = new ArrayList<String>();
-        lore.add(ChatColor.GRAY + "Level: " + ChatColor.BLUE + "120");
-        lore.add(ChatColor.GRAY + "0 / 0");
-        lore.add(ChatColor.GRAY + "EXP: " + ChatColor.BLUE + "||||||||||||||||||||||||||||||||||||||||||||||||||");
 
         switch (rank) {
             case SUB1:
-                dblAmt = 20;
-                gemAmt = 15;
-                trplAmt = 15;
-                succAmt = 25;
-                tresAmt = 8;
-                duraAmt = 20;
+                dblAmt = 20; gemAmt = 15; trplAmt = 15; succAmt = 25; tresAmt = 8; duraAmt = 20;
                 break;
             case SUB2:
             case SUPPORTER:
-                dblAmt = 25;
-                gemAmt = 24;
-                trplAmt = 20;
-                succAmt = 30;
-                tresAmt = 10;
-                duraAmt = 30;
+                dblAmt = 25; gemAmt = 24; trplAmt = 20; succAmt = 30; tresAmt = 10; duraAmt = 30;
                 mag = true;
                 break;
-
         }
+
+        ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE);
+        ItemMeta meta = pickaxe.getItemMeta();
+        meta.setDisplayName(ChatColor.BLUE + "Donator Pickaxe");
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GRAY + "Level: " + ChatColor.BLUE + "120");
+        lore.add(ChatColor.GRAY + "0 / 0");
+        lore.add(ChatColor.GRAY + "EXP: " + ChatColor.BLUE + "||||||||||||||||||||||||||||||||||||||||||||||||||");
         lore.add(ChatColor.RED + "DOUBLE ORE: " + dblAmt + "%");
         lore.add(ChatColor.RED + "GEM FIND: " + gemAmt + "%");
         lore.add(ChatColor.RED + "TRIPLE ORE: " + trplAmt + "%");
         lore.add(ChatColor.RED + "TREASURE FIND: " + tresAmt + "%");
         lore.add(ChatColor.RED + "MINING SUCCESS: " + succAmt + "%");
         lore.add(ChatColor.RED + "DURABILITY: " + duraAmt + "%");
-
-        if(mag)  lore.add(ChatColor.RED + "MAGNETISM");
+        if (mag) lore.add(ChatColor.RED + "MAGNETISM");
         lore.add(ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of ice.");
-        pickmeta.setLore(lore);
-        P.setItemMeta(pickmeta);
-        p.getInventory().addItem(P);
-
+        meta.setLore(lore);
+        pickaxe.setItemMeta(meta);
+        p.getInventory().addItem(pickaxe);
     }
 
     public static ItemStack addExp(Player p, ItemStack is, int xp, boolean alerts) {
         GuildPlayer guildPlayer = GuildPlayers.getInstance().get(p.getUniqueId());
         if (is.getType() == Material.FISHING_ROD) {
-            if(alerts) {
-                guildPlayer.setFishCaught((guildPlayer.getFishCaught() + 1));
+            if (alerts) {
+                guildPlayer.setFishCaught(guildPlayer.getFishCaught() + 1);
             }
         } else {
-            if(alerts) {
-                guildPlayer.setOreMined((guildPlayer.getOreMined() + 1));
+            if (alerts) {
+                guildPlayer.setOreMined(guildPlayer.getOreMined() + 1);
             }
         }
-        int currxp = ProfessionMechanics.getExp(is).get(0);
-        int maxxp = ProfessionMechanics.getExp(is).get(1);
-        int level = ProfessionMechanics.getPickaxeLevel(is);
-        int tier = ProfessionMechanics.getPickaxeTier(is);
+
+        ArrayList<Integer> expValues = getExp(is);
+        int currxp = expValues.get(0);
+        int maxxp = expValues.get(1);
+        int level = getPickaxeLevel(is);
+        int tier = getPickaxeTier(is);
+
         ItemMeta im = is.getItemMeta();
         List<String> lore = im.getLore();
+
         if (maxxp > 0) {
             p.sendMessage("              " + ChatColor.YELLOW + ChatColor.BOLD + "+" + ChatColor.YELLOW + xp + ChatColor.BOLD + " EXP" + ChatColor.GRAY + " [" + (currxp + xp) + ChatColor.BOLD + "/" + ChatColor.GRAY + maxxp + " EXP]");
             if (currxp + xp >= maxxp) {
                 level++;
-                if(alerts){
+                if (alerts) {
                     p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                     p.sendMessage("          " + ChatColor.YELLOW + ChatColor.BOLD + "PICKAXE LEVEL UP! " + ChatColor.YELLOW + ChatColor.UNDERLINE + (level-1) + " -> " + level);
                 }
-                int newexp = ProfessionMechanics.getExpPerLevel(level);
-                if (level == 20 || level == 40 || level == 60 || level == 80 || level == 100 || level == 120) {
-                    if (tier < 6) {
-                        ++tier;
-                    }
-                    if (tier == 2) {
-                        is.setType(Material.STONE_PICKAXE);
-                        im.setDisplayName(ChatColor.GREEN + "Apprentice Pickaxe");
-                        lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of stone.");
-                    }
-                    if (tier == 3) {
-                        is.setType(Material.IRON_PICKAXE);
-                        im.setDisplayName(ChatColor.AQUA + "Expert Pickaxe");
-                        lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of iron.");
-                    }
-                    if (tier == 4) {
-                        is.setType(Material.DIAMOND_PICKAXE);
-                        im.setDisplayName(ChatColor.LIGHT_PURPLE + "Supreme Pickaxe");
-                        lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of diamond.");
-                    }
-                    if (tier == 5) {
-                        is.setType(Material.GOLD_PICKAXE);
-                        im.setDisplayName(ChatColor.YELLOW + "Legendary Pickaxe");
-                        lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of gold.");
-                    }
-                    if (tier == 6) {
-                        is.setType(Material.DIAMOND_PICKAXE);
-                        if(level == 100) {
-                            im.setDisplayName(ChatColor.BLUE + "Master Pickaxe");
-                        }
-                        if (level == 120) {
-                            newexp = 0;
-                            im.setDisplayName(ChatColor.BLUE + "Grand Master Pickaxe");
-                        }
-                        lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of ice.");
-                    }
-                    is.setDurability((short) 0);
+                int newexp = getExpPerLevel(level);
+                if (level % 20 == 0 && level <= 120) {
+                    tier = Math.min(tier + 1, 6);
+                    updatePickaxeTier(is, im, lore, tier, level);
                 }
-                lore.set(0, ChatColor.GRAY + "Level: " + ProfessionMechanics.getTierColor(tier) + level);
+                lore.set(0, ChatColor.GRAY + "Level: " + getTierColor(tier) + level);
                 lore.set(1, ChatColor.GRAY + "0 / " + newexp);
-                lore.set(2, ChatColor.GRAY + "EXP: " + ProfessionMechanics.generateBar(0, newexp));
+                lore.set(2, ChatColor.GRAY + "EXP: " + generateBar(0, newexp));
                 im.setLore(lore);
                 is.setItemMeta(im);
-                if (level == 20 || level == 40 || level == 60 || level == 80 || level == 100 || level == 120) {
+                if (level % 20 == 0 && level <= 120) {
                     upgradePick(p, is);
                 }
-                p.getInventory().setItemInMainHand(is);
-                return is;
             } else {
-                if (maxxp != ProfessionMechanics.getExpPerLevel(level)) {
-                    maxxp = ProfessionMechanics.getExpPerLevel(level);
-                }
+                maxxp = getExpPerLevel(level);
                 lore.set(1, ChatColor.GRAY.toString() + (currxp + xp) + " / " + maxxp);
-                lore.set(2, ChatColor.GRAY + "EXP: " + ProfessionMechanics.generateBar(currxp + xp, maxxp));
+                lore.set(2, ChatColor.GRAY + "EXP: " + generateBar(currxp + xp, maxxp));
                 im.setLore(lore);
                 is.setItemMeta(im);
-                p.getInventory().setItemInMainHand(is);
-                return is;
             }
         }
+        p.getInventory().setItemInMainHand(is);
         return is;
     }
 
+    private static void updatePickaxeTier(ItemStack is, ItemMeta im, List<String> lore, int tier, int level) {
+        switch (tier) {
+            case 2:
+                is.setType(Material.STONE_PICKAXE);
+                im.setDisplayName(ChatColor.GREEN + "Apprentice Pickaxe");
+                lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of stone.");
+                break;
+            case 3:
+                is.setType(Material.IRON_PICKAXE);
+                im.setDisplayName(ChatColor.AQUA + "Expert Pickaxe");
+                lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of iron.");
+                break;
+            case 4:
+                is.setType(Material.DIAMOND_PICKAXE);
+                im.setDisplayName(ChatColor.LIGHT_PURPLE + "Supreme Pickaxe");
+                lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of diamond.");
+                break;
+            case 5:
+                is.setType(Material.GOLD_PICKAXE);
+                im.setDisplayName(ChatColor.YELLOW + "Legendary Pickaxe");
+                lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of gold.");
+                break;
+            case 6:
+                is.setType(Material.DIAMOND_PICKAXE);
+                if (level == 100) {
+                    im.setDisplayName(ChatColor.BLUE + "Master Pickaxe");
+                } else if (level == 120) {
+                    im.setDisplayName(ChatColor.BLUE + "Grand Master Pickaxe");
+                }
+                lore.set(lore.size() - 1, ChatColor.GRAY.toString() + ChatColor.ITALIC + "A pickaxe made out of ice.");
+                break;
+        }
+        is.setDurability((short) 0);
+    }
     public static String generateBar(int curr, int max) {
         int percent = Math.round(50.0f * ((float) curr / (float) max));
-        int barlength = 50;
-        String bar = "";
-        while (barlength > 0 && percent > 0) {
-            --percent;
-            --barlength;
-            bar = String.valueOf(bar) + "|";
-        }
-        bar = ChatColor.GREEN + bar;
-        bar = String.valueOf(bar) + ChatColor.RED;
-        while (barlength > 0) {
-            --barlength;
-            bar = String.valueOf(bar) + "|";
-        }
-        if (max == 0) {
-            bar = ChatColor.BLUE.toString();
-            int i = 0;
-            while (i < 50) {
-                bar = String.valueOf(bar) + "|";
-                ++i;
-            }
-        }
+        String bar = ChatColor.GREEN.toString() + String.join("", Collections.nCopies(percent, "|")) +
+                ChatColor.RED +
+                String.join("", Collections.nCopies(50 - percent, "|"));
         return bar;
     }
 

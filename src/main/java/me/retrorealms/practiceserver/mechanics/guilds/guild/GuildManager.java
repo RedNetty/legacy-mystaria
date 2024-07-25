@@ -29,7 +29,7 @@ public class GuildManager {
         this.guildMap = new ConcurrentHashMap<>();
         if(PracticeServer.DATABASE) {
             SQLMain.loadGuilds();
-            Bukkit.getScheduler().scheduleAsyncRepeatingTask(PracticeServer.getInstance(), this::updateCache, 300L, 300L);
+            Bukkit.getScheduler().scheduleAsyncRepeatingTask(PracticeServer.getInstance(), this::updateCache, 3600L, 3600L);
             return;
         }
         File file = new File(GuildMechanics.getInstance().getDataFolder() + "/guild/");

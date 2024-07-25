@@ -30,50 +30,54 @@ public class MobHandler {
     }
 
     public static boolean isCustomNamedElite(String type) {
-        if (type.equalsIgnoreCase("mitsuki") || type.equalsIgnoreCase("copjak") || type.equalsIgnoreCase("impa")
-                || type.equalsIgnoreCase("skeletonking") || type.equalsIgnoreCase("kingofgreed")
-                || type.equalsIgnoreCase("blayshan") || type.equalsIgnoreCase("bloodbutcher")
-                || type.equalsIgnoreCase("jayden") || type.equalsIgnoreCase("kilatan")
-                || type.equalsIgnoreCase("bossSkeletonDungeon") || type.equalsIgnoreCase("spiderQueen")
-                || type.equalsIgnoreCase("frostKing") || type.equalsIgnoreCase("watchMaster")
-                || type.equalsIgnoreCase("duranor") || type.equalsIgnoreCase("frozenGolem")
-                || type.equalsIgnoreCase("weakSkeletonEntity") || type.equalsIgnoreCase("frozenElite")
-                || type.equalsIgnoreCase("frozenBoss") || type.equalsIgnoreCase("spectralKnight")
-                || type.equalsIgnoreCase("krampus") || type.equalsIgnoreCase("risk_Elite")
-                || type.equalsIgnoreCase("warden") || type.equalsIgnoreCase("orcKing")) {
-            return true;
-        }
-        return false;
+        return type.equalsIgnoreCase("plaguebearer")
+                || type.equalsIgnoreCase("bonereaver")
+                || type.equalsIgnoreCase("soulreaper")
+                || type.equalsIgnoreCase("doomherald")
+                || type.equalsIgnoreCase("nethermancer")
+                || type.equalsIgnoreCase("voidlord")
+                || type.equalsIgnoreCase("mitsuki")
+                || type.equalsIgnoreCase("copjak")
+                || type.equalsIgnoreCase("impa")
+                || type.equalsIgnoreCase("skeletonking")
+                || type.equalsIgnoreCase("kingofgreed")
+                || type.equalsIgnoreCase("blayshan")
+                || type.equalsIgnoreCase("bloodbutcher")
+                || type.equalsIgnoreCase("jayden")
+                || type.equalsIgnoreCase("kilatan")
+                || type.equalsIgnoreCase("bossSkeletonDungeon")
+                || type.equalsIgnoreCase("spiderQueen")
+                || type.equalsIgnoreCase("frostKing")
+                || type.equalsIgnoreCase("watchMaster")
+                || type.equalsIgnoreCase("duranor")
+                || type.equalsIgnoreCase("frozenGolem")
+                || type.equalsIgnoreCase("weakSkeletonEntity")
+                || type.equalsIgnoreCase("frozenElite")
+                || type.equalsIgnoreCase("frozenBoss")
+                || type.equalsIgnoreCase("spectralKnight")
+                || type.equalsIgnoreCase("krampus")
+                || type.equalsIgnoreCase("risk_Elite")
+                || type.equalsIgnoreCase("warden")
+                || type.equalsIgnoreCase("grandWizard")
+                || type.equalsIgnoreCase("orcKing");
     }
 
     public static boolean isWorldBoss(final Entity e) {
         if (!(e instanceof LivingEntity)) return false;
         LivingEntity l = (LivingEntity) e;
+        if(!l.hasMetadata("type")) return false;
+        String eliteName = l.getMetadata("type").get(0).asString();
         if (WorldBossHandler.getActiveBoss() != null && WorldBossHandler.getActiveBoss().getLivingEntity().getName().equals(l.getName())) {
             return true;
         }
-        if (l.hasMetadata("type") && l.getMetadata("type").get(0).asString().equalsIgnoreCase("frostwing")) {
-            return true;
-        }
-        return false;
+        return eliteName.equalsIgnoreCase("frostwing") || eliteName.equalsIgnoreCase("chronos");
     }
+
 
     public static boolean isCustomNamedElite(final LivingEntity l) {
         if (l.hasMetadata("type")) {
             final String type = l.getMetadata("type").get(0).asString();
-            if (type.equalsIgnoreCase("mitsuki") || type.equalsIgnoreCase("copjak") || type.equalsIgnoreCase("impa")
-                    || type.equalsIgnoreCase("skeletonking") || type.equalsIgnoreCase("kingofgreed")
-                    || type.equalsIgnoreCase("blayshan") || type.equalsIgnoreCase("bloodbutcher")
-                    || type.equalsIgnoreCase("jayden") || type.equalsIgnoreCase("kilatan")
-                    || type.equalsIgnoreCase("bossSkeletonDungeon") || type.equalsIgnoreCase("spiderQueen")
-                    || type.equalsIgnoreCase("frostKing") || type.equalsIgnoreCase("watchMaster")
-                    || type.equalsIgnoreCase("duranor") || type.equalsIgnoreCase("frozenGolem")
-                    || type.equalsIgnoreCase("weakSkeletonEntity") || type.equalsIgnoreCase("frozenElite")
-                    || type.equalsIgnoreCase("frozenBoss") || type.equalsIgnoreCase("spectralKnight")
-                    || type.equalsIgnoreCase("krampus") || type.equalsIgnoreCase("risk_Elite")
-                    || type.equalsIgnoreCase("warden") || type.equalsIgnoreCase("orcKing")) {
-                return true;
-            }
+            return isCustomNamedElite(type);
         }
         return false;
     }

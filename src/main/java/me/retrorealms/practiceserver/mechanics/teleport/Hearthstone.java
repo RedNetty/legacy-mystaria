@@ -41,7 +41,7 @@ public class Hearthstone
                         Hearthstone.casting.remove(p.getName());
                         Hearthstone.castingloc.remove(p.getName());
                         p.eject();
-                        p.teleport(TeleportBooks.stonePeaks);
+                        p.teleport(TeleportBooks.DeadPeaks);
                         continue;
                     }
                     Particles.SPELL.display(0.0f, 0.0f, 0.0f, 0.5f, 80, p.getLocation().clone().add(0.0, 0.15, 0.0), 20.0);
@@ -95,7 +95,7 @@ public class Hearthstone
         }else if(Duels.duelers.containsKey(p)) {
             return;
         }else {
-            p.sendMessage(ChatColor.BOLD + "TELEPORTING" + ChatColor.WHITE + " - " + ChatColor.AQUA + "Stone-peaks Manor" + ChatColor.WHITE + " ... " + 10 + "s");
+            p.sendMessage(ChatColor.BOLD + "TELEPORTING" + ChatColor.WHITE + " - " + ChatColor.AQUA + "Dead-Peaks Mountain Camp" + ChatColor.WHITE + " ... " + 10 + "s");
             casting.put(p.getName(), 10);
             castingloc.put(p.getName(), p.getLocation());
         }

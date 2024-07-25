@@ -1,10 +1,11 @@
-package me.retrorealms.practiceserver.mechanics.player;
+package me.retrorealms.practiceserver.mechanics.player.trading;
 
 import me.retrorealms.practiceserver.PracticeServer;
 import me.retrorealms.practiceserver.commands.moderation.VanishCommand;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.item.Items;
 import me.retrorealms.practiceserver.mechanics.money.Banks;
+import me.retrorealms.practiceserver.mechanics.player.Toggles;
 import me.retrorealms.practiceserver.mechanics.vendors.MerchantMechanics;
 import me.retrorealms.practiceserver.utils.JsonBuilder;
 import org.bukkit.*;
@@ -450,7 +451,7 @@ public class Trading implements Listener {
             return;
         }
         if (tradie != null) {
-            if (!Toggles.hasTrading(tradie)) {
+            if (!Toggles.isToggled(tradie, "Trading")) {
                 trader.sendMessage(ChatColor.YELLOW + tradie.getName() + " has trading disabled.");
                 e.setCancelled(true);
                 return;

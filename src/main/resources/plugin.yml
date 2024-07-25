@@ -6,6 +6,10 @@ loadbefore:
   [Essentials, BungeeTabListPlus]
 softdepend: ['BungeeTabListPlus']
 commands:
+  wipeserver:
+  spawnitem:
+  anticheat:
+  craft:
   racegame:
   setrates:
   droprates:
