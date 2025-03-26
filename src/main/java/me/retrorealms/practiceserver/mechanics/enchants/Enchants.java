@@ -5,7 +5,6 @@ import me.retrorealms.practiceserver.apis.itemapi.ItemAPI;
 import me.retrorealms.practiceserver.mechanics.damage.Damage;
 import me.retrorealms.practiceserver.mechanics.duels.Duels;
 import me.retrorealms.practiceserver.mechanics.item.Items;
-import me.retrorealms.practiceserver.mechanics.mobs.MobHandler;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayer;
 import me.retrorealms.practiceserver.mechanics.player.PersistentPlayers;
 import me.retrorealms.practiceserver.mechanics.vendors.ItemVendors;
@@ -25,402 +24,516 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.logging.Level;
 
+/**
+ * Handles all item enhancement mechanics including:
+ * - Item upgrading (+1, +2, etc.)
+ * - Protection scrolls
+ * - Success/failure mechanics
+ */
 public class Enchants implements Listener {
+    // Constants for enhancement system
+    private static final String CRAFTING_INVENTORY = "container.crafting";
+    private static final int MAX_SAFE_ENHANCEMENT = 3;
+    private static final int MAX_ENHANCEMENT = 12;
+    private static final double STAT_INCREASE_PERCENT = 0.05;
+    private static final double MIN_STAT_INCREASE = 1.0;
+
+    // Static array of failure chances for each enhancement level
+    private static final int[] FAILURE_CHANCES = {0, 0, 0, 30, 40, 50, 65, 75, 80, 85, 90, 95};
+
+    // Glow enchantment for visual effects
     public static Enchantment glow;
 
+    // Initialize glow enchantment
     static {
-        Enchants.glow = new GlowEnchant(69);
+        glow = new GlowEnchant(69);
     }
 
+    /**
+     * Registers the custom glow enchantment with Bukkit
+     * @return true if registration was successful
+     */
     public static boolean registerNewEnchantment() {
         try {
-            final Field f = Enchantment.class.getDeclaredField("acceptingNew");
+            // Use reflection to allow new enchantments to be registered
+            Field f = Enchantment.class.getDeclaredField("acceptingNew");
             f.setAccessible(true);
             f.set(null, true);
+
             try {
-                Enchantment.registerEnchantment(Enchants.glow);
+                Enchantment.registerEnchantment(glow);
                 return true;
             } catch (IllegalArgumentException ex) {
+                PracticeServer.log.log(Level.WARNING, "Failed to register glow enchantment (already registered)", ex);
             }
-        } catch (Exception ex2) {
+        } catch (Exception ex) {
+            PracticeServer.log.log(Level.SEVERE, "Failed to register glow enchantment", ex);
         }
         return false;
     }
 
-    public static int getPlus(final ItemStack is) {
-        if (is.getItemMeta().hasDisplayName()) {
-            String name = ChatColor.stripColor(is.getItemMeta().getDisplayName());
-            if (name.startsWith("[+")) {
-                name = name.split("\\[+")[1].split("\\]")[0];
-                try {
-                    return Integer.parseInt(name);
-                } catch (Exception e) {
-                    return 0;
-                }
+    /**
+     * Extract the enhancement level (plus value) from an item's display name
+     * @param item The item to check
+     * @return The enhancement level, or 0 if none
+     */
+    public static int getPlus(ItemStack item) {
+        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return 0;
+        }
+
+        String name = ChatColor.stripColor(item.getItemMeta().getDisplayName());
+        if (name.startsWith("[+")) {
+            try {
+                return Integer.parseInt(name.split("\\[\\+")[1].split("\\]")[0]);
+            } catch (Exception e) {
+                return 0;
             }
         }
         return 0;
     }
 
+    /**
+     * Enables the enchantment system
+     */
     public void onEnable() {
         PracticeServer.log.info("[Enchants] has been enabled.");
         Bukkit.getServer().getPluginManager().registerEvents(this, PracticeServer.plugin);
         registerNewEnchantment();
     }
 
+    /**
+     * Disables the enchantment system
+     */
     public void onDisable() {
         PracticeServer.log.info("[Enchants] has been disabled.");
     }
 
+    /**
+     * Prevents using empty maps as regular maps
+     */
     @EventHandler
     public void onMapUse(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
-        if (player.getInventory().getItemInMainHand() == null) return;
-        if (player.getInventory().getItemInMainHand().getType() == Material.AIR) return;
+        if (itemInHand == null || itemInHand.getType() == Material.AIR) {
+            return;
+        }
 
-        if (player.getInventory().getItemInMainHand().getType() == Material.EMPTY_MAP) event.setCancelled(true);
+        if (itemInHand.getType() == Material.EMPTY_MAP) {
+            event.setCancelled(true);
+        }
     }
 
+    /**
+     * Handles applying protection scrolls to items
+     */
     @EventHandler
     public void onProtectionApply(InventoryClickEvent event) {
-        if (event.getCursor() == null || event.getCursor().getType() == Material.AIR) return;
-        if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
-        if (!event.getInventory().getName().equalsIgnoreCase("container.crafting")) return;
-        if (event.getSlotType() == InventoryType.SlotType.ARMOR) return;
+        // Early validation
+        if (event.getCursor() == null || event.getCursor().getType() == Material.AIR ||
+                event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR ||
+                !event.getInventory().getName().equalsIgnoreCase(CRAFTING_INVENTORY) ||
+                event.getSlotType() == InventoryType.SlotType.ARMOR) {
+            return;
+        }
 
-        ItemStack itemStack = event.getCursor();
+        ItemStack scrollItem = event.getCursor();
+        ItemStack targetItem = event.getCurrentItem();
         Player player = (Player) event.getWhoClicked();
 
-        if (!ItemAPI.isProtectionScroll(itemStack)) return;
+        // Check if the cursor item is a protection scroll
+        if (!ItemAPI.isProtectionScroll(scrollItem)) {
+            return;
+        }
 
-        ItemStack itemStack1 = event.getCurrentItem();
-
-        if (ItemAPI.isProtected(itemStack1)) {
-
+        // Check if the item is already protected
+        if (ItemAPI.isProtected(targetItem)) {
             player.sendMessage(ChatColor.RED + "ITEM ALREADY PROTECTED");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 10F, 1F);
-
             return;
         }
 
-        if (!ItemAPI.canEnchant(itemStack1, itemStack)) {
+        // Check if the item and scroll tiers match
+        if (!ItemAPI.canEnchant(targetItem, scrollItem)) {
             player.sendMessage(ChatColor.RED + "ITEM CAN'T BE PROTECTED: MUST BE THE SAME TIER");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 10F, 1F);
-
             return;
         }
-        event.setCancelled(true);
-        event.setCurrentItem(ItemAPI.makeProtected(itemStack1));
 
+        // Apply protection
+        event.setCancelled(true);
+        event.setCurrentItem(ItemAPI.makeProtected(targetItem));
+
+        // Success feedback
         player.sendMessage(ChatColor.GREEN.toString() + ChatColor.BOLD + "       ->  ITEM PROTECTED");
-        player.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "       " + itemStack1.getItemMeta().getDisplayName());
-        Firework fw = (Firework) player.getWorld().spawnEntity(player.getLocation(), EntityType.FIREWORK);
+        player.sendMessage(ChatColor.GRAY.toString() + ChatColor.ITALIC + "       " + targetItem.getItemMeta().getDisplayName());
+
+        // Spawn success firework
+        spawnFirework(player.getLocation(), FireworkEffect.Type.STAR, Color.GREEN);
+
+        // Consume protection scroll
+        consumeItem(event, scrollItem);
+    }
+
+    /**
+     * Main event handler for item enhancement
+     */
+    @EventHandler
+    public void onEnhancement(InventoryClickEvent event) throws Exception {
+        // Early validation
+        if (event.getCursor() == null || event.getCurrentItem() == null ||
+                !event.getInventory().getName().equalsIgnoreCase(CRAFTING_INVENTORY) ||
+                event.getSlotType() == InventoryType.SlotType.ARMOR) {
+            return;
+        }
+
+        Player player = (Player) event.getWhoClicked();
+        ItemStack scrollItem = event.getCursor();
+        ItemStack targetItem = event.getCurrentItem();
+
+        // Check if in duel
+        if (Duels.duelers.containsKey(player)) {
+            player.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " use this item while in a duel");
+            event.setCancelled(true);
+            return;
+        }
+
+        // Check for rate limiting to prevent potential exploits
+        if (ItemVendors.isRecentlyInteracted(player)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        // If it's an armor enhancement scroll
+        if (isArmorEnhancementScroll(scrollItem) && isEnhanceableArmor(targetItem, scrollItem)) {
+            event.setCancelled(true);
+            enhanceArmor(event, player, targetItem, scrollItem);
+            return;
+        }
+
+        // If it's a weapon enhancement scroll
+        if (isWeaponEnhancementScroll(scrollItem) && isEnhanceableWeapon(targetItem, scrollItem)) {
+            event.setCancelled(true);
+            enhanceWeapon(event, player, targetItem, scrollItem);
+            return;
+        }
+    }
+
+    /**
+     * Handle armor enhancement logic
+     */
+    private void enhanceArmor(InventoryClickEvent event, Player player, ItemStack armor, ItemStack scroll) {
+        int currentPlus = getPlus(armor);
+
+        // Validation
+        if (currentPlus >= MAX_ENHANCEMENT) {
+            player.sendMessage(ChatColor.RED + "This item is already at maximum enhancement level");
+            return;
+        }
+
+        // Get current stats
+        double currentHp = Damage.getHp(armor);
+        double currentHpRegen = Damage.getHps(armor);
+        int currentEnergy = Damage.getEnergy(armor);
+        List<String> currentLore = armor.getItemMeta().getLore();
+        String itemName = armor.getItemMeta().getDisplayName();
+
+        // Remove plus from name for processing
+        if (itemName.startsWith(ChatColor.RED + "[+")) {
+            itemName = itemName.split("] ")[1];
+        }
+
+        // Consume the scroll first to prevent duplication
+        consumeItem(event, scroll);
+
+        // Check enhancement success
+        boolean success = true;
+        if (currentPlus >= MAX_SAFE_ENHANCEMENT) {
+            success = attemptRiskyEnhancement(player, currentPlus);
+        }
+
+        // Handle enhancement failure
+        if (!success) {
+            if (ItemAPI.isProtected(armor)) {
+                event.setCurrentItem(ItemAPI.removeProtection(armor));
+                player.sendMessage(ChatColor.GREEN + "YOUR PROTECTION SCROLL HAS PREVENTED THIS ITEM FROM VANISHING");
+            } else {
+                event.setCurrentItem(null);
+            }
+            return;
+        }
+
+        // Enhancement succeeded - update item
+        double hpIncrease = Math.max(currentHp * STAT_INCREASE_PERCENT, MIN_STAT_INCREASE);
+        int newHp = (int) (currentHp + hpIncrease);
+
+        // Create updated item
+        ItemStack enhancedItem = armor.clone();
+        ItemMeta meta = enhancedItem.getItemMeta();
+
+        // Update name
+        meta.setDisplayName(ChatColor.RED + "[+" + (currentPlus + 1) + "] " + itemName);
+
+        // Update lore with new stats
+        List<String> lore = new ArrayList<>(meta.getLore());
+        lore.set(1, ChatColor.RED + "HP: +" + newHp);
+
+        // Update either energy regen or hp regen
+        if (currentLore.get(2).contains("ENERGY REGEN")) {
+            lore.set(2, ChatColor.RED + "ENERGY REGEN: +" + (currentEnergy + 1) + "%");
+        } else if (currentLore.get(2).contains("HP REGEN")) {
+            double hpRegenIncrease = Math.max(currentHpRegen * STAT_INCREASE_PERCENT, MIN_STAT_INCREASE);
+            int newHpRegen = (int) (currentHpRegen + hpRegenIncrease);
+            lore.set(2, ChatColor.RED + "HP REGEN: +" + newHpRegen + "/s");
+        }
+
+        meta.setLore(lore);
+        enhancedItem.setItemMeta(meta);
+
+        // Add glow effect for items +4 and above
+        if (currentPlus + 1 >= MAX_SAFE_ENHANCEMENT) {
+            enhancedItem.addUnsafeEnchantment(glow, 1);
+        }
+
+        // Remove protection if one was used
+        enhancedItem = ItemAPI.removeProtection(enhancedItem);
+
+        // Update the item in inventory
+        event.setCurrentItem(enhancedItem);
+
+        // Spawn success firework and play sound
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.25f);
+        spawnFirework(player.getLocation(), FireworkEffect.Type.BURST, Color.YELLOW);
+
+        // Add cooldown to prevent exploits
+        ItemVendors.addToRecentlyInteracted(player);
+    }
+
+    /**
+     * Handle weapon enhancement logic
+     */
+    private void enhanceWeapon(InventoryClickEvent event, Player player, ItemStack weapon, ItemStack scroll) {
+        int currentPlus = getPlus(weapon);
+
+        // Validation
+        if (currentPlus >= MAX_ENHANCEMENT) {
+            player.sendMessage(ChatColor.RED + "This item is already at maximum enhancement level");
+            return;
+        }
+
+        // Get current stats
+        double currentMinDmg = Damage.getDamageRange(weapon).get(0);
+        double currentMaxDmg = Damage.getDamageRange(weapon).get(1);
+        String itemName = weapon.getItemMeta().getDisplayName();
+
+        // Remove plus from name for processing
+        if (itemName.startsWith(ChatColor.RED + "[+")) {
+            itemName = itemName.split("] ")[1];
+        }
+
+        // Consume the scroll first to prevent duplication
+        consumeItem(event, scroll);
+
+        // Check enhancement success
+        boolean success = true;
+        if (currentPlus >= MAX_SAFE_ENHANCEMENT) {
+            success = attemptRiskyEnhancement(player, currentPlus);
+        }
+
+        // Handle enhancement failure
+        if (!success) {
+            if (ItemAPI.isProtected(weapon)) {
+                event.setCurrentItem(ItemAPI.removeProtection(weapon));
+                player.sendMessage(ChatColor.GREEN + "YOUR PROTECTION SCROLL HAS PREVENTED THIS ITEM FROM VANISHING");
+            } else {
+                event.setCurrentItem(null);
+            }
+            return;
+        }
+
+        // Enhancement succeeded - update item
+        double minDmgIncrease = Math.max(currentMinDmg * STAT_INCREASE_PERCENT, MIN_STAT_INCREASE);
+        double maxDmgIncrease = Math.max(currentMaxDmg * STAT_INCREASE_PERCENT, MIN_STAT_INCREASE);
+
+        int newMinDmg = (int) (currentMinDmg + minDmgIncrease);
+        int newMaxDmg = (int) (currentMaxDmg + maxDmgIncrease);
+
+        // Create updated item
+        ItemStack enhancedItem = weapon.clone();
+        ItemMeta meta = enhancedItem.getItemMeta();
+
+        // Update name
+        meta.setDisplayName(ChatColor.RED + "[+" + (currentPlus + 1) + "] " + itemName);
+
+        // Update lore with new damage values
+        List<String> lore = new ArrayList<>(meta.getLore());
+        lore.set(0, ChatColor.RED + "DMG: " + newMinDmg + " - " + newMaxDmg);
+
+        meta.setLore(lore);
+        enhancedItem.setItemMeta(meta);
+
+        // Add glow effect for items +4 and above
+        if (currentPlus + 1 >= MAX_SAFE_ENHANCEMENT) {
+            enhancedItem.addUnsafeEnchantment(glow, 1);
+        }
+
+        // Remove protection if one was used
+        enhancedItem = ItemAPI.removeProtection(enhancedItem);
+
+        // Update the item in inventory
+        event.setCurrentItem(enhancedItem);
+
+        // Spawn success firework and play sound
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.25f);
+        spawnFirework(player.getLocation(), FireworkEffect.Type.BURST, Color.YELLOW);
+
+        // Add cooldown to prevent exploits
+        ItemVendors.addToRecentlyInteracted(player);
+    }
+
+    /**
+     * Attempt a risky enhancement with chance of failure
+     * @return true if enhancement succeeded, false if failed
+     */
+    private boolean attemptRiskyEnhancement(Player player, int currentPlus) {
+        // Determine failure chance based on current plus level
+        int failureChance = currentPlus < MAX_ENHANCEMENT ? FAILURE_CHANCES[currentPlus] : 95;
+
+        // Apply luck from player stats (if applicable)
+        if (!PracticeServer.BETA_VENDOR_ENABLED) {
+            PersistentPlayer pp = PersistentPlayers.get(player.getUniqueId());
+            failureChance -= pp.luck * 2;
+
+            // Ensure failure chance is within bounds
+            failureChance = Math.max(0, Math.min(95, failureChance));
+        } else {
+            // In beta mode, always succeed
+            failureChance = 0;
+        }
+
+        // Roll for success
+        int roll = new Random().nextInt(100) + 1;
+
+        if (roll <= failureChance) {
+            // Failure effects
+            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 2.0f, 1.25f);
+            Particles.LAVA.display(0.0f, 0.0f, 0.0f, 5.0f, 10, player.getEyeLocation(), 20.0);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if an item is a valid armor enhancement scroll
+     */
+    private boolean isArmorEnhancementScroll(ItemStack item) {
+        return item != null &&
+                item.getType() == Material.EMPTY_MAP &&
+                item.hasItemMeta() &&
+                item.getItemMeta().hasDisplayName() &&
+                item.getItemMeta().getDisplayName().contains("Armor");
+    }
+
+    /**
+     * Check if an item is a valid weapon enhancement scroll
+     */
+    private boolean isWeaponEnhancementScroll(ItemStack item) {
+        return item != null &&
+                item.getType() == Material.EMPTY_MAP &&
+                item.hasItemMeta() &&
+                item.getItemMeta().hasDisplayName() &&
+                item.getItemMeta().getDisplayName().contains("Weapon");
+    }
+
+    /**
+     * Check if armor can be enhanced with the given scroll (matching tiers)
+     */
+    private boolean isEnhanceableArmor(ItemStack armor, ItemStack scroll) {
+        if (armor == null || !armor.hasItemMeta() || !armor.getItemMeta().hasDisplayName() ||
+                !armor.getItemMeta().hasLore() || scroll == null || !scroll.hasItemMeta()) {
+            return false;
+        }
+
+        String armorType = armor.getType().name();
+        String scrollName = scroll.getItemMeta().getDisplayName();
+
+        if (!armorType.contains("_HELMET") && !armorType.contains("_CHESTPLATE") &&
+                !armorType.contains("_LEGGINGS") && !armorType.contains("_BOOTS")) {
+            return false;
+        }
+
+        // Check material tiers match
+        boolean isBlueLeather = Items.isBlueLeather(armor);
+
+        return (isBlueLeather && armorType.contains("LEATHER_") && scrollName.contains("Frozen")) ||
+                (armorType.contains("GOLD_") && scrollName.contains("Gold")) ||
+                (armorType.contains("DIAMOND_") && scrollName.contains("Diamond")) ||
+                (armorType.contains("IRON_") && scrollName.contains("Iron")) ||
+                (armorType.contains("CHAINMAIL_") && scrollName.contains("Chainmail")) ||
+                (!isBlueLeather && armorType.contains("LEATHER_") && scrollName.contains("Leather"));
+    }
+
+    /**
+     * Check if weapon can be enhanced with the given scroll (matching tiers)
+     */
+    private boolean isEnhanceableWeapon(ItemStack weapon, ItemStack scroll) {
+        if (weapon == null || !weapon.hasItemMeta() || !weapon.getItemMeta().hasDisplayName() ||
+                !weapon.getItemMeta().hasLore() || scroll == null || !scroll.hasItemMeta()) {
+            return false;
+        }
+
+        String weaponType = weapon.getType().name();
+        String scrollName = scroll.getItemMeta().getDisplayName();
+        String weaponName = weapon.getItemMeta().getDisplayName();
+
+        if (!weaponType.contains("_SWORD") && !weaponType.contains("_HOE") &&
+                !weaponType.contains("_SPADE") && !weaponType.contains("_AXE")) {
+            return false;
+        }
+
+        // Check material tiers match
+        return (weaponName.contains(ChatColor.BLUE.toString()) && weaponType.contains("DIAMOND_") && scrollName.contains("Frozen")) ||
+                (weaponType.contains("GOLD_") && scrollName.contains("Gold")) ||
+                (!weaponName.contains(ChatColor.BLUE.toString()) && weaponType.contains("DIAMOND_") && scrollName.contains("Diamond")) ||
+                (weaponType.contains("IRON_") && scrollName.contains("Iron")) ||
+                (weaponType.contains("STONE_") && scrollName.contains("Stone")) ||
+                (weaponType.contains("WOOD_") && scrollName.contains("Wooden"));
+    }
+
+    /**
+     * Helper method to safely consume one item from a stack
+     */
+    private void consumeItem(InventoryClickEvent event, ItemStack item) {
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            event.setCursor(new ItemStack(Material.AIR));
+        }
+    }
+
+    /**
+     * Helper method to spawn a firework at a location
+     */
+    private void spawnFirework(Location location, FireworkEffect.Type type, Color color) {
+        Firework fw = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK);
         FireworkMeta fwm = fw.getFireworkMeta();
-        FireworkEffect effect = FireworkEffect.builder().flicker(false).withColor(Color.GREEN).withFade(Color.GREEN).with(FireworkEffect.Type.STAR).trail(true).build();
+
+        FireworkEffect effect = FireworkEffect.builder()
+                .flicker(false)
+                .withColor(color)
+                .withFade(color)
+                .with(type)
+                .trail(true)
+                .build();
+
         fwm.addEffect(effect);
         fwm.setPower(0);
         fw.setFireworkMeta(fwm);
-
-        if (itemStack.getAmount() == 1) {
-            event.setCursor(new ItemStack(Material.AIR));
-        } else {
-            ItemStack newStack = itemStack.clone();
-            newStack.setAmount(newStack.getAmount() - 1);
-            event.setCursor(newStack);
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    @EventHandler
-    public void onInvClick(final InventoryClickEvent e) throws Exception {
-        final Player p = (Player) e.getWhoClicked();
-        if (!e.getInventory().getName().equalsIgnoreCase("container.crafting")) {
-            return;
-        }
-        if (e.getSlotType() == InventoryType.SlotType.ARMOR) {
-            return;
-        }
-        if (e.getCursor() != null && e.getCursor().getType() == Material.EMPTY_MAP
-                && e.getCursor().getItemMeta().getDisplayName() != null
-                && e.getCursor().getItemMeta().getDisplayName().contains("Armor")
-                && e.getCurrentItem() != null
-                && (e.getCurrentItem().getType().name().contains("_HELMET")
-                || e.getCurrentItem().getType().name().contains("_CHESTPLATE")
-                || e.getCurrentItem().getType().name().contains("_LEGGINGS")
-                || e.getCurrentItem().getType().name().contains("_BOOTS"))
-                && e.getCurrentItem().getItemMeta().getLore() != null
-                && e.getCurrentItem().getItemMeta().hasDisplayName()
-                && ((Items.isBlueLeather(e.getCurrentItem()) && e.getCurrentItem().getType().name().contains("LEATHER_") && e.getCursor().getItemMeta().getDisplayName().contains("Frozen"))
-                || (e.getCurrentItem().getType().name().contains("GOLD_") && e.getCursor().getItemMeta().getDisplayName().contains("Gold"))
-                || (e.getCurrentItem().getType().name().contains("DIAMOND_") && e.getCursor().getItemMeta().getDisplayName().contains("Diamond"))
-                || (e.getCurrentItem().getType().name().contains("IRON_") && e.getCursor().getItemMeta().getDisplayName().contains("Iron"))
-                || (e.getCurrentItem().getType().name().contains("CHAINMAIL_") && e.getCursor().getItemMeta().getDisplayName().contains("Chainmail"))
-                || (!Items.isBlueLeather(e.getCurrentItem()) && e.getCurrentItem().getType().name().contains("LEATHER_") && e.getCursor().getItemMeta().getDisplayName().contains("Leather")))) {
-            final List<String> curlore = e.getCurrentItem().getItemMeta().getLore();
-            String name = e.getCurrentItem().getItemMeta().getDisplayName();
-            if (name.startsWith(ChatColor.RED + "[+")) {
-                name = name.split("] ")[1];
-            }if(Duels.duelers.containsKey(p)){
-                p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " use this item while in a duel");
-                e.setCancelled(true);
-                return;
-            }
-            if(ItemVendors.isRecentlyInteracted(p)) {
-                e.setCancelled(true);
-                return;
-            }
-            final double beforehp = Damage.getHp(e.getCurrentItem());
-            final double beforehpgen = Damage.getHps(e.getCurrentItem());
-            final int beforenrg = Damage.getEnergy(e.getCurrentItem());
-            final int plus = getPlus(e.getCurrentItem());
-            if (plus < 3) {
-                if (e.getCursor().getAmount() > 1) {
-                    e.getCursor().setAmount(e.getCursor().getAmount() - 1);
-                } else if (e.getCursor().getAmount() == 1) {
-                    e.setCursor(null);
-                }
-                p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.25f);
-                final Firework fw = (Firework) p.getWorld().spawnEntity(p.getLocation(), EntityType.FIREWORK);
-                final FireworkMeta fwm = fw.getFireworkMeta();
-                final FireworkEffect effect = FireworkEffect.builder().flicker(false).withColor(Color.YELLOW).withFade(Color.YELLOW).with(FireworkEffect.Type.BURST).trail(true).build();
-                fwm.addEffect(effect);
-                fwm.setPower(0);
-                fw.setFireworkMeta(fwm);
-                e.setCancelled(true);
-                double added = beforehp * 0.05;
-                if (added < 1.0) {
-                    added = 1.0;
-                }
-                final int newhp = (int) (beforehp + added);
-                final ItemStack is = e.getCurrentItem();
-                final ItemMeta im = is.getItemMeta();
-                if (ChatColor.stripColor(name).contains("[+")) {
-                    name = name.replace("[+" + (plus) + "] ", "");
-                }
-                im.setDisplayName(ChatColor.RED + "[+" + (plus + 1) + "] " + name);
-                final List<String> lore = im.getLore();
-                lore.set(1, ChatColor.RED + "HP: +" + newhp);
-                if (curlore.get(2).contains("ENERGY REGEN")) {
-                    lore.set(2, ChatColor.RED + "ENERGY REGEN: +" + (beforenrg + 1) + "%");
-                } else if (curlore.get(2).contains("HP REGEN")) {
-                    double addedhps = beforehpgen * 0.05;
-                    if (addedhps < 1.0) {
-                        addedhps = 1.0;
-                    }
-                    final int newhps = (int) (beforehpgen + addedhps);
-                    lore.set(2, ChatColor.RED + "HP REGEN: +" + newhps + "/s");
-                }
-                im.setLore(lore);
-                is.setItemMeta(im);
-                e.setCurrentItem(is);
-                ItemVendors.addToRecentlyInteracted(p);
-            }
-            if (plus >= 3 && plus < 12) {
-                if (e.getCursor().getAmount() > 1) {
-                    e.getCursor().setAmount(e.getCursor().getAmount() - 1);
-                } else if (e.getCursor().getAmount() == 1) {
-                    e.setCursor(null);
-                }
-                final Random random = new Random();
-                final int drop = random.nextInt(100) + 1;
-                int doifail = 0;
-                int[] chance = {0, 0, 0, 30, 40, 50, 65, 75, 80, 85, 90, 95};
-                if(plus > 2 && plus < 12) doifail = chance[plus];
-                if (PracticeServer.BETA_VENDOR_ENABLED) {
-                    doifail = 0;
-                }
-                PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-                doifail -= pp.luck * 2;
-                e.setCancelled(true);
-                if (drop <= doifail) {
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 2.0f, 1.25f);
-                    Particles.LAVA.display(0.0f, 0.0f, 0.0f, 5.0f, 10, p.getEyeLocation(), 20.0);
-
-                    if (ItemAPI.isProtected(e.getCurrentItem())) {
-                        e.setCurrentItem(ItemAPI.removeProtection(e.getCurrentItem()));
-                        e.getWhoClicked().sendMessage(ChatColor.GREEN + "YOUR PROTECTION SCROLL HAS PREVENTED THIS ITEM FROM VANISHING");
-
-                        return;
-                    }
-
-                    e.setCurrentItem(null);
-                } else {
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.25f);
-                    final Firework fw2 = (Firework) p.getWorld().spawnEntity(p.getLocation(), EntityType.FIREWORK);
-                    final FireworkMeta fwm2 = fw2.getFireworkMeta();
-                    final FireworkEffect effect2 = FireworkEffect.builder().flicker(false).withColor(Color.YELLOW).withFade(Color.YELLOW).with(FireworkEffect.Type.BURST).trail(true).build();
-                    fwm2.addEffect(effect2);
-                    fwm2.setPower(0);
-                    fw2.setFireworkMeta(fwm2);
-                    e.setCancelled(true);
-                    double added2 = beforehp * 0.05;
-                    if (added2 < 1.0) {
-                        added2 = 1.0;
-                    }
-                    final int newhp2 = (int) (beforehp + added2);
-                    final ItemStack is2 = e.getCurrentItem();
-                    final ItemMeta im2 = is2.getItemMeta();
-                    if (ChatColor.stripColor(name).contains("[+")) {
-                        name = name.replace("[+" + (plus) + "] ", "");
-                    }
-                    im2.setDisplayName(ChatColor.RED + "[+" + (plus + 1) + "] " + name);
-                    final List<String> lore2 = im2.getLore();
-                    lore2.set(1, ChatColor.RED + "HP: +" + newhp2);
-                    if (curlore.get(2).contains("ENERGY REGEN")) {
-                        lore2.set(2, ChatColor.RED + "ENERGY REGEN: +" + (beforenrg + 1) + "%");
-                    } else if (curlore.get(2).contains("HP REGEN")) {
-                        double addedhps2 = beforehpgen * 0.05;
-                        if (addedhps2 < 1.0) {
-                            addedhps2 = 1.0;
-                        }
-                        final int newhps2 = (int) (beforehpgen + addedhps2);
-                        lore2.set(2, ChatColor.RED + "HP REGEN: +" + newhps2 + "/s");
-                    }
-                    im2.setLore(lore2);
-                    is2.setItemMeta(im2);
-                    is2.addUnsafeEnchantment(Enchants.glow, 1);
-                    e.setCurrentItem(is2);
-                    e.setCurrentItem(ItemAPI.removeProtection(is2));
-                    ItemVendors.addToRecentlyInteracted(p);
-                }
-            }
-        }
-        if (e.getCursor() != null && e.getCursor().getType() == Material.EMPTY_MAP
-                && e.getCursor().getItemMeta().getDisplayName() != null
-                && e.getCursor().getItemMeta().getDisplayName().contains("Weapon")
-                && e.getCurrentItem() != null && (e.getCurrentItem().getType().name().contains("_SWORD")
-                || e.getCurrentItem().getType().name().contains("_HOE")
-                || e.getCurrentItem().getType().name().contains("_SPADE")
-                || e.getCurrentItem().getType().name().contains("_AXE"))
-                && e.getCurrentItem().getItemMeta().getLore() != null
-                && e.getCurrentItem().getItemMeta().hasDisplayName()
-                && ((e.getCurrentItem().getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && e.getCurrentItem().getType().name().contains("DIAMOND_") && e.getCursor().getItemMeta().getDisplayName().contains("Frozen"))
-                || (e.getCurrentItem().getType().name().contains("GOLD_") && e.getCursor().getItemMeta().getDisplayName().contains("Gold"))
-                || (!e.getCurrentItem().getItemMeta().getDisplayName().contains(ChatColor.BLUE.toString()) && e.getCurrentItem().getType().name().contains("DIAMOND_") && e.getCursor().getItemMeta().getDisplayName().contains("Diamond"))
-                || (e.getCurrentItem().getType().name().contains("IRON_") && e.getCursor().getItemMeta().getDisplayName().contains("Iron"))
-                || (e.getCurrentItem().getType().name().contains("STONE_") && e.getCursor().getItemMeta().getDisplayName().contains("Stone"))
-                || (e.getCurrentItem().getType().name().contains("WOOD_") && e.getCursor().getItemMeta().getDisplayName().contains("Wooden")))) {
-            String name2 = e.getCurrentItem().getItemMeta().getDisplayName();
-            if (name2.startsWith(ChatColor.RED + "[+")) {
-                name2 = name2.split("] ")[1];
-            }if(Duels.duelers.containsKey(p)){
-                p.sendMessage(ChatColor.RED + "You " + ChatColor.UNDERLINE + "cannot" + ChatColor.RED + " use this item while in a duel");
-                e.setCancelled(true);
-                return;
-            }
-            if(ItemVendors.isRecentlyInteracted(p)) {
-                e.setCancelled(true);
-                return;
-            }
-            final double beforemin = Damage.getDamageRange(e.getCurrentItem()).get(0);
-            final double beforemax = Damage.getDamageRange(e.getCurrentItem()).get(1);
-            final int plus2 = getPlus(e.getCurrentItem());
-            if (plus2 < 3) {
-                if (e.getCursor().getAmount() > 1) {
-                    e.getCursor().setAmount(e.getCursor().getAmount() - 1);
-                } else if (e.getCursor().getAmount() == 1) {
-                    e.setCursor(null);
-                }
-                p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.25f);
-                final Firework fw3 = (Firework) p.getWorld().spawnEntity(p.getLocation(), EntityType.FIREWORK);
-                final FireworkMeta fwm3 = fw3.getFireworkMeta();
-                final FireworkEffect effect3 = FireworkEffect.builder().flicker(false).withColor(Color.YELLOW).withFade(Color.YELLOW).with(FireworkEffect.Type.BURST).trail(true).build();
-                fwm3.addEffect(effect3);
-                fwm3.setPower(0);
-                fw3.setFireworkMeta(fwm3);
-                e.setCancelled(true);
-                double addedmin = beforemin * 0.05;
-                if (addedmin < 1.0) {
-                    addedmin = 1.0;
-                }
-                final int min = (int) (beforemin + addedmin);
-                double addedmax = beforemax * 0.05;
-                if (addedmax < 1.0) {
-                    addedmax = 1.0;
-                }
-                final int max = (int) (beforemax + addedmax);
-                final ItemStack is3 = e.getCurrentItem();
-                final ItemMeta im3 = is3.getItemMeta();
-                if (ChatColor.stripColor(name2).contains("[+")) {
-                    name2 = name2.replace("[+" + (plus2) + "] ", "");
-                }
-                im3.setDisplayName(ChatColor.RED + "[+" + (plus2 + 1) + "] " + name2);
-                final List<String> lore3 = im3.getLore();
-                lore3.set(0, ChatColor.RED + "DMG: " + min + " - " + max);
-                im3.setLore(lore3);
-                is3.setItemMeta(im3);
-                e.setCurrentItem(is3);
-                ItemVendors.addToRecentlyInteracted(p);
-            }
-            if (plus2 >= 3 && plus2 < 12) {
-                if (e.getCursor().getAmount() > 1) {
-                    e.getCursor().setAmount(e.getCursor().getAmount() - 1);
-                } else if (e.getCursor().getAmount() == 1) {
-                    e.setCursor(null);
-                }
-                final Random random2 = new Random();
-                final int drop2 = random2.nextInt(100) + 1;
-                int doifail2 = 0;
-                int[] chance = {0, 0, 0, 30, 40, 50, 65, 75, 80, 85, 90, 95};
-                if(plus2 > 2 && plus2 < 12) doifail2 = chance[plus2];
-                if (PracticeServer.BETA_VENDOR_ENABLED) {
-                    doifail2 = 0;
-                }
-                PersistentPlayer pp = PersistentPlayers.get(p.getUniqueId());
-                doifail2 -= pp.luck * 2;
-
-                e.setCancelled(true);
-                if (drop2 <= doifail2) {
-                    p.getWorld().playSound(p.getLocation(), Sound.BLOCK_LAVA_EXTINGUISH, 2.0f, 1.25f);
-                    Particles.LAVA.display(0.0f, 0.0f, 0.0f, 5.0f, 10, p.getEyeLocation(), 20.0);
-
-                    if (ItemAPI.isProtected(e.getCurrentItem())) {
-                        e.setCurrentItem(ItemAPI.removeProtection(e.getCurrentItem()));
-
-                        e.getWhoClicked().sendMessage(ChatColor.GREEN + "YOUR PROTECTION SCROLL HAS PREVENTED THIS ITEM FROM VANISHING");
-
-                        return;
-                    }
-
-                    e.setCurrentItem(null);
-                } else {
-                    final Firework fw4 = (Firework) p.getWorld().spawnEntity(p.getLocation(), EntityType.FIREWORK);
-                    final FireworkMeta fwm4 = fw4.getFireworkMeta();
-                    final FireworkEffect effect4 = FireworkEffect.builder().flicker(false).withColor(Color.YELLOW).withFade(Color.YELLOW).with(FireworkEffect.Type.BURST).trail(true).build();
-                    fwm4.addEffect(effect4);
-                    fwm4.setPower(0);
-                    fw4.setFireworkMeta(fwm4);
-                    e.setCancelled(true);
-                    double addedmin2 = beforemin * 0.05;
-                    if (addedmin2 < 1.0) {
-                        addedmin2 = 1.0;
-                    }
-                    final int min2 = (int) (beforemin + addedmin2);
-                    double addedmax2 = beforemax * 0.05;
-                    if (addedmax2 < 1.0) {
-                        addedmax2 = 1.0;
-                    }
-                    final int max2 = (int) (beforemax + addedmax2);
-                    final ItemStack is4 = e.getCurrentItem();
-                    final ItemMeta im4 = is4.getItemMeta();
-                    if (ChatColor.stripColor(name2).contains("[+")) {
-                        name2 = name2.replace("[+" + (plus2) + "] ", "");;
-                    }
-                    im4.setDisplayName(ChatColor.RED + "[+" + (plus2 + 1) + "] " + name2);
-                    final List<String> lore4 = im4.getLore();
-                    lore4.set(0, ChatColor.RED + "DMG: " + min2 + " - " + max2);
-                    im4.setLore(lore4);
-                    is4.setItemMeta(im4);
-                    is4.addUnsafeEnchantment(Enchants.glow, 1);
-                    e.setCurrentItem(is4);
-                    e.setCurrentItem(ItemAPI.removeProtection(is4));
-                    ItemVendors.addToRecentlyInteracted(p);
-                }
-            }
-        }
     }
 }
